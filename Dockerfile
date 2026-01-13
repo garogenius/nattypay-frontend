@@ -12,6 +12,9 @@ WORKDIR /app
 
 FROM base AS deps
 COPY package.json package-lock.json ./
+#region agent log
+RUN node -e "fetch('http://127.0.0.1:7243/ingest/5abb3048-c47c-471e-9437-af292579c9d4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:process.env.DEBUG_RUN_ID||'run1',hypothesisId:'H1',location:'Dockerfile:deps',message:'Build args/env observed in deps stage',data:{CACHE_KEY:process.env.CACHE_KEY||null,NODE_VERSION:process.env.NODE_VERSION||null},timestamp:Date.now()})}).catch(()=>{});"
+#endregion agent log
 # Cache npm downloads between builds (BuildKit)
 RUN --mount=type=cache,id=s/${CACHE_KEY}-npm/cache,target=/root/.npm \
     npm ci
@@ -19,6 +22,9 @@ RUN --mount=type=cache,id=s/${CACHE_KEY}-npm/cache,target=/root/.npm \
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+#region agent log
+RUN node -e "fetch('http://127.0.0.1:7243/ingest/5abb3048-c47c-471e-9437-af292579c9d4',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:process.env.DEBUG_RUN_ID||'run1',hypothesisId:'H2',location:'Dockerfile:builder',message:'Build args/env observed in builder stage',data:{CACHE_KEY:process.env.CACHE_KEY||null},timestamp:Date.now()})}).catch(()=>{});"
+#endregion agent log
 # Cache Next.js build artifacts
 RUN --mount=type=cache,id=s/${CACHE_KEY}-next/cache,target=/app/.next/cache \
     npm run build
