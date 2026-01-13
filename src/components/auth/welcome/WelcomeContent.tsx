@@ -5,9 +5,11 @@ import Link from "next/link";
 import CustomButton from "@/components/shared/Button";
 import useNavigate from "@/hooks/useNavigate";
 import images from "../../../../public/images";
+import { useTheme } from "@/store/theme.store";
 
 const WelcomeContent = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const handleCreateAccount = () => {
     navigate("/account-type");
@@ -43,8 +45,12 @@ const WelcomeContent = () => {
         </div>
       </div>
 
-      {/* Right Panel - White Background */}
-      <div className="w-full lg:w-[60%] bg-white flex flex-col items-center justify-center px-6 sm:px-8 py-12 overflow-x-hidden">
+      {/* Right Panel - Theme-aware Background */}
+      <div
+        className={`w-full lg:w-[60%] ${
+          theme === "dark" ? "bg-[#141414]" : "bg-white"
+        } flex flex-col items-center justify-center px-6 sm:px-8 py-12 overflow-x-hidden`}
+      >
         <div className="w-full max-w-md space-y-8 overflow-x-hidden">
           {/* Logo - NattyPay Logo */}
           <div className="flex justify-center mb-8">
@@ -60,8 +66,16 @@ const WelcomeContent = () => {
 
           {/* Welcome Text */}
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold text-gray-900">Welcome to NattyPay</h2>
-            <p className="text-gray-600">We make the best & easiest banking for you.</p>
+            <h2
+              className={`text-3xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Welcome to NattyPay
+            </h2>
+            <p className={theme === "dark" ? "text-white/80" : "text-gray-600"}>
+              We make the best & easiest banking for you.
+            </p>
           </div>
 
           {/* Action Buttons */}
@@ -76,14 +90,22 @@ const WelcomeContent = () => {
             <CustomButton
               type="button"
               onClick={() => navigate("/login")}
-              className="w-full bg-transparent border-2 border-[#D4B139] text-[#D4B139] hover:bg-[#D4B139]/5 font-medium py-3.5 rounded-lg text-base"
+              className={`w-full border-2 border-[#D4B139] font-medium py-3.5 rounded-lg text-base ${
+                theme === "dark"
+                  ? "bg-transparent text-[#D4B139] hover:bg-[#D4B139]/10"
+                  : "bg-transparent text-[#D4B139] hover:bg-[#D4B139]/5"
+              }`}
             >
               I have an account
             </CustomButton>
           </div>
 
           {/* Footer */}
-          <div className="text-center text-[9px] xs:text-xs text-gray-500 mt-8 px-2">
+          <div
+            className={`text-center text-[9px] xs:text-xs mt-8 px-2 ${
+              theme === "dark" ? "text-white/60" : "text-gray-500"
+            }`}
+          >
             <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
               <span>Licenced by CBN</span>
               <Image

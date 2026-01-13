@@ -5,7 +5,7 @@ import InvestCard from "../InvestCard";
 import UnverifiedDashboard from "./UnverifiedDashboard";
 import { TIER_LEVEL } from "@/constants/types";
 import VerifiedDashboard from "./VerifiedDashboard";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import FixedSavingsCard from "../FixedSavingsCard";
 import FixedDepositCard from "../FixedDepositCard";
 import { useGetCurrencyAccounts } from "@/api/currency/currency.queries";
@@ -13,6 +13,10 @@ import { useGetSavingsPlans } from "@/api/savings/savings.queries";
 import { useGetInvestments } from "@/api/investments/investments.queries";
 import { useGetFixedDeposits } from "@/api/fixed-deposits/fixed-deposits.queries";
 import StatsPlaceholderCard from "./StatsPlaceholderCard";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 const DashboardContent = () => {
   const { user } = useUserStore();
@@ -99,7 +103,44 @@ const DashboardContent = () => {
       </div>
 
       {/* Stats cards - conditionally displayed */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+      {/* Mobile: Slider with pagination dots */}
+      <div className="sm:hidden">
+        <Swiper
+          modules={[Pagination]}
+          spaceBetween={12}
+          slidesPerView={1}
+          pagination={{
+            clickable: true,
+          }}
+          className="!pb-8 !overflow-x-hidden overflow-y-visible"
+          style={{ overflowX: "hidden", overflowY: "visible" }}
+        >
+        <SwiperSlide className="!overflow-x-hidden overflow-y-visible">
+            <BalanceCard
+              wallets={user?.wallet || []}
+              currencyAccounts={currencyAccounts}
+            />
+          </SwiperSlide>
+          {hasFixedSavings && (
+            <SwiperSlide>
+              <FixedSavingsCard />
+            </SwiperSlide>
+          )}
+          {hasFixedDeposits && (
+            <SwiperSlide>
+              <FixedDepositCard />
+            </SwiperSlide>
+          )}
+          {hasInvestments && (
+            <SwiperSlide>
+              <InvestCard amount={totalInvestmentInterest} />
+            </SwiperSlide>
+          )}
+        </Swiper>
+      </div>
+
+      {/* Desktop: Grid layout */}
+      <div className="hidden sm:grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <BalanceCard
           wallets={user?.wallet || []}
           currencyAccounts={currencyAccounts}

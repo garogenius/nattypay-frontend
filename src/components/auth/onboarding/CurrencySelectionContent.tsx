@@ -12,6 +12,7 @@ import SuccessToast from "@/components/toast/SuccessToast";
 import useAuthEmailStore from "@/store/authEmail.store";
 import Cookies from "js-cookie";
 import images from "../../../../public/images";
+import { useTheme } from "@/store/theme.store";
 
 const currencies = [
   {
@@ -46,6 +47,7 @@ const currencies = [
 
 const CurrencySelectionContent = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const { registrationData, clearRegistrationData, selectedAccountType } = useRegistrationStore();
   const { setAuthEmail, setRegistrationMethod } = useAuthEmailStore();
   const [selectedCurrency, setSelectedCurrency] = useState<string>("NGN");
@@ -208,14 +210,14 @@ const CurrencySelectionContent = () => {
         </div>
       </div>
 
-      {/* Right Panel - White Background with Form */}
-      <div className="w-full lg:w-[60%] bg-white flex flex-col items-center justify-center px-6 sm:px-8 py-12">
+      {/* Right Panel - Theme-aware Background with Form */}
+      <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
         <div className="w-full max-w-md">
           {/* Form Card */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg">
+          <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Currency Type</h2>
-              <p className="text-sm text-gray-600">Choose your preferred currency for transactions</p>
+              <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2`}>Currency Type</h2>
+              <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>Choose your preferred currency for transactions</p>
             </div>
 
             {/* Currency Options */}
@@ -236,19 +238,19 @@ const CurrencySelectionContent = () => {
                     disabled={!isEnabled}
                     className={`w-full flex items-center justify-between p-4 border-2 rounded-lg transition-all ${
                       !isEnabled
-                        ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                        ? theme === "dark" ? "border-gray-700 bg-[#1a1a1a] opacity-60 cursor-not-allowed" : "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
                         : isSelected
                         ? "border-[#D4B139] bg-[#D4B139]/5"
-                        : "border-gray-200 hover:border-gray-300"
+                        : theme === "dark" ? "border-gray-700 hover:border-gray-600" : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-2xl">{currency.flag}</div>
                       <div className="text-left">
-                        <p className={`font-medium ${!isEnabled ? "text-gray-500" : "text-gray-900"}`}>
+                        <p className={`font-medium ${!isEnabled ? theme === "dark" ? "text-white/50" : "text-gray-500" : theme === "dark" ? "text-white" : "text-gray-900"}`}>
                           {currency.label}
                         </p>
-                        <p className={`text-sm ${!isEnabled ? "text-gray-400" : "text-gray-600"}`}>
+                        <p className={`text-sm ${!isEnabled ? theme === "dark" ? "text-white/40" : "text-gray-400" : theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
                           {currency.description}
                         </p>
                       </div>
@@ -292,7 +294,7 @@ const CurrencySelectionContent = () => {
             </div>
 
             {/* Footer */}
-            <div className="text-center text-[9px] xs:text-xs text-gray-500 mt-8 px-2">
+            <div className={`text-center text-[9px] xs:text-xs ${theme === "dark" ? "text-white/60" : "text-gray-500"} mt-8 px-2`}>
               <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
                 <span>Licenced by CBN</span>
                 <Image

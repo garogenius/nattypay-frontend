@@ -12,6 +12,7 @@ import useNavigate from "@/hooks/useNavigate";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import images from "../../../../public/images";
+import { useTheme } from "@/store/theme.store";
 
 const schema = yup.object().shape({
   mobileNumber: yup.string().when("tab", {
@@ -41,6 +42,7 @@ type CreateAccountFormData = yup.InferType<typeof schema> & { tab: "mobile" | "e
 
 const CreateAccountContent = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<"mobile" | "email">("mobile");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -113,16 +115,16 @@ const CreateAccountContent = () => {
         </div>
       </div>
 
-      {/* Right Panel - White Background with Form */}
-      <div className="w-full lg:w-[60%] bg-white flex flex-col items-center justify-center px-6 sm:px-8 py-12">
+      {/* Right Panel - Theme-aware Background with Form */}
+      <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
         <div className="w-full max-w-md">
           {/* Form Card */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Create an Account</h2>
-            <p className="text-sm text-gray-600 mb-6">You Can Use Your Email or Mobile Number</p>
+          <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
+            <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2`}>Create an Account</h2>
+            <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-6`}>You Can Use Your Email or Mobile Number</p>
 
             {/* Tabs */}
-            <div className="flex gap-6 mb-6 border-b border-gray-200">
+            <div className={`flex gap-6 mb-6 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
               <button
                 type="button"
                 onClick={() => {
@@ -132,7 +134,7 @@ const CreateAccountContent = () => {
                 className={`pb-2 text-sm font-medium ${
                   activeTab === "mobile"
                     ? "text-[#D4B139] border-b-2 border-[#D4B139]"
-                    : "text-gray-600"
+                    : theme === "dark" ? "text-white/80" : "text-gray-600"
                 }`}
               >
                 Mobile Number
@@ -146,7 +148,7 @@ const CreateAccountContent = () => {
                 className={`pb-2 text-sm font-medium ${
                   activeTab === "email"
                     ? "text-[#D4B139] border-b-2 border-[#D4B139]"
-                    : "text-gray-600"
+                    : theme === "dark" ? "text-white/80" : "text-gray-600"
                 }`}
               >
                 Email
@@ -157,11 +159,12 @@ const CreateAccountContent = () => {
               {/* Mobile Number or Email */}
               {activeTab === "mobile" ? (
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700">Mobile Number</label>
+                  <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Mobile Number</label>
                   <input
                     type="text"
                     placeholder="Enter your number"
-                    className="w-full border border-gray-300 rounded-lg py-3 px-4 text-black dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent bg-transparent"
+                    className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                    style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                     {...register("mobileNumber")}
                   />
                   {errors.mobileNumber && (
@@ -170,11 +173,12 @@ const CreateAccountContent = () => {
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700">Email</label>
+                  <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Email</label>
                   <input
                     type="email"
                     placeholder="Enter your email"
-                    className="w-full border border-gray-300 rounded-lg py-3 px-4 text-black dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent bg-transparent"
+                    className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                    style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                     {...register("email")}
                   />
                   {errors.email && (
@@ -185,11 +189,12 @@ const CreateAccountContent = () => {
 
               {/* Username */}
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Username</label>
+                <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Username</label>
                 <input
                   type="text"
                   placeholder="Enter your username"
-                  className="w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent"
+                  className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                  style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                   {...register("username")}
                 />
                 {errors.username && (
@@ -200,18 +205,19 @@ const CreateAccountContent = () => {
               {/* Password Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700">Pass code</label>
+                  <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Pass code</label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="At least 6 Characters"
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 pr-10 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent"
+                      className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                      style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                       {...register("password")}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === "dark" ? "text-white/70" : "text-gray-500"}`}
                     >
                       {showPassword ? (
                         <AiOutlineEye className="w-5 h-5" />
@@ -226,18 +232,19 @@ const CreateAccountContent = () => {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700">Confirm Passcode</label>
+                  <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Confirm Passcode</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm Pass code"
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 pr-10 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent"
+                      className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                      style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                       {...register("confirmPassword")}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === "dark" ? "text-white/70" : "text-gray-500"}`}
                     >
                       {showConfirmPassword ? (
                         <AiOutlineEye className="w-5 h-5" />
@@ -257,7 +264,7 @@ const CreateAccountContent = () => {
                 <button
                   type="button"
                   onClick={() => setShowInvitationCode(!showInvitationCode)}
-                  className="flex items-center justify-between text-sm font-medium text-gray-700"
+                  className={`flex items-center justify-between text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}
                 >
                   <span>Invitation Code</span>
                   {showInvitationCode ? (
@@ -270,7 +277,8 @@ const CreateAccountContent = () => {
                   <input
                     type="text"
                     placeholder="INVITATION CODE"
-                    className="w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 uppercase focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent"
+                    className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 uppercase focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                    style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                     {...register("invitationCode")}
                   />
                 )}
@@ -284,7 +292,7 @@ const CreateAccountContent = () => {
                   className="mt-1 w-4 h-4 text-[#D4B139] border-gray-300 rounded focus:ring-[#D4B139]"
                   {...register("termsAccepted")}
                 />
-                <label htmlFor="terms" className="text-xs text-gray-600">
+                <label htmlFor="terms" className={`text-xs ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
                   I have read, understand, and agreed to Terms & Conditions and Privacy Policy
                 </label>
               </div>
@@ -301,7 +309,7 @@ const CreateAccountContent = () => {
               </CustomButton>
 
               {/* Login Link */}
-              <p className="text-center text-sm text-gray-600 mt-4">
+              <p className={`text-center text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mt-4`}>
                 Already have NattyPay account?{" "}
                 <Link href="/login" className="text-[#D4B139] font-medium">
                   Login
@@ -310,7 +318,7 @@ const CreateAccountContent = () => {
             </form>
 
             {/* Footer */}
-            <div className="text-center text-[9px] xs:text-xs text-gray-500 mt-8 px-2">
+            <div className={`text-center text-[9px] xs:text-xs ${theme === "dark" ? "text-white/60" : "text-gray-500"} mt-8 px-2`}>
               <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
                 <span>Licenced by CBN</span>
                 <Image

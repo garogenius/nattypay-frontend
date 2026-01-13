@@ -207,8 +207,8 @@ const ReceiptContainer = () => {
             <div key={index} className="w-full">
               <div className="w-full border-t border-dotted border-[#D4B139] border-[1.5px] opacity-100 my-0"></div>
               
-              <div className="flex items-center justify-between py-4 px-1">
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-normal">
+              <div className={`flex items-center ${detail.label === "Transaction ID" ? "flex-nowrap" : ""} justify-between py-4 px-1 gap-2`}>
+                <p className={`text-gray-500 dark:text-gray-400 text-sm font-normal ${detail.label === "Transaction ID" ? "flex-shrink-0" : ""}`}>
                   {detail.label}
                 </p>
                 {detail.isStatus ? (
@@ -216,7 +216,7 @@ const ReceiptContainer = () => {
                     {detail.value.toLowerCase() === "success" ? "Successful" : detail.value}
                   </span>
                 ) : (
-                  <p className="text-black dark:text-white text-sm font-semibold text-right">
+                  <p className={`text-black dark:text-white text-sm font-semibold text-right ${detail.label === "Transaction ID" ? "truncate min-w-0 flex-1" : ""}`}>
                     {displayValue}
                   </p>
                 )}

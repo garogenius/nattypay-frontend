@@ -144,33 +144,33 @@ html:not(.dark) select:-webkit-autofill:active {
   -webkit-text-fill-color: #141414 !important;
 }
 
-/* Auth/Onboarding: force stable light mode + readable input text (typing/paste/autofill) */
-html[data-auth-onboarding="true"] input,
-html[data-auth-onboarding="true"] textarea,
-html[data-auth-onboarding="true"] select {
+/* Auth/Onboarding: keep light-mode overrides only when not in dark theme */
+html[data-auth-onboarding="true"]:not(.dark) input,
+html[data-auth-onboarding="true"]:not(.dark) textarea,
+html[data-auth-onboarding="true"]:not(.dark) select {
   color: #141414 !important;
   -webkit-text-fill-color: #141414 !important;
   caret-color: #141414 !important;
 }
 
-html[data-auth-onboarding="true"] input::placeholder,
-html[data-auth-onboarding="true"] textarea::placeholder {
+html[data-auth-onboarding="true"]:not(.dark) input::placeholder,
+html[data-auth-onboarding="true"]:not(.dark) textarea::placeholder {
   color: #797B86 !important;
   opacity: 1 !important;
 }
 
-html[data-auth-onboarding="true"] input:-webkit-autofill,
-html[data-auth-onboarding="true"] input:-webkit-autofill:hover,
-html[data-auth-onboarding="true"] input:-webkit-autofill:focus,
-html[data-auth-onboarding="true"] input:-webkit-autofill:active,
-html[data-auth-onboarding="true"] textarea:-webkit-autofill,
-html[data-auth-onboarding="true"] textarea:-webkit-autofill:hover,
-html[data-auth-onboarding="true"] textarea:-webkit-autofill:focus,
-html[data-auth-onboarding="true"] textarea:-webkit-autofill:active,
-html[data-auth-onboarding="true"] select:-webkit-autofill,
-html[data-auth-onboarding="true"] select:-webkit-autofill:hover,
-html[data-auth-onboarding="true"] select:-webkit-autofill:focus,
-html[data-auth-onboarding="true"] select:-webkit-autofill:active {
+html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill,
+html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill:hover,
+html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill:focus,
+html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill:active,
+html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill,
+html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill:hover,
+html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill:focus,
+html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill:active,
+html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill,
+html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill:hover,
+html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill:focus,
+html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill:active {
   -webkit-text-fill-color: #141414 !important;
 }
 
@@ -202,6 +202,20 @@ html[data-auth-onboarding="true"] select:-webkit-autofill:active {
 
 .swiper-button-disabled {
   opacity: 0.35;
+}
+
+/* Swiper pagination dots for stats cards slider */
+.swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.3) !important;
+  width: 8px !important;
+  height: 8px !important;
+  opacity: 1 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: #ffffff !important;
+  width: 8px !important;
+  height: 8px !important;
 }
 
 /* Professional scrollbar for in-app scroll areas */

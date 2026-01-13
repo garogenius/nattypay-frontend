@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CgClose } from "react-icons/cg";
 import CustomButton from "@/components/shared/Button";
 import { useGetAllBanks, useGetMatchedBanks, useVerifyAccount } from "@/api/wallet/wallet.queries";
@@ -218,7 +219,8 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   if (!isOpen) return null;
-  return (
+
+  const modal = (
     <div
       aria-hidden="true"
       className="z-[999999] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 flex justify-center items-center w-full md:inset-0 h-[100dvh]"
@@ -672,6 +674,12 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+
+  // Render via portal to avoid being clipped by transformed/overflow parents (e.g., Swiper slides)
+  if (typeof document !== "undefined") {
+    return createPortal(modal, document.body);
+  }
+  return modal;
 };
 
 export default AddMoneyModal;

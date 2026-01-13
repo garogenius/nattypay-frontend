@@ -3,10 +3,12 @@ import useNavigate from "@/hooks/useNavigate";
 import React, { useState } from "react";
 import CustomButton from "@/components/shared/Button";
 import useRegistrationStore from "@/store/registration.store";
+import { useTheme } from "@/store/theme.store";
 
 const AccountTypeSelector = () => {
   const navigate = useNavigate();
   const { setSelectedAccountType } = useRegistrationStore();
+  const theme = useTheme();
   const [selectedType, setSelectedType] = useState<string>("");
 
   const handleTypeChange = (type: "personal" | "business") => {
@@ -25,10 +27,10 @@ const AccountTypeSelector = () => {
 
   return (
     <div className="w-full flex flex-col gap-4">
-      <label className={`w-full relative flex items-center px-4 py-4 bg-white border-2 rounded-lg cursor-pointer transition-all hover:border-[#D4B139]/50 ${
+      <label className={`w-full relative flex items-center px-4 py-4 ${theme === "dark" ? "bg-[#1a1a1a]" : "bg-white"} border-2 rounded-lg cursor-pointer transition-all hover:border-[#D4B139]/50 ${
         selectedType === "personal"
           ? "border-[#D4B139] bg-[#D4B139]/5"
-          : "border-gray-200"
+          : theme === "dark" ? "border-gray-700" : "border-gray-200"
       }`}>
         <input
           type="radio"
@@ -41,10 +43,10 @@ const AccountTypeSelector = () => {
           }}
         />
         <div className="flex-1">
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className={`text-lg font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             Personal Account
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
             for individuals
           </p>
         </div>
@@ -63,10 +65,10 @@ const AccountTypeSelector = () => {
         </div>
       </label>
 
-      <label className={`w-full relative flex items-center px-4 py-4 bg-white border-2 rounded-lg cursor-pointer transition-all hover:border-[#D4B139]/50 ${
+      <label className={`w-full relative flex items-center px-4 py-4 ${theme === "dark" ? "bg-[#1a1a1a]" : "bg-white"} border-2 rounded-lg cursor-pointer transition-all hover:border-[#D4B139]/50 ${
         selectedType === "business"
           ? "border-[#D4B139] bg-[#D4B139]/5"
-          : "border-gray-200"
+          : theme === "dark" ? "border-gray-700" : "border-gray-200"
       }`}>
         <input
           type="radio"
@@ -79,10 +81,10 @@ const AccountTypeSelector = () => {
           }}
         />
         <div className="flex-1">
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className={`text-lg font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             Business Account
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
             for corporate entities
           </p>
         </div>

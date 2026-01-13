@@ -8,58 +8,106 @@ import { createRoot } from "react-dom/client";
 import ReceiptContainer from "./ReceiptFields";
 import { TRANSACTION_STATUS } from "@/constants/types";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const ReceiptBackHeader = () => {
   const router = useRouter();
   const { transaction } = useTransactionStore();
 
   const handleShare = async () => {
-    console.log("sharing");
+    if (!transaction) {
+      toast.error("No transaction found");
+      return;
+    }
+
+    const toastId = toast.loading("Preparing receipt...");
 
     // Create a temporary div and render the receipt
     const tempDiv = document.createElement("div");
     tempDiv.style.position = "absolute";
     tempDiv.style.left = "-9999px";
+    tempDiv.style.width = "500px"; // Fixed width for consistent receipt size
     document.body.appendChild(tempDiv);
 
     // Create root and render the ReceiptContainer content into the temp div
     const root = createRoot(tempDiv);
-    root.render(<ReceiptContainer />);
+    root.render(
+      <div className="bg-white">
+        <ReceiptContainer />
+      </div>
+    );
 
     try {
-      // Wait a moment for the content to render
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for content and images to load
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(tempDiv, {
-        scale: 2,
+        scale: 3, // High quality
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
       });
 
       // Convert canvas to blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => resolve(blob!), "image/png", 1.0);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create blob"));
+          }
+        }, "image/png", 1.0);
       });
 
       // Check if Web Share API is available
-      if (navigator.share) {
-        const file = new File([blob], "transaction-receipt.png", {
-          type: "image/png",
-        });
-        await navigator.share({
-          files: [file],
-          title: "Transaction Receipt",
-        });
+      if (navigator.share && navigator.canShare) {
+        const file = new File(
+          [blob],
+          `NattyPay_Receipt_${transaction.transactionRef || 'transaction'}.png`,
+          {
+            type: "image/png",
+          }
+        );
+
+        // Check if files can be shared
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "NattyPay Transaction Receipt",
+            text: `Transaction Receipt from NattyPay - Ref: ${transaction.transactionRef || 'N/A'}`,
+          });
+          toast.success("Receipt shared successfully!", { id: toastId });
+        } else {
+          // Fallback: try to copy image to clipboard or download
+          throw new Error("Sharing files not supported");
+        }
       } else {
-        // Fallback to download if sharing is not supported
-        const link = document.createElement("a");
-        link.download = "transaction-receipt.png";
-        link.href = URL.createObjectURL(blob);
-        link.click();
+        // Fallback: try to copy image to clipboard
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "image/png": blob,
+            }),
+          ]);
+          toast.success("Receipt copied to clipboard!", { id: toastId });
+        } catch (clipboardError) {
+          // Final fallback: download
+          const link = document.createElement("a");
+          link.download = `NattyPay_Receipt_${transaction.transactionRef || 'transaction'}.png`;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          URL.revokeObjectURL(link.href);
+          toast.success("Receipt downloaded!", { id: toastId });
+        }
       }
-    } catch (error) {
-      console.error("Error sharing/generating PNG:", error);
+    } catch (error: any) {
+      // Don't show error if user cancelled the share
+      if (error.name === 'AbortError') {
+        toast.dismiss(toastId);
+      } else {
+        console.error("Error sharing receipt:", error);
+        toast.error("Failed to share receipt", { id: toastId });
+      }
     } finally {
       // Clean up: unmount the root and remove the temporary div
       root.unmount();

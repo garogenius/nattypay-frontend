@@ -19,10 +19,12 @@ import { initializeFCM } from "@/services/fcm.service";
 import { User } from "@/constants/types";
 import images from "../../../public/images";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "@/store/theme.store";
 
 const TwoFactorAuthContent = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const theme = useTheme();
 
   const { authEmail } = useAuthEmailStore();
   const [token, setToken] = useState("");
@@ -304,15 +306,15 @@ const TwoFactorAuthContent = () => {
         </div>
       </div>
 
-      {/* Right Panel - White Background with Form */}
-      <div className="w-full lg:w-[60%] bg-white flex flex-col items-center justify-center px-6 sm:px-8 py-12">
+      {/* Right Panel - Theme-aware Background with Form */}
+      <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
         <div className="w-full max-w-md">
           {/* Form Card */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
+            <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2`}>
               Verify Two Factor Authentication
             </h2>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-6`}>
               Enter the code sent to {authEmail || "your email"}
             </p>
 
@@ -336,10 +338,11 @@ const TwoFactorAuthContent = () => {
                           {...rest}
                           style={{
                             ...(style || {}),
-                            color: "#141414",
-                            WebkitTextFillColor: "#141414",
+                            color: theme === "dark" ? "#ffffff" : "#141414",
+                            WebkitTextFillColor: theme === "dark" ? "#ffffff" : "#141414",
+                            caretColor: theme === "dark" ? "#ffffff" : "#141414",
                           }}
-                          className="w-12 h-12 bg-transparent border-b-2 border-gray-300 text-center text-xl font-medium outline-none focus:border-[#D4B139] text-[#141414]"
+                          className={`w-12 h-12 bg-transparent border-b-2 ${theme === "dark" ? "border-gray-600" : "border-gray-300"} text-center text-xl font-medium outline-none focus:border-[#D4B139] ${theme === "dark" ? "text-white" : "text-[#141414]"}`}
                         />
                       );
                     }}
@@ -347,7 +350,7 @@ const TwoFactorAuthContent = () => {
                 </div>
 
                 {/* Resend Text */}
-                <p className="text-center text-sm text-gray-600">
+                <p className={`text-center text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
                   {resendTimer && resendTimer > 0 ? (
                     <>
                       Didn't receive the code?{" "}
@@ -390,7 +393,7 @@ const TwoFactorAuthContent = () => {
             </div>
 
             {/* Footer */}
-            <div className="text-center text-[9px] xs:text-xs text-gray-500 mt-8 px-2">
+            <div className={`text-center text-[9px] xs:text-xs ${theme === "dark" ? "text-white/60" : "text-gray-500"} mt-8 px-2`}>
               <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
                 <span>Licenced by CBN</span>
                 <Image

@@ -329,7 +329,7 @@ const LoginContent = () => {
         <motion.div
           whileInView={{ opacity: [0, 1] }}
           transition={{ duration: 0.5, type: "tween" }}
-          className="w-full max-w-md sm:max-w-lg space-y-8 bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-2xl px-6 2xs:px-8 sm:px-8 py-6 2xs:py-8"
+          className="w-full max-w-md sm:max-w-lg space-y-8 bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-2xl px-6 2xs:px-8 sm:px-8 py-6 2xs:py-8 shadow-2xl shadow-black/40 dark:shadow-primary/30"
         >
           <div className="text-white flex flex-col items-center justify-center w-full text-center">
             {/* <Image

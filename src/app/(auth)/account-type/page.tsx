@@ -1,10 +1,14 @@
+"use client";
+
 import AccountTypeSelector from "@/components/auth/accountType/AccountTypeSelector";
 import Link from "next/link";
 import React from "react";
 import Image from "next/image";
 import images from "../../../../public/images";
+import { useTheme } from "@/store/theme.store";
 
 const AccountTypePage = () => {
+  const theme = useTheme();
   return (
     <div className="relative flex h-full min-h-screen w-full overflow-hidden">
       {/* Left Panel - Yellow/Gold Background */}
@@ -35,8 +39,8 @@ const AccountTypePage = () => {
         </div>
       </div>
 
-      {/* Right Panel - White Background */}
-      <div className="w-full lg:w-[60%] bg-white flex flex-col items-center justify-center px-6 sm:px-8 py-12">
+      {/* Right Panel - Theme-aware Background */}
+      <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
         <div className="w-full max-w-md space-y-8">
           {/* Logo - NattyPay Logo */}
           <div className="flex justify-center mb-8">
@@ -52,8 +56,8 @@ const AccountTypePage = () => {
 
           {/* Title */}
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold text-gray-900">Choose Account Type</h2>
-            <p className="text-gray-600">Are you creating a business or personal account?</p>
+            <h2 className={`text-3xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Choose Account Type</h2>
+            <p className={theme === "dark" ? "text-white/80" : "text-gray-600"}>Are you creating a business or personal account?</p>
           </div>
 
           {/* Account Type Selector */}
@@ -62,7 +66,7 @@ const AccountTypePage = () => {
           </div>
 
           {/* Login Link */}
-          <p className="mt-6 text-center text-sm text-gray-400">
+          <p className={`mt-6 text-center text-sm ${theme === "dark" ? "text-white/70" : "text-gray-400"}`}>
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-[#D4B139] hover:text-[#c7a42f]">
               Sign in
@@ -70,7 +74,7 @@ const AccountTypePage = () => {
           </p>
 
           {/* Footer */}
-          <div className="text-center text-xs text-gray-500 mt-8">
+          <div className={`text-center text-xs ${theme === "dark" ? "text-white/60" : "text-gray-500"} mt-8`}>
             <p className="flex items-center justify-center gap-2 flex-wrap">
               <span>Licenced by CBN</span>
               <Image

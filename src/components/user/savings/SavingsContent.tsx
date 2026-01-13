@@ -215,23 +215,46 @@ const SavingsContent: React.FC = () => {
         </div>
 
       <div className="rounded-2xl bg-bg-600 dark:bg-bg-1100 p-6 flex flex-col gap-6">
-        {/* Sub-tabs */}
-        <div className="flex items-center gap-1.5 sm:gap-2 border-b border-white/10 pb-2 overflow-x-auto">
-          {[
-            { key: "active", label: "Active" },
-            { key: "completed", label: "Completed" },
-            { key: "broken", label: "Broken" },
-          ].map((st) => (
+        {/* Sub-tabs with Action Button */}
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+            {[
+              { key: "active", label: "Active" },
+              { key: "completed", label: "Completed" },
+              { key: "broken", label: "Broken" },
+            ].map((st) => (
+              <button
+                key={st.key}
+                onClick={() => setSubTab(st.key as "active" | "completed" | "broken")}
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  subTab === st.key ? "bg-white/10 text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Action Button - Shows based on active tab */}
+          {subTab === "active" && (
             <button
-              key={st.key}
-              onClick={() => setSubTab(st.key as "active" | "completed" | "broken")}
-              className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-                subTab === st.key ? "bg-white/10 text-white" : "text-white/60 hover:text-white"
-              }`}
+              onClick={() => {
+                if (tab === "fixed") {
+                  setOpenFixedDeposit(true);
+                } else if (tab === "target") {
+                  setOpenTarget(true);
+                } else if (tab === "easylife") {
+                  setOpenEasy(true);
+                }
+              }}
+              className="flex items-center gap-2 bg-[#D4B139] hover:bg-[#c7a42f] text-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
             >
-              {st.label}
+              <FiPlus className="text-sm sm:text-base" />
+              <span>
+                {tab === "fixed" ? "New Fixed Deposit" : tab === "target" ? "New Target Savings" : "New Easy-life Plan"}
+              </span>
             </button>
-          ))}
+          )}
         </div>
 
         {/* Loading State */}

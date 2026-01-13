@@ -37,6 +37,7 @@ import Cookies from "js-cookie";
 import useUserStore from "@/store/user.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { getDeviceId, initializeFCM } from "@/services/fcm.service";
+import { useTheme } from "@/store/theme.store";
 
 const schema = yup.object().shape({
   identifier: yup.string().when("hasStoredIdentifier", {
@@ -73,6 +74,7 @@ const LoginWithBiometricContent = () => {
   const { setAuthEmail } = useAuthEmailStore();
   const { setUser, setIsLoggedIn } = useUserStore();
   const queryClient = useQueryClient();
+  const theme = useTheme();
   const [showPasscode, setShowPasscode] = useState(false);
   const [showBiometricModal, setShowBiometricModal] = useState(false);
   const [biometricType, setBiometricType] = useState<"fingerprint" | "face">("fingerprint");
@@ -535,11 +537,11 @@ const LoginWithBiometricContent = () => {
           </div>
         </div>
 
-        {/* Right Panel - White Background with Form */}
-        <div className="w-full lg:w-[60%] bg-white flex flex-col items-center justify-center px-6 sm:px-8 py-12">
+        {/* Right Panel - Theme-aware Background with Form */}
+        <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
           <div className="w-full max-w-md">
             {/* Form Card */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg">
+            <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
               {/* Logo Icon */}
               <div className="flex justify-center mb-6">
                   <Image
@@ -553,12 +555,12 @@ const LoginWithBiometricContent = () => {
 
               {/* Welcome Message */}
               {userName && (
-                <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2 text-center`}>
                   Welcome Back {userName}!
                 </h2>
               )}
               {storedIdentifier && (
-                <p className="text-lg font-bold text-gray-900 mb-6 text-center">
+                <p className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-6 text-center`}>
                   {storedIdentifier.masked}
                 </p>
               )}
@@ -572,7 +574,7 @@ const LoginWithBiometricContent = () => {
                       <div className="flex flex-col items-center w-full">
                         <div className="w-40 h-40 flex items-center justify-center mb-6">
                         <svg
-                            className="w-40 h-40 text-gray-700"
+                            className={`w-40 h-40 ${theme === "dark" ? "text-white/80" : "text-gray-700"}`}
                           fill="none"
                           stroke="currentColor"
                             strokeWidth={1.5}
@@ -585,7 +587,7 @@ const LoginWithBiometricContent = () => {
                           />
                         </svg>
                         </div>
-                        <p className="text-base font-medium text-gray-700 mb-6">
+                        <p className={`text-base font-medium ${theme === "dark" ? "text-white" : "text-gray-700"} mb-6`}>
                           Click to log in with Fingerprint
                         </p>
                         <CustomButton
@@ -603,10 +605,10 @@ const LoginWithBiometricContent = () => {
                       <div className="flex flex-col items-center w-full">
                         <div className="w-40 h-40 flex flex-col items-center justify-center mb-6">
                           {/* Dashed square outline */}
-                          <div className="relative w-28 h-28 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center">
+                          <div className={`relative w-28 h-28 border-2 border-dashed ${theme === "dark" ? "border-white/40" : "border-gray-400"} rounded-lg flex items-center justify-center`}>
                             {/* Face icon inside */}
                           <svg
-                              className="w-20 h-20 text-gray-700"
+                              className={`w-20 h-20 ${theme === "dark" ? "text-white/80" : "text-gray-700"}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -621,11 +623,11 @@ const LoginWithBiometricContent = () => {
                           </div>
                           {/* Two dots below */}
                           <div className="flex gap-1.5 mt-3">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <div className={`w-2 h-2 ${theme === "dark" ? "bg-white/40" : "bg-gray-400"} rounded-full`}></div>
+                            <div className={`w-2 h-2 ${theme === "dark" ? "bg-white/40" : "bg-gray-400"} rounded-full`}></div>
                           </div>
                         </div>
-                        <p className="text-base font-medium text-gray-700 mb-6">
+                        <p className={`text-base font-medium ${theme === "dark" ? "text-white" : "text-gray-700"} mb-6`}>
                           Click to log in with FaceID
                         </p>
                         <CustomButton
@@ -645,7 +647,7 @@ const LoginWithBiometricContent = () => {
                   <CustomButton
                     type="button"
                     onClick={() => setShowPasscodeForm(true)}
-                    className="w-full bg-transparent border-2 border-gray-300 hover:border-[#D4B139] text-gray-700 hover:text-[#D4B139] font-medium py-3 rounded-lg transition-colors mt-4"
+                    className={`w-full bg-transparent border-2 ${theme === "dark" ? "border-gray-600 hover:border-[#D4B139]" : "border-gray-300 hover:border-[#D4B139]"} ${theme === "dark" ? "text-white hover:text-[#D4B139]" : "text-gray-700 hover:text-[#D4B139]"} font-medium py-3 rounded-lg transition-colors mt-4`}
                   >
                     Login with Passcode
                   </CustomButton>
@@ -657,11 +659,12 @@ const LoginWithBiometricContent = () => {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {!storedIdentifier && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">Email or Phone Number</label>
+                    <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Email or Phone Number</label>
                     <input
                       type="text"
                       placeholder="Enter your email or phone number"
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent"
+                      className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                      style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                       {...register("identifier")}
                     />
                     {errors.identifier && (
@@ -670,18 +673,19 @@ const LoginWithBiometricContent = () => {
                   </div>
                 )}
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700">Passcode</label>
+                  <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Passcode</label>
                   <div className="relative">
                     <input
                       type={showPasscode ? "text" : "password"}
                       placeholder="At least 8 Characters"
-                      className="w-full border border-gray-300 rounded-lg py-3 px-4 pr-10 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent"
+                      className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                      style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                       {...register("password")}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPasscode(!showPasscode)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === "dark" ? "text-white/70" : "text-gray-500"}`}
                     >
                       {showPasscode ? (
                         <AiOutlineEye className="w-5 h-5" />
@@ -715,7 +719,7 @@ const LoginWithBiometricContent = () => {
                     <CustomButton
                       type="button"
                       onClick={() => setShowPasscodeForm(false)}
-                      className="w-full bg-transparent border-2 border-gray-300 hover:border-[#D4B139] text-gray-700 hover:text-[#D4B139] font-medium py-3 rounded-lg transition-colors mt-2"
+                      className={`w-full bg-transparent border-2 ${theme === "dark" ? "border-gray-600 hover:border-[#D4B139]" : "border-gray-300 hover:border-[#D4B139]"} ${theme === "dark" ? "text-white hover:text-[#D4B139]" : "text-gray-700 hover:text-[#D4B139]"} font-medium py-3 rounded-lg transition-colors mt-2`}
                     >
                       Use Biometric Instead
                     </CustomButton>
@@ -725,7 +729,7 @@ const LoginWithBiometricContent = () => {
 
               {/* Account Options */}
               <div className="mt-6 space-y-2">
-                <p className="text-sm text-gray-600 text-center">
+                <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} text-center`}>
                   Don't have a NattyPay account yet?{" "}
                   <Link href="/account-type" className="text-[#D4B139] font-medium">
                     Open account
@@ -741,18 +745,18 @@ const LoginWithBiometricContent = () => {
                       setValue("identifier", "");
                       setValue("hasStoredIdentifier", false);
                     }}
-                    className="text-sm text-gray-600 mb-1 block w-full"
+                    className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-1 block w-full`}
                   >
                     Switch account
                   </button>
-                  <Link href="/login" className="text-sm text-gray-600">
+                  <Link href="/login" className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
                     Login with Finger Print or Face ID
                   </Link>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="text-center text-[9px] xs:text-xs text-gray-500 mt-8 px-2">
+              <div className={`text-center text-[9px] xs:text-xs ${theme === "dark" ? "text-white/60" : "text-gray-500"} mt-8 px-2`}>
                 <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
                   <span>Licenced by CBN</span>
                   <Image

@@ -27,6 +27,7 @@ import Cookies from "js-cookie";
 import { useQueryClient } from "@tanstack/react-query";
 import { isTokenExpired } from "@/utils/tokenChecker";
 import images from "../../../../public/images";
+import { useTheme } from "@/store/theme.store";
 
 const schema = yup.object().shape({
   verificationType: yup.string().required("Please select BVN or NIN"),
@@ -51,6 +52,7 @@ const OpenAccountContent = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useUserStore();
+  const theme = useTheme();
   const [showBvnInfo, setShowBvnInfo] = useState(false);
   const [showFaceCaptureModal, setShowFaceCaptureModal] = useState(false);
   const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
@@ -590,24 +592,24 @@ const OpenAccountContent = () => {
           </div>
         </div>
 
-        {/* Right Panel - Light Gray Background with Form */}
-        <div className="w-full lg:w-[60%] bg-gray-100 flex flex-col items-center justify-center px-6 sm:px-8 py-12">
+        {/* Right Panel - Theme-aware Background with Form */}
+        <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-gray-100"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
           <div className="w-full max-w-md">
             {/* Form Card */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg">
+            <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
               {verificationStep === "enter-details" ? (
                 <>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                  <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2 text-center`}>
                     Open Account
                   </h2>
-                  <p className="text-sm text-gray-600 mb-6 text-center">
+                  <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-6 text-center`}>
                     Verify your identity using BVN or NIN to open your account.
                   </p>
 
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Verification Type Selection */}
                     <div>
-                      <p className="text-sm text-gray-700 mb-4">I want to open account with</p>
+                      <p className={`text-sm ${theme === "dark" ? "text-white" : "text-gray-700"} mb-4`}>I want to open account with</p>
                       <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -616,7 +618,7 @@ const OpenAccountContent = () => {
                             {...register("verificationType")}
                             className="w-5 h-5 text-[#D4B139] border-gray-300 focus:ring-[#D4B139]"
                           />
-                          <span className="text-gray-900">BVN</span>
+                          <span className={theme === "dark" ? "text-white" : "text-gray-900"}>BVN</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -625,7 +627,7 @@ const OpenAccountContent = () => {
                             {...register("verificationType")}
                             className="w-5 h-5 text-[#D4B139] border-gray-300 focus:ring-[#D4B139]"
                           />
-                          <span className="text-gray-900">NIN</span>
+                          <span className={theme === "dark" ? "text-white" : "text-gray-900"}>NIN</span>
                         </label>
                       </div>
                     </div>
@@ -634,13 +636,13 @@ const OpenAccountContent = () => {
                     {verificationType === "BVN" ? (
                       <>
                         <div className="flex flex-col gap-1">
-                          <label className="text-sm font-medium text-gray-700">Your BVN</label>
+                          <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Your BVN</label>
                           <input
                             type="text"
                             placeholder="Enter your 11-digit BVN"
                             maxLength={11}
-                            className="w-full border border-gray-300 rounded-lg py-3 px-4 text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent bg-transparent"
-                            style={{ color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
+                            className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-black placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                            style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                             {...register("bvn")}
                           />
                           {errors.bvn && (
@@ -649,7 +651,7 @@ const OpenAccountContent = () => {
                           <button
                             type="button"
                             onClick={handleInfoClick}
-                            className="flex items-center gap-2 text-sm text-gray-600 mt-2"
+                            className={`flex items-center gap-2 text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mt-2`}
                           >
                             Why we need your BVN
                             <FiInfo className="w-4 h-4" />
@@ -658,7 +660,7 @@ const OpenAccountContent = () => {
 
                         {/* BVN Verification Method - Face is default, OTP as alternative */}
                         <div className="text-center">
-                          <p className="text-xs text-gray-600 mb-2">
+                          <p className={`text-xs ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-2`}>
                             Using face verification for quick and secure verification
                           </p>
                           <button
@@ -672,12 +674,12 @@ const OpenAccountContent = () => {
                       </>
                     ) : (
                       <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-gray-700">Your NIN</label>
+                        <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Your NIN</label>
                         <input
                           type="text"
                           placeholder="Enter your NIN"
-                          className="w-full border border-gray-300 rounded-lg py-3 px-4 text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent bg-transparent"
-                          style={{ color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
+                          className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-black placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                          style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                           {...register("nin")}
                         />
                         {errors.nin && (
@@ -686,7 +688,7 @@ const OpenAccountContent = () => {
                         <button
                           type="button"
                           onClick={handleInfoClick}
-                          className="flex items-center gap-2 text-sm text-gray-600 mt-2"
+                          className={`flex items-center gap-2 text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mt-2`}
                         >
                           Why we need your NIN
                           <FiInfo className="w-4 h-4" />
@@ -714,7 +716,7 @@ const OpenAccountContent = () => {
                     </div>
 
                     {/* Instruction Text */}
-                    <p className="text-xs text-gray-600 text-center">
+                    <p className={`text-xs ${theme === "dark" ? "text-white/80" : "text-gray-600"} text-center`}>
                       To check your {verificationType === "BVN" ? "BVN" : "NIN"}, dial 5650# using
                       the phone number linked to your bank account.
                     </p>
@@ -722,8 +724,8 @@ const OpenAccountContent = () => {
                 </>
               ) : verificationStep === "verify-otp" ? (
                 <>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify BVN</h2>
-                  <p className="text-sm text-gray-600 mb-6">
+                  <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2`}>Verify BVN</h2>
+                  <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-6`}>
                     Enter the 6-digit verification code sent to the phone number linked to your BVN
                   </p>
 
@@ -743,15 +745,15 @@ const OpenAccountContent = () => {
                           renderInput={(props) => (
                             <input
                               {...props}
-                              className="w-12 h-12 bg-transparent border-b-2 border-gray-300 text-center text-xl font-medium outline-none focus:border-[#D4B139] text-[#141414]"
-                              style={{ color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
+                              className={`w-12 h-12 bg-transparent border-b-2 ${theme === "dark" ? "border-gray-600" : "border-gray-300"} text-center text-xl font-medium outline-none focus:border-[#D4B139] ${theme === "dark" ? "text-white" : "text-[#141414]"}`}
+                              style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
                             />
                           )}
                         />
                       </div>
 
                       {/* Resend Text */}
-                      <p className="text-center text-sm text-gray-600">
+                      <p className={`text-center text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
                         {resendTimer && resendTimer > 0 ? (
                           <>
                             Didn't receive the code?{" "}
@@ -799,7 +801,7 @@ const OpenAccountContent = () => {
               ) : null}
 
               {/* Footer */}
-              <div className="text-center text-[9px] xs:text-xs text-gray-500 mt-8 px-2">
+              <div className={`text-center text-[9px] xs:text-xs ${theme === "dark" ? "text-white/60" : "text-gray-500"} mt-8 px-2`}>
                 <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
                   <span>Licenced by CBN</span>
                   <Image

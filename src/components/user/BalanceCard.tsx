@@ -10,6 +10,7 @@ import useOnClickOutside from "@/hooks/useOnClickOutside";
 import { Wallet } from "@/constants/types";
 import { ICurrencyAccount } from "@/api/currency/currency.types";
 import AddMoneyModal from "@/components/modals/AddMoneyModal";
+import { createPortal } from "react-dom";
 
 interface AccountOption {
   currency: string;
@@ -148,66 +149,77 @@ const BalanceCard = ({
   }
 
   return (
-    <div className="bg-bg-600 dark:bg-bg-1100 rounded-xl px-4 py-4 flex flex-col gap-2 sm:gap-3">
-      {/* Header: currency icon + account label + chevron */}
-      <div className="relative flex items-center gap-2 text-text-200 dark:text-text-800">
+    <div className="bg-[#D4B139] rounded-xl px-4 py-4 flex flex-col gap-2 sm:gap-3 relative z-20">
+      {/* Header: currency icon + account label */}
+      <div className="relative flex items-center gap-2">
         <Image 
           src={getCurrencyIconByString(currentCurrency) || ""} 
           alt="currency" 
           className="w-8 h-8" 
         />
-        <p className="text-sm sm:text-base font-semibold uppercase">
+        <p className="text-[#141414] text-sm sm:text-base font-semibold uppercase flex-1">
           {selectedAccount?.label || `${currentCurrency.toUpperCase()} Account`}
         </p>
         {/* Only show dropdown if there are 2 or more accounts (i.e., at least one currency account besides NGN) */}
         {accountOptions.length > 1 && (
           <MdKeyboardArrowDown 
             onClick={() => setOpen((v) => !v)} 
-            className="ml-auto cursor-pointer hover:opacity-70 transition-opacity" 
+            className="ml-1 cursor-pointer hover:opacity-70 transition-opacity text-[#141414]" 
           />
         )}
 
-        {open && accountOptions.length > 1 && (
-          <div ref={menuRef} className="absolute right-0 top-9 z-50 w-56 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-text-200 dark:text-text-800 font-semibold">Select Account</p>
-              <MdClose onClick={() => setOpen(false)} className="cursor-pointer" />
-            </div>
-            {accountOptions.map((opt, idx, arr) => (
-              <button
-                key={`${opt.type}-${opt.currency}-${idx}`}
-                onClick={() => {
-                  setSelectedAccount(opt);
-                  setOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 py-2.5 ${idx !== arr.length - 1 ? "border-b border-border-800 dark:border-border-700" : ""}`}
-              >
-                <span className="text-lg">{getCurrencyFlag(opt.currency)}</span>
-                <span className="text-left text-text-200 dark:text-text-800 text-sm flex-1">{opt.label}</span>
-                <span className={`w-3.5 h-3.5 rounded-full border ${
-                  selectedAccount?.currency === opt.currency && selectedAccount?.type === opt.type
-                    ? "bg-secondary border-secondary" 
-                    : "border-border-800 dark:border-border-700"
-                }`}></span>
-              </button>
-            ))}
-          </div>
-        )}
+        {open && accountOptions.length > 1 &&
+          (typeof document !== "undefined"
+            ? createPortal(
+                <div className="fixed inset-0 z-[100000]" onClick={() => setOpen(false)}>
+                  <div className="absolute inset-0" />
+                  <div
+                    ref={menuRef}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-4 top-[110px] z-[100001] w-56 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-3"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm text-text-200 dark:text-text-800 font-semibold">Select Account</p>
+                      <MdClose onClick={() => setOpen(false)} className="cursor-pointer" />
+                    </div>
+                    {accountOptions.map((opt, idx, arr) => (
+                      <button
+                        key={`${opt.type}-${opt.currency}-${idx}`}
+                        onClick={() => {
+                          setSelectedAccount(opt);
+                          setOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 py-2.5 ${idx !== arr.length - 1 ? "border-b border-border-800 dark:border-border-700" : ""}`}
+                      >
+                        <span className="text-lg">{getCurrencyFlag(opt.currency)}</span>
+                        <span className="text-left text-text-200 dark:text-text-800 text-sm flex-1">{opt.label}</span>
+                        <span className={`w-3.5 h-3.5 rounded-full border ${
+                          selectedAccount?.currency === opt.currency && selectedAccount?.type === opt.type
+                            ? "bg-secondary border-secondary" 
+                            : "border-border-800 dark:border-border-700"
+                        }`}></span>
+                      </button>
+                    ))}
+                  </div>
+                </div>,
+                document.body
+              )
+            : null)}
       </div>
 
       {/* Subtitle + eye toggle */}
       <div className="flex items-center gap-2 font-semibold">
-        <p className="text-text-200 dark:text-text-800 text-xs sm:text-sm">Main Balance</p>
+        <p className="text-[#141414] text-xs sm:text-sm">Main Balance</p>
         {isBalanceVisible ? (
-          <FiEyeOff onClick={toggleBalanceVisibility} className="cursor-pointer text-text-200 dark:text-text-800 text-base" />
+          <FiEyeOff onClick={toggleBalanceVisibility} className="cursor-pointer text-[#141414] text-base" />
         ) : (
-          <FiEye onClick={toggleBalanceVisibility} className="cursor-pointer text-text-200 dark:text-text-800 text-base" />
+          <FiEye onClick={toggleBalanceVisibility} className="cursor-pointer text-[#141414] text-base" />
         )}
       </div>
 
       {/* Amount + yellow action */}
       <div className="flex items-center justify-between">
-        <p className="text-text-400 text-2xl sm:text-3xl font-semibold">
+        <p className="text-[#141414] text-2xl sm:text-3xl font-semibold">
           {isBalanceVisible 
             ? `${currencySymbol} ${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
             : "---"}
@@ -216,7 +228,7 @@ const BalanceCard = ({
           type="button"
           aria-label="add"
           onClick={() => setIsAddMoneyModalOpen(true)}
-          className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-secondary text-black font-bold grid place-items-center hover:bg-[#c7a42f] transition-colors cursor-pointer"
+          className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#141414] text-white font-bold grid place-items-center hover:bg-[#2a2a2a] transition-colors cursor-pointer text-xl"
         >
           +
         </button>

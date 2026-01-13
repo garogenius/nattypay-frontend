@@ -76,18 +76,25 @@ const ChangeTransactionPinModal: React.FC<ChangeTransactionPinModalProps> = ({ i
   const { mutate: requestOtp, isPending: requestingOtp } = useResetOtp(handleOtpError, handleOtpSuccess);
   const { mutate: resetPin, isPending: resettingPin } = useResetPin(handleResetError, handleResetSuccess);
 
-  const validReset =
-    /^\d{6}$/.test(otpCode) &&
-    /^\d{4}$/.test(newPin) &&
-    newPin === confirmPin;
+  // Validate reset form - ensure all fields are filled and match
+  // OTPs are 4–6 digits depending on provider; accept either
+  const validReset = React.useMemo(() => {
+    return (
+      step === "reset" &&
+      /^\d{4,6}$/.test(otpCode) &&
+      /^\d{4}$/.test(newPin) &&
+      /^\d{4}$/.test(confirmPin) &&
+      newPin === confirmPin
+    );
+  }, [step, otpCode, newPin, confirmPin]);
 
   const handleSubmit = async () => {
     if (step !== "reset" || resettingPin) return;
 
-    if (!/^\d{6}$/.test(otpCode)) {
+    if (!/^\d{4,6}$/.test(otpCode)) {
       ErrorToast({
         title: "Validation Error",
-        descriptions: ["OTP code must be exactly 6 digits"],
+        descriptions: ["OTP code must be 4 to 6 digits"],
       });
       return;
     }

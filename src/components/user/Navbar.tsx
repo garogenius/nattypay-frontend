@@ -145,26 +145,29 @@ const Navbar = () => {
 
   return (
     <div className="w-full z-40 xs:z-50 sticky top-0 flex items-center gap-3 bg-bg-600 dark:bg-bg-1100 px-4 2xs:px-6 lg:px-8 py-3 border-b border-[#253041]">
-      {/* Left: menu + search */}
-      <FiMenu
-        onClick={toggleMenu}
-        className="lg:hidden text-2xl text-text-200 dark:text-text-400 mr-1"
-      />
-      <div className="flex-1 max-w-[820px]" ref={searchRef}>
-        <div className="relative">
+      <FiMenu onClick={toggleMenu} className="lg:hidden text-2xl text-text-200 dark:text-text-400 mr-1" />
+
+      <div className="flex-1 max-w-[820px] flex items-center gap-2" ref={searchRef}>
+        <div className="relative flex-1">
           <div className="w-full flex items-center gap-2 bg-bg-600 dark:bg-bg-1100 border border-[#2C3947] rounded-xl px-4 py-2.5">
             <FiSearch className="text-text-200 dark:text-text-400" />
             <input
               aria-label="search"
-              placeholder="Search transactions, bills or payments..."
+              placeholder="Search"
               className="bg-transparent outline-none w-full text-text-200 dark:text-text-800 placeholder-white"
               value={searchValue}
-              onChange={(e)=> setSearchValue(e.target.value)}
-              onFocus={()=> setSearchOpen(true)}
-              onKeyDown={(e)=> { if (e.key === 'Enter') onSubmitSearch(); }}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSubmitSearch();
+              }}
             />
             {searchOpen && (
-              <button aria-label="close" onClick={()=> setSearchOpen(false)} className="text-white/70 hover:text-white">
+              <button
+                aria-label="close"
+                onClick={() => setSearchOpen(false)}
+                className="text-white/70 hover:text-white"
+              >
                 <FiX />
               </button>
             )}
@@ -175,7 +178,9 @@ const Navbar = () => {
               <div className="flex items-center justify-between px-4 pt-4 pb-2">
                 <p className="text-white/80 text-sm">Recent Search</p>
                 {recent.length > 0 && (
-                  <button className="text-[#D4B139] text-sm" onClick={()=> persistRecent([])}>Clear All</button>
+                  <button className="text-[#D4B139] text-sm" onClick={() => persistRecent([])}>
+                    Clear All
+                  </button>
                 )}
               </div>
               <div className="h-px bg-[#2C3947]" />
@@ -185,81 +190,94 @@ const Navbar = () => {
                     <FiClock className="text-white/30 text-2xl" />
                     <p className="text-white/60 text-sm">No recent searches</p>
                   </div>
-                ) : recent.map((r, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-white/5">
-                    <button
-                      className="flex items-center gap-3 flex-1 text-left"
-                      onClick={()=> { setSearchValue(r); onSubmitSearch(); }}
+                ) : (
+                  recent.map((r, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-white/5"
                     >
-                      <FiClock className="text-white/50" />
-                      <span className="text-sm text-white/80">{r}</span>
-                    </button>
-                    <button aria-label="remove" onClick={()=> persistRecent(recent.filter((x)=> x!==r))} className="text-white/40 hover:text-white/70">
-                      <FiX />
-                    </button>
+                      <button
+                        className="flex items-center gap-3 flex-1 text-left"
+                        onClick={() => {
+                          setSearchValue(r);
+                          onSubmitSearch();
+                        }}
+                      >
+                        <FiClock className="text-white/50" />
+                        <span className="text-sm text-white/80">{r}</span>
+                      </button>
+                      <button
+                        aria-label="remove"
+                        onClick={() => persistRecent(recent.filter((x) => x !== r))}
+                        className="text-white/40 hover:text-white/70"
+                      >
+                        <FiX />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div ref={bellRef} className="relative">
+          <FiBell
+            onClick={() => setBellOpen((v) => !v)}
+            className="text-lg sm:text-xl text-white cursor-pointer"
+          />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-semibold rounded-full px-1 py-[1px] min-w-[16px] text-center">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+          {bellOpen && (
+            <div className="absolute right-0 mt-3 w-64 sm:w-80 bg-bg-600 dark:bg-bg-1100 border border-[#2C3947] rounded-xl shadow-2xl overflow-hidden z-50">
+              <div className="px-4 py-3 border-b border-[#2C3947] flex items-center justify-between">
+                <span className="text-sm text-[#E7EAEE] font-semibold">Notifications</span>
+                {notifications.length > 0 && (
+                  <Link
+                    href="/user/notifications"
+                    onClick={() => setBellOpen(false)}
+                    className="text-xs text-[#D4B139] hover:text-[#E5C249]"
+                  >
+                    View all
+                  </Link>
+                )}
+              </div>
+              <div className="max-h-80 overflow-auto">
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+                    <FiBell className="text-white/30 text-2xl" />
+                    <p className="text-white/60 text-sm">No notifications</p>
                   </div>
-                ))}
+                ) : (
+                  notifications.map((n) => (
+                    <Link
+                      key={n.id}
+                      href="/user/notifications"
+                      onClick={() => setBellOpen(false)}
+                      className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 border-t border-[#2C3947] first:border-t-0"
+                    >
+                      <span
+                        className={`mt-1 w-2 h-2 rounded-full ${
+                          !n.isRead ? "bg-secondary" : "bg-[#2C3947]"
+                        }`}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm text-[#E7EAEE]">{n.title}</p>
+                        <p className="text-xs text-[#9AA3B2] mt-0.5 line-clamp-2">{n.body}</p>
+                        <p className="text-xs text-[#9AA3B2] mt-1">{timeAgo(n.createdAt)}</p>
+                      </div>
+                    </Link>
+                  ))
+                )}
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Notification */}
-      <div ref={bellRef} className="relative hidden sm:block mr-2">
-        <FiBell onClick={() => setBellOpen((v) => !v)} className="text-2xl text-white cursor-pointer" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-semibold rounded-full px-1.5 py-[2px] min-w-[18px] text-center">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-        {bellOpen && (
-          <div className="absolute right-0 mt-3 w-80 bg-bg-600 dark:bg-bg-1100 border border-[#2C3947] rounded-xl shadow-2xl overflow-hidden z-50">
-            <div className="px-4 py-3 border-b border-[#2C3947] flex items-center justify-between">
-              <span className="text-sm text-[#E7EAEE] font-semibold">Notifications</span>
-              {notifications.length > 0 && (
-                <Link
-                  href="/user/notifications"
-                  onClick={() => setBellOpen(false)}
-                  className="text-xs text-[#D4B139] hover:text-[#E5C249]"
-                >
-                  View all
-                </Link>
-              )}
-            </div>
-            <div className="max-h-80 overflow-auto">
-              {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                  <FiBell className="text-white/30 text-2xl" />
-                  <p className="text-white/60 text-sm">No notifications</p>
-                </div>
-              ) : (
-                notifications.map((n) => (
-                  <Link
-                    key={n.id}
-                    href="/user/notifications"
-                    onClick={() => setBellOpen(false)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 border-t border-[#2C3947] first:border-t-0"
-                  >
-                    <span
-                      className={`mt-1 w-2 h-2 rounded-full ${
-                        !n.isRead ? "bg-secondary" : "bg-[#2C3947]"
-                      }`}
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm text-[#E7EAEE]">{n.title}</p>
-                      <p className="text-xs text-[#9AA3B2] mt-0.5 line-clamp-2">{n.body}</p>
-                      <p className="text-xs text-[#9AA3B2] mt-1">{timeAgo(n.createdAt)}</p>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Profile pill + dropdown */}
       <div ref={dropdownRef} className="relative flex items-center ml-auto">
         <button
           onClick={() => setOpen((v) => !v)}
@@ -294,10 +312,16 @@ const Navbar = () => {
             <Link href="/user/settings/profile" className="block px-4 py-3 text-sm text-[#E7EAEE] hover:bg-white/5">
               My Account
             </Link>
-            <Link href="/user/settings/profile" className="block px-4 py-3 text-sm text-[#E7EAEE] border-t border-[#2C3947] hover:bg-white/5">
+            <Link
+              href="/user/settings/profile"
+              className="block px-4 py-3 text-sm text-[#E7EAEE] border-t border-[#2C3947] hover:bg-white/5"
+            >
               Profile Settings
             </Link>
-            <Link href="/logout" className="block px-4 py-3 text-sm font-semibold text-red-500 border-t border-[#2C3947] hover:bg-white/5">
+            <Link
+              href="/logout"
+              className="block px-4 py-3 text-sm font-semibold text-red-500 border-t border-[#2C3947] hover:bg-white/5"
+            >
               Logout
             </Link>
           </div>

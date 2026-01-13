@@ -14,10 +14,18 @@ export default function AuthThemeGuard({ children }: { children: React.ReactNode
     const hadDarkClass = html.classList.contains("dark");
     const prevDataMode = html.getAttribute("data-mode");
 
-    // Force light mode for auth/onboarding
-    html.classList.remove("dark");
-    html.setAttribute("data-mode", "light");
+    // Keep auth/onboarding marker without forcing light mode
     html.setAttribute("data-auth-onboarding", "true");
+
+    // Align with persisted user preference if available
+    const storedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+    if (storedTheme === "dark") {
+      html.classList.add("dark");
+      html.setAttribute("data-mode", "dark");
+    } else if (storedTheme === "light") {
+      html.classList.remove("dark");
+      html.setAttribute("data-mode", "light");
+    }
 
     return () => {
       html.removeAttribute("data-auth-onboarding");
