@@ -11,14 +11,14 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json package-lock.json ./
 # Cache npm downloads between builds (BuildKit)
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,id=natty-pay-npm-cache,target=/root/.npm \
     npm ci
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Cache Next.js build artifacts
-RUN --mount=type=cache,target=/app/.next/cache \
+RUN --mount=type=cache,id=natty-pay-next-cache,target=/app/.next/cache \
     npm run build
 
 FROM base AS runner
