@@ -4,6 +4,8 @@
 #
 
 ARG NODE_VERSION=20.11.1
+# Used to prefix BuildKit cache IDs in CI environments that enforce a cache-key prefix.
+ARG CACHE_KEY=natty-pay
 
 FROM node:${NODE_VERSION}-bookworm-slim AS base
 WORKDIR /app
@@ -11,14 +13,14 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json package-lock.json ./
 # Cache npm downloads between builds (BuildKit)
-RUN --mount=type=cache,id=natty-pay-npm-cache,target=/root/.npm \
+RUN --mount=type=cache,id=s/${CACHE_KEY}-npm/cache,target=/root/.npm \
     npm ci
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Cache Next.js build artifacts
-RUN --mount=type=cache,id=natty-pay-next-cache,target=/app/.next/cache \
+RUN --mount=type=cache,id=s/${CACHE_KEY}-next/cache,target=/app/.next/cache \
     npm run build
 
 FROM base AS runner
