@@ -279,11 +279,25 @@ const SavingsContent: React.FC = () => {
             </p>
             {subTab === "active" && (
               <button
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                  if (tab === "fixed") {
+                    setOpenFixedDeposit(true);
+                  } else if (tab === "target") {
+                    setOpenTarget(true);
+                  } else if (tab === "easylife") {
+                    setOpenEasy(true);
+                  }
+                }}
                 className="flex items-center gap-2 bg-[#D4B139] hover:bg-[#c7a42f] text-black px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
               >
                 <FiPlus className="text-base" />
-                <span>Start New Plan</span>
+                <span>
+                  {tab === "fixed"
+                    ? "New Fixed Deposit"
+                    : tab === "target"
+                      ? "New Target Savings"
+                      : "New Easy-life Plan"}
+                </span>
               </button>
             )}
           </div>

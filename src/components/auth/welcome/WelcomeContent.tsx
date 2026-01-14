@@ -74,7 +74,7 @@ const WelcomeContent = () => {
               Welcome to NattyPay
             </h2>
             <p className={theme === "dark" ? "text-white/80" : "text-gray-600"}>
-              We make the best & easiest banking for you.
+              We Are Future Banking
             </p>
           </div>
 
