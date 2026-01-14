@@ -2,7 +2,7 @@ import MultiCurrencyContent from "@/components/user/multi-currency/MultiCurrency
 
 export default function MultiCurrencyPage() {
   return (
-    <div className="h-full w-full overflow-hidden no-scrollbar">
+    <div className="w-full h-full">
       <MultiCurrencyContent />
     </div>
   );

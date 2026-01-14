@@ -3,7 +3,7 @@ import ProfileContent from "@/components/user/settings/ProfileContent";
 
 const ProfilePage = () => {
   return (
-    <div className="h-full w-full overflow-hidden no-scrollbar">
+    <div className="w-full h-full">
       <ProfileContent />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FiEdit2, FiTrash2, FiPlus, FiCopy, FiArrowDownLeft, FiArrowUpRight, FiCheckCircle, FiXCircle, FiClock } from "react-icons/fi";
+import { FiTrash2, FiPlus, FiCopy, FiArrowDownLeft, FiArrowUpRight, FiCheckCircle, FiXCircle, FiClock } from "react-icons/fi";
 import { LuCopy } from "react-icons/lu";
 import {
   useGetCurrencyAccountByCurrency,
@@ -173,22 +173,15 @@ const MultiCurrencyAccountDetails: React.FC<MultiCurrencyAccountDetailsProps> = 
                   <p className="text-white/60 text-sm">{currency} Account Details</p>
                 </div>
               </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setOpenUpdate(true)}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-colors"
-            >
-              <FiEdit2 className="text-base" />
-              <span className="hidden sm:inline">Edit Label</span>
-            </button>
-            <button
-              onClick={() => setOpenClose(true)}
-              disabled={account.balance && account.balance > 0}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FiTrash2 className="text-base" />
-              <span className="hidden sm:inline">Close Account</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setOpenClose(true)}
+                disabled={account.balance && account.balance > 0}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiTrash2 className="text-base" />
+                <span className="hidden sm:inline">Close Account</span>
+              </button>
             </div>
           </div>
 

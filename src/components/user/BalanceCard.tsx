@@ -125,8 +125,18 @@ const BalanceCard = ({
 
   // Add Money Modal
   const [isAddMoneyModalOpen, setIsAddMoneyModalOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
 
   const currencySymbol = getCurrencySymbol(currentCurrency);
+
+  // Track viewport to decide where to render dropdown
+  useEffect(() => {
+    const mq = typeof window !== "undefined" ? window.matchMedia("(min-width: 1024px)") : null;
+    const update = () => setIsDesktop(Boolean(mq?.matches));
+    update();
+    mq?.addEventListener("change", update);
+    return () => mq?.removeEventListener("change", update);
+  }, []);
 
   const getCurrencyFlag = (currency: string): string => {
     const upper = currency.toUpperCase();
@@ -168,43 +178,78 @@ const BalanceCard = ({
           />
         )}
 
-        {open && accountOptions.length > 1 &&
-          (typeof document !== "undefined"
-            ? createPortal(
-                <div className="fixed inset-0 z-[100000]" onClick={() => setOpen(false)}>
-                  <div className="absolute inset-0" />
-                  <div
-                    ref={menuRef}
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-4 top-[110px] z-[100001] w-56 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-3"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-text-200 dark:text-text-800 font-semibold">Select Account</p>
-                      <MdClose onClick={() => setOpen(false)} className="cursor-pointer" />
+        {open && accountOptions.length > 1 && (
+          isDesktop ? (
+            <div
+              ref={menuRef}
+              className="absolute right-0 top-9 z-50 w-56 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-3"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-text-200 dark:text-text-800 font-semibold">Select Account</p>
+                <MdClose onClick={() => setOpen(false)} className="cursor-pointer" />
+              </div>
+              {accountOptions.map((opt, idx, arr) => (
+                <button
+                  key={`${opt.type}-${opt.currency}-${idx}`}
+                  onClick={() => {
+                    setSelectedAccount(opt);
+                    setOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 py-2.5 ${idx !== arr.length - 1 ? "border-b border-border-800 dark:border-border-700" : ""}`}
+                >
+                  <span className="text-lg">{getCurrencyFlag(opt.currency)}</span>
+                  <span className="text-left text-text-200 dark:text-text-800 text-sm flex-1">{opt.label}</span>
+                  <span
+                    className={`w-3.5 h-3.5 rounded-full border ${
+                      selectedAccount?.currency === opt.currency && selectedAccount?.type === opt.type
+                        ? "bg-secondary border-secondary"
+                        : "border-border-800 dark:border-border-700"
+                    }`}
+                  ></span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            typeof document !== "undefined"
+              ? createPortal(
+                  <div className="fixed inset-0 z-[100000]" onClick={() => setOpen(false)}>
+                    <div className="absolute inset-0" />
+                    <div
+                      ref={menuRef}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-4 top-[110px] z-[100001] w-56 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-3"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-text-200 dark:text-text-800 font-semibold">Select Account</p>
+                        <MdClose onClick={() => setOpen(false)} className="cursor-pointer" />
+                      </div>
+                      {accountOptions.map((opt, idx, arr) => (
+                        <button
+                          key={`${opt.type}-${opt.currency}-${idx}`}
+                          onClick={() => {
+                            setSelectedAccount(opt);
+                            setOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 py-2.5 ${idx !== arr.length - 1 ? "border-b border-border-800 dark:border-border-700" : ""}`}
+                        >
+                          <span className="text-lg">{getCurrencyFlag(opt.currency)}</span>
+                          <span className="text-left text-text-200 dark:text-text-800 text-sm flex-1">{opt.label}</span>
+                          <span
+                            className={`w-3.5 h-3.5 rounded-full border ${
+                              selectedAccount?.currency === opt.currency && selectedAccount?.type === opt.type
+                                ? "bg-secondary border-secondary"
+                                : "border-border-800 dark:border-border-700"
+                            }`}
+                          ></span>
+                        </button>
+                      ))}
                     </div>
-                    {accountOptions.map((opt, idx, arr) => (
-                      <button
-                        key={`${opt.type}-${opt.currency}-${idx}`}
-                        onClick={() => {
-                          setSelectedAccount(opt);
-                          setOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 py-2.5 ${idx !== arr.length - 1 ? "border-b border-border-800 dark:border-border-700" : ""}`}
-                      >
-                        <span className="text-lg">{getCurrencyFlag(opt.currency)}</span>
-                        <span className="text-left text-text-200 dark:text-text-800 text-sm flex-1">{opt.label}</span>
-                        <span className={`w-3.5 h-3.5 rounded-full border ${
-                          selectedAccount?.currency === opt.currency && selectedAccount?.type === opt.type
-                            ? "bg-secondary border-secondary" 
-                            : "border-border-800 dark:border-border-700"
-                        }`}></span>
-                      </button>
-                    ))}
-                  </div>
-                </div>,
-                document.body
-              )
-            : null)}
+                  </div>,
+                  document.body
+                )
+              : null
+          )
+        )}
       </div>
 
       {/* Subtitle + eye toggle */}
