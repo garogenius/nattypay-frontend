@@ -24,9 +24,9 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
   const [step, setStep] = useState<"form" | "verify" | "confirm" | "result">("form");
   const [discoOpen, setDiscoOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
-  const [selectedDisco, setSelectedDisco] = useState<{name: string; billerCode: string} | null>(null);
+  const [selectedDisco, setSelectedDisco] = useState<{ name: string; billerCode: string } | null>(null);
   const [meterNumber, setMeterNumber] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<{name: string; amount: number; itemCode: string; payAmount: number} | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; amount: number; itemCode: string; payAmount: number; fee: number } | null>(null);
   const [amount, setAmount] = useState<string>("");
   const [walletPin, setWalletPin] = useState<string>("");
   const [resultSuccess, setResultSuccess] = useState<boolean | null>(null);
@@ -107,11 +107,11 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
       variations &&
       variations.length > 0
     ) {
-    verifyMeter({
+      verifyMeter({
         itemCode: variations[0].item_code,
-      billerCode: selectedDisco.billerCode,
-      billerNumber: meterNumber,
-    });
+        billerCode: selectedDisco.billerCode,
+        billerNumber: meterNumber,
+      });
     }
   }, [
     meterNumber,
@@ -145,11 +145,11 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
   const handleConfirm = () => {
     if (walletPin.length !== 4 || !selectedDisco) return;
     if (!selectedPlan && (!amount || Number(amount) < 500)) return;
-    
+
     // Use selected plan's itemCode and payAmount, or use first variation's itemCode and entered amount (matching bills/electricity page)
     const itemCodeToUse = selectedPlan?.itemCode || (variations && variations.length > 0 ? variations[0].item_code : "");
     const amountToUse = selectedPlan ? selectedPlan.payAmount : Number(amount);
-    
+
     payElectricity({
       amount: amountToUse,
       itemCode: itemCodeToUse,
@@ -187,13 +187,14 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
               <div className="flex flex-col gap-2">
                 <label className="text-white/70 text-sm">Meter Number</label>
                 <div className="relative w-full">
-                  <input 
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none" 
-                    placeholder="Enter meter number" 
-                    value={meterNumber} 
-                    minLength={10} 
-                    maxLength={12} 
-                    onChange={(e)=> setMeterNumber(e.target.value.replace(/\D/g, ""))} 
+                  <input
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none"
+                    placeholder="Enter meter number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={meterNumber}
+                    onChange={(e) => setMeterNumber(e.target.value.replace(/\D/g, ""))}
                   />
                   {(verifying || electricityVariationsLoading) && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -206,17 +207,16 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
               {/* Disco - Only enabled when meter number is valid (matching bills/electricity page) */}
               <div className="flex flex-col gap-2 relative" ref={discoRef}>
                 <label className="text-white/70 text-sm">Select Disco</label>
-                <div 
+                <div
                   onClick={() => {
                     if (meterNumber && meterNumber.length >= 10) {
                       setDiscoOpen(!discoOpen);
                     }
-                  }} 
-                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${
-                    meterNumber && meterNumber.length >= 10 
-                      ? "cursor-pointer" 
-                      : "cursor-not-allowed opacity-50"
-                  }`}
+                  }}
+                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${meterNumber && meterNumber.length >= 10
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed opacity-50"
+                    }`}
                 >
                   {!meterNumber || meterNumber.length < 10 ? (
                     <span className="text-white/50">Enter valid meter number</span>
@@ -240,18 +240,18 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                         </div>
                       ) : (
                         electricityPlans.map((d: any) => (
-                        <button
+                          <button
                             key={d.billerCode || d.id}
-                          onClick={() => {
+                            onClick={() => {
                               setSelectedDisco({ name: d.shortName || d.planName || d.name, billerCode: d.billerCode });
-                            setSelectedPlan(null);
+                              setSelectedPlan(null);
                               setAmount("");
-                            setDiscoOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
-                        >
+                              setDiscoOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
+                          >
                             {d.shortName || d.planName || d.name}
-                        </button>
+                          </button>
                         ))
                       )}
                     </div>
@@ -268,13 +268,13 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
               ) : (
                 <>
                   {electricityPlans &&
-                  verificationMessage &&
-                  !verificationError &&
-                  selectedDisco &&
-                  selectedDisco.name &&
-                  selectedDisco.billerCode &&
-                  meterNumber &&
-                  meterNumber.length >= 10 ? (
+                    verificationMessage &&
+                    !verificationError &&
+                    selectedDisco &&
+                    selectedDisco.name &&
+                    selectedDisco.billerCode &&
+                    meterNumber &&
+                    meterNumber.length >= 10 ? (
                     <div className="flex flex-col">
                       <p className="text-[#D4B139] text-sm">{verificationMessage}</p>
                     </div>
@@ -288,109 +288,127 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
 
               {/* Plan - Only show when verification is successful (matching bills/electricity page exactly) */}
               {electricityPlans &&
-              verificationMessage &&
-              !verificationError &&
-              selectedDisco &&
-              selectedDisco.name &&
-              selectedDisco.billerCode &&
-              meterNumber &&
-              meterNumber.length >= 10 && (
-                <div className="flex flex-col gap-2 relative" ref={planRef}>
-                  <label className="text-white/70 text-sm">Select Plan</label>
-                  <div 
-                    onClick={() => {
-                      if (meterNumber && selectedDisco && verificationMessage && !verificationError) {
-                        setPlanOpen(!planOpen);
-                      }
-                    }} 
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
-                  >
-                    <span className={selectedPlan ? "text-white" : "text-white/50"}>
-                      {selectedPlan?.name || 'Select plan'}
-                    </span>
-                    <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${planOpen ? 'rotate-180' : ''}`} />
-                  </div>
-                  {planOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 z-[100]">
-                      <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
-                        {electricityVariationsLoading ? (
-                          <div className="flex items-center justify-center py-4">
-                          <SpinnerLoader width={20} height={20} color="#D4B139" />
-                        </div>
-                        ) : variations && variations.length > 0 ? (
-                          variations.map((item: any, index: number) => (
-                          <button
-                              key={item.item_code || index}
-                            onClick={() => {
-                                setSelectedPlan({
-                                  name: item.short_name || item.name || item.item_name,
-                                  amount: Number(item.amount) || 0,
-                                  payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
-                                  itemCode: item.item_code || item.itemCode,
-                                });
-                                setAmount(String(item.payAmount || item.amount));
-                              setPlanOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm flex items-center justify-between"
-                          >
-                              <span>{item.short_name || item.name || item.item_name}</span>
-                              <span className="text-[#D4B139] font-medium">₦{Number(item.payAmount || item.amount).toLocaleString()}</span>
-                          </button>
-                          ))
-                        ) : (
-                          <div className="px-4 py-3 text-white/50 text-sm">No plans available</div>
-                        )}
-                      </div>
+                verificationMessage &&
+                !verificationError &&
+                selectedDisco &&
+                selectedDisco.name &&
+                selectedDisco.billerCode &&
+                meterNumber &&
+                meterNumber.length >= 10 && (
+                  <div className="flex flex-col gap-2 relative" ref={planRef}>
+                    <label className="text-white/70 text-sm">Select Plan</label>
+                    <div
+                      onClick={() => {
+                        if (meterNumber && selectedDisco && verificationMessage && !verificationError) {
+                          setPlanOpen(!planOpen);
+                        }
+                      }}
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
+                    >
+                      <span className={selectedPlan ? "text-white" : "text-white/50"}>
+                        {selectedPlan?.name || 'Select plan'}
+                      </span>
+                      <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${planOpen ? 'rotate-180' : ''}`} />
                     </div>
-                  )}
-                </div>
-              )}
+                    {planOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 z-[100]">
+                        <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+                          {electricityVariationsLoading ? (
+                            <div className="flex items-center justify-center py-4">
+                              <SpinnerLoader width={20} height={20} color="#D4B139" />
+                            </div>
+                          ) : variations && variations.length > 0 ? (
+                            variations.map((item: any, index: number) => (
+                              <button
+                                key={item.item_code || index}
+                                onClick={() => {
+                                  setSelectedPlan({
+                                    name: item.short_name || item.name || item.item_name,
+                                    amount: Number(item.amount) || 0,
+                                    fee: Number(item.fee) || 0,
+                                    payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
+                                    itemCode: item.item_code || item.itemCode,
+                                  });
+                                  setAmount(String(item.payAmount || item.amount));
+                                  setPlanOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm flex items-center justify-between"
+                              >
+                                <span>{item.short_name || item.name || item.item_name}</span>
+                                <div className="flex flex-col items-end">
+                                  <span className="text-[#D4B139] font-medium text-xs">₦{Number(item.fee || 0).toLocaleString()}</span>
+                                </div>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-4 py-3 text-white/50 text-sm">No plans available</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* Amount Input - Always show when verification is successful (matching bills/electricity page exactly) */}
               {electricityPlans &&
-              verificationMessage &&
-              !verificationError &&
-              selectedDisco &&
-              meterNumber &&
-              meterNumber.length >= 10 && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-white/70 text-sm">Amount</label>
-                  <input 
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" 
-                    placeholder="₦5,000" 
-                    type="number"
-                    value={amount} 
-                    onChange={(e)=> setAmount(e.target.value.replace(/[^\d.]/g, ''))} 
-                  />
-                  {selectedPlan && selectedPlan.payAmount - selectedPlan.amount > 0 && (
-                    <p className="text-[#D4B139] text-sm">
-                      Fee: ₦{selectedPlan.payAmount - selectedPlan.amount}
-                    </p>
-                  )}
-                </div>
-              )}
+                verificationMessage &&
+                !verificationError &&
+                selectedDisco &&
+                meterNumber &&
+                meterNumber.length >= 10 && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-white/70 text-sm">Amount</label>
+                      {verifiedCustomer?.minimum && (
+                        <span className="text-[#D4B139] text-[10px] font-medium">
+                          Min: ₦{Number(verifiedCustomer.minimum).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none"
+                      placeholder="Enter amount"
+                      type="text"
+                      inputMode="numeric"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
+                    />
+                    {selectedPlan && (
+                      <div className="flex flex-col gap-1 mt-1 px-1">
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-white/50 italic">Service Charge:</span>
+                          <span className="text-white/80">₦{Number(selectedPlan.fee).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold py-1 border-t border-white/5 mt-1">
+                          <span className="text-white/70">Total Amount:</span>
+                          <span className="text-[#D4B139]">₦{Number(Number(amount || 0) + selectedPlan.fee).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* Next Button - Only show when verification is successful and (plan is selected or amount is entered) */}
               {electricityPlans &&
-              verificationMessage &&
-              !verificationError &&
-              selectedDisco &&
-              meterNumber &&
-              meterNumber.length >= 10 &&
-              (selectedPlan || (amount && Number(amount) >= 500)) && (
-              <CustomButton
-                type="button"
-                  disabled={!selectedPlan && (!amount || Number(amount) < 500)}
-                className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
-                  onClick={() => {
-                    if (selectedPlan || (amount && Number(amount) >= 500)) {
-                      setStep("confirm");
-                    }
-                  }}
-              >
-                  Next
-              </CustomButton>
-              )}
+                verificationMessage &&
+                !verificationError &&
+                selectedDisco &&
+                meterNumber &&
+                meterNumber.length >= 10 &&
+                (selectedPlan || (amount && Number(amount) >= 500)) && (
+                  <CustomButton
+                    type="button"
+                    disabled={!selectedPlan && (!amount || Number(amount) < 500)}
+                    className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
+                    onClick={() => {
+                      if (selectedPlan || (amount && Number(amount) >= 500)) {
+                        setStep("confirm");
+                      }
+                    }}
+                  >
+                    Next
+                  </CustomButton>
+                )}
             </div>
           )}
 
@@ -402,18 +420,28 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                 {selectedPlan && (
                   <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Plan</span><span className="text-white text-sm font-medium">{selectedPlan.name}</span></div>
                 )}
-                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Amount</span><span className="text-white text-sm font-medium">₦{Number(selectedPlan?.payAmount || amount || 0).toLocaleString()}</span></div>
+                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Amount</span><span className="text-white text-sm font-medium">₦{Number(amount || 0).toLocaleString()}</span></div>
+                {selectedPlan && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60 text-sm">Service Charge</span>
+                    <span className="text-white text-sm font-medium">₦{Number(selectedPlan.fee).toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-white/10 pt-2">
+                  <span className="text-white/60 text-sm font-semibold">Total Amount</span>
+                  <span className="text-[#D4B139] text-base font-bold">₦{Number(Number(amount || 0) + (selectedPlan?.fee || 0)).toLocaleString()}</span>
+                </div>
                 {verifiedCustomer && (
                   <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Customer Name</span><span className="text-white text-sm font-medium">{verifiedCustomer.customerName || verifiedCustomer.name || "N/A"}</span></div>
                 )}
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-white/60 text-sm">Enter Transaction PIN</label>
-                <input type="password" maxLength={4} value={walletPin} onChange={(e)=> setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
+                <input type="password" maxLength={4} value={walletPin} onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
               </div>
               <div className="flex gap-4 mt-2">
-                <CustomButton onClick={()=> setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
-                <CustomButton onClick={handleConfirm} disabled={(walletPin.length!==4 || paying || (!selectedPlan && (!amount || Number(amount) < 500)))} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
+                <CustomButton onClick={() => setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
+                <CustomButton onClick={handleConfirm} disabled={(walletPin.length !== 4 || paying || (!selectedPlan && (!amount || Number(amount) < 500)))} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
               </div>
             </div>
           )}
@@ -430,8 +458,8 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                 </svg>
               </div>
               <span className={`${resultSuccess ? 'text-emerald-400' : 'text-red-400'} text-sm font-medium`}>{resultSuccess ? 'Payment Successful' : 'Payment Failed'}</span>
-              <span className="text-white text-2xl font-bold">₦{Number(selectedPlan?.payAmount || amount || 0).toLocaleString()}.00</span>
-              
+              <span className="text-white text-2xl font-bold">₦{Number(Number(amount || 0) + (selectedPlan?.fee || 0)).toLocaleString()}.00</span>
+
               {resultSuccess && transactionData && (
                 <div className="w-full bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -456,7 +484,7 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       )}
@@ -479,7 +507,7 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       </div>
@@ -493,7 +521,7 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                   )}
                 </div>
               )}
-              
+
               <div className="flex gap-3 mt-4 w-full">
                 <CustomButton onClick={handleClose} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Contact Support</CustomButton>
                 <CustomButton onClick={handleClose} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Download Receipt</CustomButton>
