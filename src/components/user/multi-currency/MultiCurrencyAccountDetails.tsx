@@ -2,7 +2,9 @@
 
 import React from "react";
 import { FiTrash2, FiPlus, FiCopy, FiArrowDownLeft, FiArrowUpRight, FiCheckCircle, FiXCircle, FiClock } from "react-icons/fi";
-import { LuCopy } from "react-icons/lu";
+import { LuCopy, LuCoins } from "react-icons/lu";
+import { RiSwapLine } from "react-icons/ri";
+import { MdOutlineAccountBalanceWallet } from "react-icons/md";
 import {
   useGetCurrencyAccountByCurrency,
   useGetCurrencyAccountTransactions,
@@ -127,6 +129,22 @@ const MultiCurrencyAccountDetails: React.FC<MultiCurrencyAccountDetailsProps> = 
     setOpenCreateDestination(true);
   };
 
+  React.useEffect(() => {
+    const handleTriggerPayout = () => setOpenCreatePayout(true);
+    const handleTriggerDestination = () => openDestinationModal("wire");
+    const handleTriggerStablecoin = () => openDestinationModal("stablecoin");
+
+    window.addEventListener('trigger-payout', handleTriggerPayout);
+    window.addEventListener('trigger-destination', handleTriggerDestination);
+    window.addEventListener('trigger-stablecoin', handleTriggerStablecoin);
+
+    return () => {
+      window.removeEventListener('trigger-payout', handleTriggerPayout);
+      window.removeEventListener('trigger-destination', handleTriggerDestination);
+      window.removeEventListener('trigger-stablecoin', handleTriggerStablecoin);
+    };
+  }, []);
+
   if (!account && !accountLoading) {
     return (
       <div className="rounded-2xl bg-bg-600 dark:bg-bg-1100 border border-white/10 p-8 flex flex-col items-center justify-center gap-4">
@@ -163,7 +181,7 @@ const MultiCurrencyAccountDetails: React.FC<MultiCurrencyAccountDetailsProps> = 
           </div>
         ) : account ? (
           <>
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+            <div className="flex items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <Image
                   src={getCurrencyIconByString(currency.toLowerCase()) || ""}
@@ -242,31 +260,45 @@ const MultiCurrencyAccountDetails: React.FC<MultiCurrencyAccountDetailsProps> = 
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-              <CustomButton
+            {/* Action Buttons - Redesigned as TransferTypeCards style - hidden on mobile as they are already in the quick actions section */}
+            <div className="hidden sm:grid grid-cols-3 gap-3 sm:gap-4 mb-8 pb-6 border-b border-white/5">
+              <button
+                type="button"
                 onClick={() => setOpenCreatePayout(true)}
-                className="bg-[#D4B139] hover:bg-[#c7a42f] text-black font-medium py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#D4B139]/10"
+                className="text-left rounded-xl sm:rounded-2xl border border-[#2C3947] bg-transparent hover:bg-white/5 px-3 py-3 sm:px-4 sm:py-5 transition-colors cursor-pointer group"
               >
-                <FiArrowUpRight className="text-lg" />
-                <span>Fund Payout</span>
-              </CustomButton>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#D4B139]/10 grid place-items-center mb-2 sm:mb-3 group-hover:bg-[#D4B139] group-hover:text-black transition-colors">
+                  <RiSwapLine className="text-lg sm:text-2xl text-[#D4B139] group-hover:text-black transition-colors" />
+                </div>
+                <p className="text-white font-medium text-[11px] sm:text-base leading-tight">Transfer</p>
+                <p className="text-white/60 text-[10px] sm:text-xs mt-0.5 sm:mt-1 leading-snug">Send instantly</p>
+              </button>
 
-              <CustomButton
+              <button
+                type="button"
                 onClick={() => openDestinationModal("wire")}
-                className="bg-bg-1400 hover:bg-bg-1200 text-white font-medium py-3 rounded-lg flex items-center justify-center gap-2 border border-white/10 transition-all"
+                className="text-left rounded-xl sm:rounded-2xl border border-[#2C3947] bg-transparent hover:bg-white/5 px-3 py-3 sm:px-4 sm:py-5 transition-colors cursor-pointer group"
               >
-                <FiPlus className="text-lg" />
-                <span>Add Destination</span>
-              </CustomButton>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#D4B139]/10 grid place-items-center mb-2 sm:mb-3 group-hover:bg-[#D4B139] group-hover:text-black transition-colors">
+                  <FiPlus className="text-lg sm:text-2xl text-[#D4B139] group-hover:text-black transition-colors" />
+                </div>
+                <p className="text-white font-medium text-[11px] sm:text-base leading-tight">Destination</p>
+                <p className="text-white/60 text-[10px] sm:text-xs mt-0.5 sm:mt-1 leading-snug">Add recipient</p>
+              </button>
 
-              <CustomButton
-                onClick={() => openDestinationModal("stablecoin")}
-                className="bg-bg-1400 hover:bg-bg-1200 text-white font-medium py-3 rounded-lg flex items-center justify-center gap-2 border border-white/10 transition-all"
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('trigger-account-list'));
+                }}
+                className="text-left rounded-xl sm:rounded-2xl border border-[#2C3947] bg-transparent hover:bg-white/5 px-3 py-3 sm:px-4 sm:py-5 transition-colors cursor-pointer group"
               >
-                <FiPlus className="text-lg" />
-                <span>Add Stablecoin</span>
-              </CustomButton>
+                <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#D4B139]/10 grid place-items-center mb-2 sm:mb-3 group-hover:bg-[#D4B139] group-hover:text-black transition-colors">
+                  <MdOutlineAccountBalanceWallet className="text-lg sm:text-2xl text-[#D4B139] group-hover:text-black transition-colors" />
+                </div>
+                <p className="text-white font-medium text-[11px] sm:text-base leading-tight">Account</p>
+                <p className="text-white/60 text-[10px] sm:text-xs mt-0.5 sm:mt-1 leading-snug">View details</p>
+              </button>
             </div>
 
           </>
