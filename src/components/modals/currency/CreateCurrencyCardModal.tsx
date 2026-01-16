@@ -23,7 +23,8 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
 }) => {
   const [currency, setCurrency] = React.useState<"USD" | "EUR" | "GBP">("USD");
   const [label, setLabel] = React.useState("");
-  const [initialBalance, setInitialBalance] = React.useState("");
+  const [fundingAmount, setFundingAmount] = React.useState("");
+  const [pin, setPin] = React.useState("");
   const [currencyOpen, setCurrencyOpen] = React.useState(false);
   const currencyRef = React.useRef<HTMLDivElement>(null);
 
@@ -39,7 +40,7 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
 
   const hasCurrencyAccount = (curr: "USD" | "EUR" | "GBP") => {
     if (!Array.isArray(accounts)) return false;
-    return accounts.some((acc: any) => 
+    return accounts.some((acc: any) =>
       acc?.currency && String(acc.currency).toUpperCase() === curr.toUpperCase()
     );
   };
@@ -55,7 +56,8 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
   const handleClose = () => {
     setCurrency("USD");
     setLabel("");
-    setInitialBalance("");
+    setFundingAmount("");
+    setPin("");
     setCurrencyOpen(false);
     onClose();
   };
@@ -89,18 +91,16 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
     const formdata: any = {
       currency,
       label: label.trim(),
+      pin,
+      fundingAmount: Number(fundingAmount),
     };
-
-    if (initialBalance && Number(initialBalance) > 0) {
-      formdata.initialBalance = Number(initialBalance);
-    }
 
     createCard(formdata);
   };
 
   if (!isOpen) return null;
 
-  const canSubmit = !!currency && label.trim().length > 0;
+  const canSubmit = !!currency && label.trim().length > 0 && Number(fundingAmount) > 0 && pin.length === 8;
 
   if (availableCurrencies.length === 0) {
     return (
@@ -113,7 +113,7 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
             onClick={handleClose}
             className="absolute top-3 right-3 p-2 cursor-pointer bg-bg-1400 rounded-full hover:bg-bg-1200 transition-colors"
           >
-            <CgClose className="text-xl text-text-200 dark:text-text-400" />
+            <CgClose className="text-xl text-text-200 dark:text-400" />
           </button>
           <div className="px-5 sm:px-6 pt-1 pb-6 text-center">
             <h2 className="text-white text-base sm:text-lg font-semibold mb-2">No Currency Accounts</h2>
@@ -137,12 +137,12 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
       <div className="fixed inset-0 transition-opacity" aria-hidden="true">
         <div className="absolute inset-0 bg-black/80 dark:bg-black/60" onClick={handleClose} />
       </div>
-      <div className="relative mx-2.5 2xs:mx-4 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 px-0 py-4 w-full max-w-md max-h-[92vh] rounded-2xl overflow-hidden">
+      <div className="relative mx-2.5 2xs:mx-4 bg-bg-600 dark:bg-1100 border border-border-800 dark:border-700 px-0 py-4 w-full max-w-md max-h-[92vh] rounded-2xl overflow-hidden">
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 p-2 cursor-pointer bg-bg-1400 rounded-full hover:bg-bg-1200 transition-colors"
         >
-          <CgClose className="text-xl text-text-200 dark:text-text-400" />
+          <CgClose className="text-xl text-text-200 dark:text-400" />
         </button>
 
         <div className="px-5 sm:px-6 pt-1 pb-4">
@@ -158,7 +158,7 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCurrencyOpen(!currencyOpen)}
-                className="w-full flex items-center justify-between bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white"
+                className="w-full flex items-center justify-between bg-bg-2400 dark:bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white"
               >
                 <div className="flex items-center gap-3">
                   <Image
@@ -180,7 +180,7 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
                 </svg>
               </button>
               {currencyOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-lg overflow-hidden">
+                <div className="absolute z-10 w-full mt-1 bg-bg-600 dark:bg-1100 border border-border-600 rounded-lg overflow-hidden">
                   {availableCurrencies.map((curr) => (
                     <button
                       key={curr.value}
@@ -189,9 +189,8 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
                         setCurrency(curr.value);
                         setCurrencyOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-white/5 transition-colors ${
-                        currency === curr.value ? "bg-white/10" : ""
-                      }`}
+                      className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-white/5 transition-colors ${currency === curr.value ? "bg-white/10" : ""
+                        }`}
                     >
                       <Image
                         src={getCurrencyIconByString(curr.value.toLowerCase()) || ""}
@@ -216,26 +215,42 @@ const CreateCurrencyCardModal: React.FC<CreateCurrencyCardModalProps> = ({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="e.g., My Shopping Card"
-              className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
+              className="w-full bg-bg-2400 dark:bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
               maxLength={50}
             />
           </div>
 
-          {/* Initial Balance (Optional) */}
+          {/* Funding Amount */}
           <div>
-            <label className="block text-sm text-white/80 mb-1.5">Initial Balance (Optional)</label>
+            <label className="block text-sm text-white/80 mb-1.5">Funding Amount</label>
             <input
               type="number"
-              value={initialBalance}
+              value={fundingAmount}
               onChange={(e) => {
                 const value = e.target.value;
                 if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
-                  setInitialBalance(value);
+                  setFundingAmount(value);
                 }
               }}
               placeholder="0.00"
               step="0.01"
               min="0"
+              className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
+            />
+          </div>
+
+          {/* Card PIN */}
+          <div>
+            <label className="block text-sm text-white/80 mb-1.5">Card PIN (8 digits)</label>
+            <input
+              type="password"
+              value={pin}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                setPin(val);
+              }}
+              placeholder="Enter 8-digit PIN"
+              maxLength={8}
               className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
             />
           </div>

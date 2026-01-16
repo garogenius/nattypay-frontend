@@ -41,7 +41,7 @@ const AccountsContent: React.FC = () => {
 
   // Fetch cards
   const { cards, isPending: cardsLoading, refetch: refetchCards } = useGetCards();
-  
+
   // Initialize currency state first
   // Only NGN and USD are available for account creation
   const allCurrencies: Array<"NGN" | "USD" | "EUR" | "GBP"> = ["NGN", "USD", "EUR", "GBP"];
@@ -53,7 +53,7 @@ const AccountsContent: React.FC = () => {
   const [accountLabel, setAccountLabel] = useState("");
   const [showProfileInfoModal, setShowProfileInfoModal] = useState(false);
   const [missingInfo, setMissingInfo] = useState<"phone" | "email" | "both">("both");
-  
+
   // Fetch specific currency account details when currency is selected
   const { account: fetchedCurrencyAccount, isPending: fetchingAccountDetails, isNotFound: accountNotFound } = useGetCurrencyAccountByCurrency(
     selectedCurrency !== "NGN" ? selectedCurrency : ""
@@ -72,11 +72,11 @@ const AccountsContent: React.FC = () => {
       } : null,
     });
   }
-  
+
   // Filter cards for selected currency (including NGN)
   const currencyCards = useMemo(() => {
-    return cards.filter((card: IVirtualCard) => 
-      card.isVirtual && 
+    return cards.filter((card: IVirtualCard) =>
+      card.isVirtual &&
       (card.currency || "").toUpperCase() === selectedCurrency
     );
   }, [cards, selectedCurrency]);
@@ -87,12 +87,12 @@ const AccountsContent: React.FC = () => {
       // NGN uses wallet
       return null;
     }
-    
+
     // If account was not found (404), return null
     if (accountNotFound) {
       return null;
     }
-    
+
     // Prioritize fetched account details (already normalized by query hook)
     if (fetchedCurrencyAccount) {
       // Debug log in development
@@ -107,7 +107,7 @@ const AccountsContent: React.FC = () => {
       }
       return fetchedCurrencyAccount;
     }
-    
+
     // Fallback to finding from list
     if (!Array.isArray(currencyAccounts) || currencyAccounts.length === 0) {
       return null;
@@ -118,7 +118,7 @@ const AccountsContent: React.FC = () => {
       const selected = String(selectedCurrency).toUpperCase().trim();
       return accCurrency === selected;
     });
-    
+
     return found || null;
   }, [fetchedCurrencyAccount, currencyAccounts, selectedCurrency, accountNotFound]);
 
@@ -126,19 +126,19 @@ const AccountsContent: React.FC = () => {
   // Use currencyAccounts from API to determine which currencies have accounts
   const currencyAccountStatus = useMemo(() => {
     const status: Record<string, boolean> = {};
-    
+
     // Debug: Log currency accounts to help diagnose issues
     if (process.env.NODE_ENV === 'development' && currencyAccounts.length > 0) {
       console.log('Currency Accounts:', currencyAccounts);
     }
-    
+
     currencies.forEach((k) => {
       const isNGN = k === "NGN";
       const hasWallet = isNGN && user?.wallet?.some(w => {
         const walletCurrency = String(w?.currency || "").toUpperCase().trim();
         return walletCurrency === k.toUpperCase();
       });
-      
+
       // Check if account exists in the fetched accounts list from API
       // This is the primary source of truth from GET /api/v1/currency/accounts
       const hasCurrencyAccountInList = !isNGN && Array.isArray(currencyAccounts) && currencyAccounts.length > 0 && currencyAccounts.some((acc: ICurrencyAccount) => {
@@ -147,11 +147,11 @@ const AccountsContent: React.FC = () => {
         const targetCurrency = String(k).toUpperCase().trim();
         return accCurrency === targetCurrency;
       });
-      
+
       // Don't use fetchedCurrencyAccount for status check if it's a 404
       // Only use it if it's actually a valid account
       const hasFetchedAccount = !isNGN && k === selectedCurrency && fetchedCurrencyAccount && fetchedCurrencyAccount.currency && !accountNotFound;
-      
+
       status[k] = hasWallet || hasCurrencyAccountInList || hasFetchedAccount;
     });
     return status;
@@ -166,10 +166,10 @@ const AccountsContent: React.FC = () => {
   }, [user?.wallet, selectedCurrency]);
 
   // Get the account to use - prioritize fetched account (most up-to-date)
-  const accountToUse = selectedCurrency === "NGN" 
-    ? null 
+  const accountToUse = selectedCurrency === "NGN"
+    ? null
     : (fetchedCurrencyAccount || currencyAccount);
-  
+
   // Debug: Log which account is being used
   if (process.env.NODE_ENV === 'development' && selectedCurrency !== "NGN") {
     console.log('Account Selection:', {
@@ -203,30 +203,30 @@ const AccountsContent: React.FC = () => {
       } : null,
     });
   }
-  
+
   // For NGN, use wallet data; for others, use currency account data (already normalized by query hook)
   // Use nullish coalescing (??) to preserve empty strings from API, only fallback when null/undefined
-  const bankName = selectedCurrency === "NGN" 
+  const bankName = selectedCurrency === "NGN"
     ? (activeWallet?.bankName ?? "NattyPay")
     : (accountToUse?.bankName ?? "NattyPay");
-  
+
   const displayName = (user?.accountType === "BUSINESS" || user?.isBusiness) && user?.businessName
     ? user.businessName
     : user?.fullname || "-";
-  
+
   // For non-NGN currencies, use accountName from API (already normalized in query hook)
   // Preserve exact API values - only use fallback when value is null/undefined
   const accountName = selectedCurrency === "NGN"
     ? (activeWallet?.accountName ?? displayName)
     : (accountToUse?.accountName ?? displayName);
-  
+
   const cardHolderOnly = (accountName || "").split("/").pop()?.trim() || accountName;
-  
+
   // Use normalized accountNumber from query hook - preserve exact API values
   const accountNumber = selectedCurrency === "NGN"
     ? (activeWallet?.accountNumber ?? "-")
     : (accountToUse?.accountNumber ?? "-");
-  
+
   // Debug: Log final values being displayed
   if (process.env.NODE_ENV === 'development' && selectedCurrency !== "NGN") {
     console.log('Final Display Values:', {
@@ -238,7 +238,7 @@ const AccountsContent: React.FC = () => {
       accountToUseAccountNumber: accountToUse?.accountNumber,
     });
   }
-  
+
   const balance = selectedCurrency === "NGN"
     ? (activeWallet?.balance || 0)
     : (accountToUse?.balance || 0);
@@ -260,12 +260,14 @@ const AccountsContent: React.FC = () => {
 
     // Check if the error is about missing KYC documents (passport, bank statement, etc.)
     const hasKycError = errorMessages.some((msg: string) =>
-      msg.toLowerCase().includes("passport") || 
+      msg.toLowerCase().includes("passport") ||
       msg.toLowerCase().includes("kyc") ||
       msg.toLowerCase().includes("document") ||
       msg.toLowerCase().includes("international passport") ||
       msg.toLowerCase().includes("utilities bill") ||
-      msg.toLowerCase().includes("bank statement")
+      msg.toLowerCase().includes("utility bill") ||
+      msg.toLowerCase().includes("bank statement") ||
+      msg.toLowerCase().includes("proof of address")
     );
 
     if (hasKycError) {
@@ -281,7 +283,7 @@ const AccountsContent: React.FC = () => {
 
     // Check if the error is about ID validation (tier verification required)
     const hasIdValidationError = errorMessages.some((msg: string) =>
-      msg.toLowerCase().includes("unable to validate") || 
+      msg.toLowerCase().includes("unable to validate") ||
       msg.toLowerCase().includes("verify provided id") ||
       msg.toLowerCase().includes("invalid id number")
     );
@@ -392,9 +394,68 @@ const AccountsContent: React.FC = () => {
       return;
     }
 
+    const kycDocuments: any[] = [];
+
+    // Use kycDocuments array if available
+    if (user?.kycDocuments && user.kycDocuments.length > 0) {
+      user.kycDocuments.forEach(doc => {
+        kycDocuments.push({
+          type: doc.type,
+          url: doc.url,
+          issueDate: doc.issueDate,
+          expiryDate: doc.expiryDate,
+          documentNumber: doc.documentNumber
+        });
+      });
+    } else {
+      // Fallback to individual properties
+      if (user?.passportDocumentUrl) {
+        kycDocuments.push({
+          type: "PASSPORT",
+          url: user.passportDocumentUrl,
+          issueDate: user.passportIssueDate || null,
+          expiryDate: user.passportExpiryDate || null,
+          documentNumber: user.passportNumber || null
+        });
+      }
+      if (user?.bankStatementUrl) {
+        kycDocuments.push({
+          type: "BANK_STATEMENT",
+          url: user.bankStatementUrl,
+          issueDate: user.bankStatementIssueDate || null,
+          expiryDate: user.bankStatementExpiryDate || null
+        });
+      }
+      if (user?.utilityBillUrl) {
+        kycDocuments.push({
+          type: "UTILITY_BILL",
+          url: user.utilityBillUrl,
+          issueDate: user.utilityBillIssueDate || null,
+          expiryDate: user.utilityBillExpiryDate || null
+        });
+      }
+    }
+
+    // Validation for USD account: Proof of address is required
+    const hasProofOfAddress = kycDocuments.some(doc =>
+      doc.type === "BANK_STATEMENT" || doc.type === "UTILITY_BILL"
+    );
+
+    if (selectedCurrency === "USD" && !hasProofOfAddress) {
+      ErrorToast({
+        title: "Proof of Address Required",
+        descriptions: [
+          "To create a USD account, you must upload either a bank statement or utility bill.",
+          "Please go to Profile Settings and upload your proof of address documents."
+        ],
+      });
+      return;
+    }
+
     createAccount({
       currency: selectedCurrency as "USD",
       label: accountLabel.trim(),
+      kycDocuments: kycDocuments.length > 0 ? kycDocuments : undefined
     });
   };
 
@@ -438,12 +499,12 @@ const AccountsContent: React.FC = () => {
               onClick={() => setMenuOpen(v => !v)}
               className="inline-flex items-center gap-2 rounded-lg bg-[#D4B139] text-black text-xs sm:text-sm font-semibold px-3 py-1.5 uppercase whitespace-nowrap"
             >
-              <NextImage 
-                src={getCurrencyIconByString(selectedCurrency.toLowerCase()) || ""} 
-                alt="flag" 
-                width={16} 
-                height={16} 
-                className="w-4 h-4" 
+              <NextImage
+                src={getCurrencyIconByString(selectedCurrency.toLowerCase()) || ""}
+                alt="flag"
+                width={16}
+                height={16}
+                className="w-4 h-4"
               />
               <span>{selectedCurrency} Account</span>
               <FiChevronDown className="text-black/80" />
@@ -453,22 +514,22 @@ const AccountsContent: React.FC = () => {
                 {currencies.map((k) => {
                   const hasAccount = currencyAccountStatus[k] || false;
                   const canCreate = availableCurrencies.includes(k as "NGN" | "USD");
-                  
+
                   return (
                     <button
                       key={k}
-                      onClick={() => { 
-                        setSelectedCurrency(k); 
+                      onClick={() => {
+                        setSelectedCurrency(k);
                         setMenuOpen(false);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 ${selectedCurrency === k ? "bg-white/10" : ""} cursor-pointer`}
                     >
-                      <NextImage 
-                        src={getCurrencyIconByString(k.toLowerCase()) || ""} 
-                        alt="flag" 
-                        width={18} 
-                        height={18} 
-                        className="w-5 h-5" 
+                      <NextImage
+                        src={getCurrencyIconByString(k.toLowerCase()) || ""}
+                        alt="flag"
+                        width={18}
+                        height={18}
+                        className="w-5 h-5"
                       />
                       <span className="text-sm flex-1 text-white">{k} Account</span>
                       {hasAccount ? (
@@ -494,7 +555,7 @@ const AccountsContent: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="w-full bg-bg-600 dark:bg-bg-1100 border border-white/10 rounded-2xl p-4 sm:p-5">
           <h3 className="text-white font-semibold mb-4">Account Details</h3>
-          
+
           {/* Show Create Account if account doesn't exist for non-NGN currencies */}
           {/* For NGN, check if wallet exists; for others, check if currency account exists */}
           {selectedCurrency === "NGN" && !activeWallet ? (
@@ -577,23 +638,6 @@ const AccountsContent: React.FC = () => {
             </div>
           ) : ((selectedCurrency === "NGN" && activeWallet) || (selectedCurrency !== "NGN" && !accountNotFound && (currencyAccount || fetchedCurrencyAccount))) ? (
             <React.Fragment>
-              {/* Copy All Account Details Button */}
-              <div className="mb-4">
-                <CustomButton
-                  onClick={() => {
-                    const accountDetails = `Account Name: ${accountName}\nAccount Number: ${accountNumber}\nBank Name: ${bankName}\nCurrency: ${selectedCurrency}`;
-                    navigator.clipboard.writeText(accountDetails);
-                    SuccessToast({
-                      title: "Account Details Copied",
-                      description: "All account details have been copied to clipboard",
-                    });
-                  }}
-                  className="w-full bg-[#D4B139] hover:bg-[#c7a42f] text-black font-medium py-2.5 rounded-lg flex items-center justify-center gap-2"
-                >
-                  <FiCopy />
-                  <span>Copy Account Details</span>
-                </CustomButton>
-              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
@@ -730,12 +774,11 @@ const AccountsContent: React.FC = () => {
                             </div>
                             <div className="text-right">
                               <p className="text-white/60 text-xs">Status</p>
-                              <p className={`text-xs font-medium capitalize ${
-                                card.status === "ACTIVE" ? "text-green-400" :
+                              <p className={`text-xs font-medium capitalize ${card.status === "ACTIVE" ? "text-green-400" :
                                 card.status === "FROZEN" ? "text-yellow-400" :
-                                card.status === "BLOCKED" ? "text-red-400" :
-                                "text-gray-400"
-                              }`}>
+                                  card.status === "BLOCKED" ? "text-red-400" :
+                                    "text-gray-400"
+                                }`}>
                                 {card.status.toLowerCase()}
                               </p>
                             </div>
@@ -808,12 +851,11 @@ const AccountsContent: React.FC = () => {
                             </div>
                             <div className="text-right">
                               <p className="text-white/60 text-xs">Status</p>
-                              <p className={`text-xs font-medium capitalize ${
-                                card.status === "ACTIVE" ? "text-green-400" :
+                              <p className={`text-xs font-medium capitalize ${card.status === "ACTIVE" ? "text-green-400" :
                                 card.status === "FROZEN" ? "text-yellow-400" :
-                                card.status === "BLOCKED" ? "text-red-400" :
-                                "text-gray-400"
-                              }`}>
+                                  card.status === "BLOCKED" ? "text-red-400" :
+                                    "text-gray-400"
+                                }`}>
                                 {card.status.toLowerCase()}
                               </p>
                             </div>
@@ -921,58 +963,58 @@ const AccountsContent: React.FC = () => {
             />
           </div>
         ) : hasActivity ? (
-                          <ul className="flex flex-col gap-1.5">
-                            {recent.map((n, idx) => {
-                              const isPositive = /login|successful|completed/i.test(`${n.title} ${n.body}`);
-                              const Icon = isPositive ? FiCheckCircle : FiXCircle;
-                              return (
-                                <li key={n.id ?? idx} className="grid grid-cols-[auto,1fr,auto] items-center gap-3 py-2.5">
-                                  <div className={`w-9 h-9 rounded-md grid place-items-center ${isPositive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
-                                    <Icon className="text-lg" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-text-200 dark:text-text-800 text-sm sm:text-base truncate">{n.title}</p>
-                                    <p className="text-xs text-white/80 truncate">{n.body}</p>
-                                  </div>
-                                  <div className="text-[11px] text-white/70 whitespace-nowrap">
-                                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                                  </div>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-12 gap-4">
-                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                              <FiClock className="text-3xl text-white/40" />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-white/80 text-sm font-medium mb-1">No Recent Activity</p>
-                              <p className="text-white/60 text-xs">Your login history, transactions, and other activities will appear here</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+          <ul className="flex flex-col gap-1.5">
+            {recent.map((n, idx) => {
+              const isPositive = /login|successful|completed/i.test(`${n.title} ${n.body}`);
+              const Icon = isPositive ? FiCheckCircle : FiXCircle;
+              return (
+                <li key={n.id ?? idx} className="grid grid-cols-[auto,1fr,auto] items-center gap-3 py-2.5">
+                  <div className={`w-9 h-9 rounded-md grid place-items-center ${isPositive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                    <Icon className="text-lg" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-text-200 dark:text-text-800 text-sm sm:text-base truncate">{n.title}</p>
+                    <p className="text-xs text-white/80 truncate">{n.body}</p>
+                  </div>
+                  <div className="text-[11px] text-white/70 whitespace-nowrap">
+                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+              <FiClock className="text-3xl text-white/40" />
+            </div>
+            <div className="text-center">
+              <p className="text-white/80 text-sm font-medium mb-1">No Recent Activity</p>
+              <p className="text-white/60 text-xs">Your login history, transactions, and other activities will appear here</p>
+            </div>
+          </div>
+        )}
+      </div>
 
-                      {/* Modals */}
-                      <ShowCardDetailsModal isOpen={openDetails} onClose={() => { setOpenDetails(false); setSelectedCard(null); }} card={selectedCard} />
-                      <ChangePinModal isOpen={openChangePin} onClose={() => { setOpenChangePin(false); setSelectedCard(null); }} />
-                      <ConfirmActionModal
-                        isOpen={openBlock}
-                        onClose={() => setOpenBlock(false)}
-                        onConfirm={() => setOpenBlock(false)}
-                        title="Block Card?"
-                        description="This action is permanent. Your card will be blocked and you'll need to create a new one."
-                        confirmText="Block"
-                        confirmTone="danger"
-                      />
-                      <Tier2UpgradeModal isOpen={openTier2Modal} onClose={() => setOpenTier2Modal(false)} />
-                      <Tier3UpgradeModal isOpen={openTier3Modal} onClose={() => setOpenTier3Modal(false)} />
-                      <ProfileInfoRequiredModal
-                        isOpen={showProfileInfoModal}
-                        onClose={() => setShowProfileInfoModal(false)}
-                        missingInfo={missingInfo}
-                      />
+      {/* Modals */}
+      <ShowCardDetailsModal isOpen={openDetails} onClose={() => { setOpenDetails(false); setSelectedCard(null); }} card={selectedCard} />
+      <ChangePinModal isOpen={openChangePin} onClose={() => { setOpenChangePin(false); setSelectedCard(null); }} />
+      <ConfirmActionModal
+        isOpen={openBlock}
+        onClose={() => setOpenBlock(false)}
+        onConfirm={() => setOpenBlock(false)}
+        title="Block Card?"
+        description="This action is permanent. Your card will be blocked and you'll need to create a new one."
+        confirmText="Block"
+        confirmTone="danger"
+      />
+      <Tier2UpgradeModal isOpen={openTier2Modal} onClose={() => setOpenTier2Modal(false)} />
+      <Tier3UpgradeModal isOpen={openTier3Modal} onClose={() => setOpenTier3Modal(false)} />
+      <ProfileInfoRequiredModal
+        isOpen={showProfileInfoModal}
+        onClose={() => setShowProfileInfoModal(false)}
+        missingInfo={missingInfo}
+      />
     </div>
   );
 };

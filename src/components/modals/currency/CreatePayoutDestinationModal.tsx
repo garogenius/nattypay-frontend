@@ -3,17 +3,22 @@
 import React from "react";
 import { CgClose } from "react-icons/cg";
 import { useCreateCurrencyAccountPayoutDestination, useGetBanksByCurrency } from "@/api/currency/currency.queries";
+import { useVerifyAccount, useGetMatchedBanks } from "@/api/wallet/wallet.queries";
+import { verifyAccountRequest } from "@/api/wallet/wallet.apis";
 import CustomButton from "@/components/shared/Button";
+import SpinnerLoader from "@/components/Loader/SpinnerLoader";
 import ErrorToast from "@/components/toast/ErrorToast";
 import SuccessToast from "@/components/toast/SuccessToast";
 import { ICurrencyAccount } from "@/api/currency/currency.types";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
+import { FiChevronDown, FiCheckCircle } from "react-icons/fi";
 
 interface CreatePayoutDestinationModalProps {
   isOpen: boolean;
   onClose: () => void;
   account: ICurrencyAccount;
   onSuccess: () => void;
+  initialType?: "wire" | "nip" | "stablecoin";
 }
 
 const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> = ({
@@ -21,38 +26,75 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
   onClose,
   account,
   onSuccess,
+  initialType = "wire",
 }) => {
-  const [type, setType] = React.useState<"wire" | "nip" | "stablecoin">("wire");
+  const [type, setType] = React.useState<"wire" | "nip" | "stablecoin">(initialType);
+
+  // Common State
+  const [label, setLabel] = React.useState("");
+
+  // NIP / Wire State
   const [accountNumber, setAccountNumber] = React.useState("");
-  const [accountName, setAccountName] = React.useState("");
-  const [bankName, setBankName] = React.useState("");
-  const [bankOpen, setBankOpen] = React.useState(false);
+  const [accountType, setAccountType] = React.useState<"personal" | "business">("personal");
+  const [beneficiaryName, setBeneficiaryName] = React.useState("");
+  const [bankName, setBankName] = React.useState(""); // For Wire manual entry
+  const [bankAddress, setBankAddress] = React.useState("");
+  const [routingNumber, setRoutingNumber] = React.useState("");
+  const [beneficiaryAddress, setBeneficiaryAddress] = React.useState("");
+  const [wireType, setWireType] = React.useState<"swift" | "aba">("swift");
+
+  // NIP Specific
+  const [nipCurrency, setNipCurrency] = React.useState("NGN");
   const [selectedBank, setSelectedBank] = React.useState<{ code: string; name: string } | null>(null);
+  const [bankOpen, setBankOpen] = React.useState(false);
   const bankRef = React.useRef<HTMLDivElement>(null);
+  const [isDetectingBank, setIsDetectingBank] = React.useState(false);
+  const detectReqIdRef = React.useRef(0);
+  const [matchedBanks, setMatchedBanks] = React.useState<Array<{ bankCode: string; name: string }>>([]);
+  const [isVerifying, setIsVerifying] = React.useState(false);
+
+  // Stablecoin State
+  const [stablecoinCurrency, setStablecoinCurrency] = React.useState("USDC");
+  const [stablecoinNetwork, setStablecoinNetwork] = React.useState("POL");
+  const [addressCode, setAddressCode] = React.useState("");
 
   useOnClickOutside(bankRef, () => setBankOpen(false));
 
-  const currency = account.currency || "USD";
-  const { banks, isPending: banksLoading } = useGetBanksByCurrency(currency);
+  const currency = account?.currency || "USD";
+  const banksCurrency = type === "nip" ? nipCurrency : currency;
+  const { banks, isPending: banksLoading } = useGetBanksByCurrency(banksCurrency);
+
+  React.useEffect(() => {
+    setSelectedBank(null);
+  }, [nipCurrency]);
 
   React.useEffect(() => {
     if (isOpen) {
-      setType("wire");
-      setAccountNumber("");
-      setAccountName("");
-      setBankName("");
-      setSelectedBank(null);
-      setBankOpen(false);
+      setType(initialType);
+      resetForm();
     }
-  }, [isOpen]);
+  }, [isOpen, initialType]);
 
-  const handleClose = () => {
-    setType("wire");
+  const resetForm = () => {
+    setLabel("");
     setAccountNumber("");
-    setAccountName("");
+    setAccountType("personal");
+    setBeneficiaryName("");
     setBankName("");
+    setBankAddress("");
+    setRoutingNumber("");
+    setBeneficiaryAddress("");
+    setWireType("swift");
+    setNipCurrency("NGN");
     setSelectedBank(null);
     setBankOpen(false);
+    setStablecoinCurrency("USDC");
+    setStablecoinNetwork("POL");
+    setAddressCode("");
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -67,7 +109,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     });
   };
 
-  const onSuccessCallback = (data: any) => {
+  const onSuccessCallback = () => {
     SuccessToast({
       title: "Destination Created",
       description: "Payout destination created successfully",
@@ -76,6 +118,82 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     onSuccess();
   };
 
+  const { mutate: verifyAccount, isPending: verifyLoading } = useVerifyAccount(
+    () => {
+      setBeneficiaryName("");
+    },
+    (data: any) => {
+      const responseData = data?.data?.data || data?.data || data;
+      const accName = responseData?.accountName || responseData?.account_name || "";
+      setBeneficiaryName(accName);
+    }
+  );
+
+  const { mutate: getMatchedBanks, isPending: matchedBanksLoading } = useGetMatchedBanks(
+    () => setMatchedBanks([]),
+    (data: any) => {
+      const raw = data?.data?.data ?? data?.data ?? data;
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.banks) ? raw.banks : [];
+      const normalized = list.map((b: any) => ({
+        bankCode: String(b?.bankCode ?? b?.code ?? b?.bank_code ?? ""),
+        name: String(b?.name ?? b?.bankName ?? b?.bank_name ?? ""),
+      })).filter((b: any) => !!b.bankCode && !!b.name);
+      setMatchedBanks(normalized);
+    }
+  );
+
+  const tryAutoDetectBank = async (acctNumber: string, candidates?: Array<{ bankCode: string; name: string }>) => {
+    const reqId = ++detectReqIdRef.current;
+    setIsDetectingBank(true);
+    try {
+      const sourceBanks = candidates && candidates.length > 0 ? candidates : (banks || []).map((b: any) => ({
+        bankCode: String(b?.code ?? b?.bankCode ?? b?.bank_code ?? ""),
+        name: String(b?.name ?? b?.bankName ?? b?.bank_name ?? ""),
+      })).filter((b: any) => !!b.bankCode);
+
+      for (const b of sourceBanks) {
+        try {
+          const res = await verifyAccountRequest({ accountNumber: acctNumber, bankCode: b.bankCode });
+          if (detectReqIdRef.current !== reqId) return;
+          const responseData = res?.data?.data || res?.data || {};
+          const accName = responseData?.accountName || responseData?.account_name || "";
+          if (accName) {
+            setSelectedBank({ code: b.bankCode, name: b.name });
+            setBeneficiaryName(accName);
+            return;
+          }
+        } catch { /* continue */ }
+      }
+    } finally {
+      if (detectReqIdRef.current === reqId) setIsDetectingBank(false);
+    }
+  };
+
+  const handleAccountNumberChange = (val: string) => {
+    const v = val.replace(/\D/g, "");
+    setAccountNumber(v);
+    setBeneficiaryName("");
+    if (type === "nip") {
+      if (v.length === 10) {
+        if (selectedBank) {
+          verifyAccount({ accountNumber: v, bankCode: selectedBank.code });
+        } else {
+          if (nipCurrency === "NGN") {
+            getMatchedBanks(v);
+          } else {
+            tryAutoDetectBank(v);
+          }
+        }
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (type === "nip" && accountNumber.length === 10 && nipCurrency === "NGN" && matchedBanks.length > 0 && !selectedBank && !isDetectingBank) {
+      tryAutoDetectBank(accountNumber, matchedBanks);
+    }
+  }, [matchedBanks, nipCurrency, type, accountNumber]);
+
   const { mutate: createDestination, isPending } = useCreateCurrencyAccountPayoutDestination(
     onError,
     onSuccessCallback
@@ -83,51 +201,106 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountNumber.trim() || !accountName.trim()) return;
 
-    const formdata: any = {
+    const payload: any = {
       type,
-      account_number: accountNumber.trim(),
-      account_name: accountName.trim(),
+      label: label.trim(),
     };
 
-    if (type === "wire" && (bankName.trim() || selectedBank)) {
-      formdata.bank_name = bankName.trim() || selectedBank?.name || "";
+    if (type === "stablecoin") {
+      if (!stablecoinCurrency || !stablecoinNetwork || !addressCode.trim()) return;
+      payload.currency = stablecoinCurrency;
+      payload.address_network = stablecoinNetwork;
+      payload.address_code = addressCode.trim();
+    } else if (type === "nip") {
+      if (!accountNumber.trim() || !beneficiaryName.trim() || !selectedBank || !selectedBank.code) return;
+      payload.currency = nipCurrency;
+      payload.account_type = accountType;
+      payload.account_number = accountNumber.trim();
+      payload.bank_code = String(selectedBank.code);
+      payload.beneficiary_name = beneficiaryName.trim();
+      // Also map to account_name for backward compatibility if backend needs it?
+      // Assuming backend updated to use beneficiary_name based on user request.
+      // But let's add account_name just in case if the API expects it.
+      payload.account_name = beneficiaryName.trim();
+    } else if (type === "wire") {
+      if (!accountNumber.trim() || !beneficiaryName.trim() || !routingNumber.trim() || !bankName.trim()) return;
+      payload.wire_type = wireType;
+      payload.account_type = accountType;
+      payload.account_number = accountNumber.trim();
+      payload.routing_number = routingNumber.trim();
+      payload.beneficiary_name = beneficiaryName.trim();
+      payload.beneficiary_address = beneficiaryAddress.trim();
+      payload.bank_name = bankName.trim();
+      payload.bank_address = bankAddress.trim();
+      payload.account_name = beneficiaryName.trim();
     }
 
-    createDestination({ currency, formdata });
+    createDestination({ currency, formdata: payload });
   };
 
-  if (!isOpen || !account) return null;
+  const canSubmit = React.useMemo(() => {
+    if (!label.trim()) return false;
+    if (type === "stablecoin") {
+      return !!stablecoinCurrency && !!stablecoinNetwork && !!addressCode.trim();
+    }
+    if (type === "nip") {
+      return !!accountNumber.trim() && !!beneficiaryName.trim() && !!selectedBank && !!selectedBank.code;
+    }
+    if (type === "wire") {
+      return (
+        !!accountNumber.trim() &&
+        !!beneficiaryName.trim() &&
+        !!routingNumber.trim() &&
+        !!bankName.trim() &&
+        !!beneficiaryAddress.trim() &&
+        !!bankAddress.trim()
+      );
+    }
+    return false;
+  }, [
+    type,
+    label,
+    stablecoinCurrency,
+    stablecoinNetwork,
+    addressCode,
+    accountNumber,
+    beneficiaryName,
+    selectedBank,
+    routingNumber,
+    bankName,
+    beneficiaryAddress,
+    bankAddress,
+  ]);
 
-  const canSubmit = !!type && accountNumber.trim().length > 0 && accountName.trim().length > 0;
-  const showBankField = type === "wire";
+  if (!isOpen || !account) return null;
 
   return (
     <div className="z-[999999] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 flex justify-center items-center w-full md:inset-0 h-[100dvh]">
       <div className="fixed inset-0 transition-opacity" aria-hidden="true">
         <div className="absolute inset-0 bg-black/80 dark:bg-black/60" onClick={handleClose} />
       </div>
-      <div className="relative mx-2.5 2xs:mx-4 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 px-0 py-4 w-full max-w-md max-h-[92vh] rounded-2xl overflow-hidden">
+      <div className="relative mx-2.5 2xs:mx-4 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 px-0 py-4 w-full max-w-lg max-h-[92vh] rounded-2xl overflow-hidden flex flex-col">
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 p-2 cursor-pointer bg-bg-1400 rounded-full hover:bg-bg-1200 transition-colors"
+          className="absolute top-3 right-3 p-2 cursor-pointer bg-bg-1400 rounded-full hover:bg-bg-1200 transition-colors z-10"
         >
           <CgClose className="text-xl text-text-200 dark:text-text-400" />
         </button>
 
-        <div className="px-5 sm:px-6 pt-1 pb-4">
-          <h2 className="text-white text-base sm:text-lg font-semibold">Create Payout Destination</h2>
-          <p className="text-white/60 text-sm mt-1">Add a new payout destination for {currency} account</p>
+        <div className="px-5 sm:px-6 pt-1 pb-4 flex-shrink-0">
+          <h2 className="text-white text-base sm:text-lg font-semibold">
+            {type === "stablecoin" ? "Add Stablecoin Wallet" : "Add Bank Account"}
+          </h2>
+          <p className="text-white/60 text-sm mt-1">Add a new destination for your payments</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 sm:px-6 pb-6 space-y-4">
-          {/* Type Selection */}
-          <div>
-            <label className="block text-sm text-white/80 mb-1.5">Destination Type</label>
-            <div className="grid grid-cols-3 gap-2">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6">
+          <form onSubmit={handleSubmit} className="space-y-4 pb-4">
+            {/* Type Selection Tabs */}
+            <div className="flex p-1 bg-black/20 rounded-lg">
               {[
-                { value: "wire", label: "Wire" },
+                { value: "wire", label: "Wire Transfer" },
                 { value: "nip", label: "NIP" },
                 { value: "stablecoin", label: "Stablecoin" },
               ].map((t) => (
@@ -135,125 +308,316 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                   key={t.value}
                   type="button"
                   onClick={() => setType(t.value as any)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    type === t.value
-                      ? "bg-primary text-black"
-                      : "bg-white/5 text-white/70 hover:bg-white/10"
-                  }`}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${type === t.value
+                    ? "bg-bg-1400 text-white shadow-sm"
+                    : "text-white/60 hover:text-white"
+                    }`}
                 >
                   {t.label}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Account Number */}
-          <div>
-            <label className="block text-sm text-white/80 mb-1.5">Account Number</label>
-            <input
-              type="text"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-              placeholder="Enter account number"
-              className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
-            />
-          </div>
-
-          {/* Account Name */}
-          <div>
-            <label className="block text-sm text-white/80 mb-1.5">Account Name</label>
-            <input
-              type="text"
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              placeholder="Enter account holder name"
-              className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
-            />
-          </div>
-
-          {/* Bank Name (for wire transfers) */}
-          {showBankField && (
+            {/* Common Label Field */}
             <div>
-              <label className="block text-sm text-white/80 mb-1.5">Bank Name</label>
-              {banks && banks.length > 0 ? (
-                <div className="relative" ref={bankRef}>
-                  <button
-                    type="button"
-                    onClick={() => setBankOpen(!bankOpen)}
-                    className="w-full flex items-center justify-between bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white"
-                  >
-                    <span>{selectedBank?.name || bankName || "Select bank"}</span>
-                    <svg
-                      className={`w-5 h-5 text-white/60 transition-transform ${bankOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <label className="block text-sm text-white/80 mb-1.5">Label (Alias)</label>
+              <input
+                type="text"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="e.g. Supplier Payment"
+                className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+              />
+            </div>
+
+            {/* STABLECOIN FORM */}
+            {type === "stablecoin" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Currency</label>
+                    <div className="relative">
+                      <select
+                        value={stablecoinCurrency}
+                        onChange={(e) => setStablecoinCurrency(e.target.value)}
+                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
+                      >
+                        <option value="USDC">USDC</option>
+                        <option value="USDT">USDT</option>
+                      </select>
+                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Network</label>
+                    <div className="relative">
+                      <select
+                        value={stablecoinNetwork}
+                        onChange={(e) => setStablecoinNetwork(e.target.value)}
+                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
+                      >
+                        <option value="POL">Polygon (POL)</option>
+                        <option value="ETH">Ethereum (ETH)</option>
+                        <option value="SOL">Solana (SOL)</option>
+                      </select>
+                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Wallet Address</label>
+                  <input
+                    type="text"
+                    value={addressCode}
+                    onChange={(e) => setAddressCode(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm font-mono"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* NIP FORM */}
+            {type === "nip" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Currency</label>
+                    <div className="relative">
+                      <select
+                        value={nipCurrency}
+                        onChange={(e) => setNipCurrency(e.target.value)}
+                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm uppercase"
+                      >
+                        <option value="NGN">NGN</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                      </select>
+                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Account Type</label>
+                    <div className="relative">
+                      <select
+                        value={accountType}
+                        onChange={(e) => setAccountType(e.target.value as any)}
+                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
+                      >
+                        <option value="personal">Personal</option>
+                        <option value="business">Business</option>
+                      </select>
+                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Bank</label>
+                  <div className="relative" ref={bankRef}>
+                    <button
+                      type="button"
+                      onClick={() => setBankOpen(!bankOpen)}
+                      className="w-full flex items-center justify-between bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white text-sm"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {bankOpen && (
-                    <div className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-lg">
-                      {banksLoading ? (
-                        <div className="p-3 text-white/60 text-sm">Loading banks...</div>
-                      ) : (
-                        banks.map((bank: any) => (
-                          <button
-                            key={bank.code}
-                            type="button"
-                            onClick={() => {
-                              setSelectedBank(bank);
-                              setBankName(bank.name);
-                              setBankOpen(false);
-                            }}
-                            className="w-full px-3 py-3 text-left hover:bg-white/5 transition-colors text-white"
-                          >
-                            {bank.name}
-                          </button>
-                        ))
-                      )}
+                      <span className="truncate">{selectedBank?.name || "Select Bank"}</span>
+                      <FiChevronDown className={`transition-transform ${bankOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {bankOpen && (
+                      <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-lg shadow-lg">
+                        {banksLoading ? (
+                          <div className="p-3 text-white/60 text-xs">Loading banks for {nipCurrency}...</div>
+                        ) : banks?.length === 0 ? (
+                          <div className="p-3 text-white/60 text-xs">No banks found for {nipCurrency}</div>
+                        ) : (
+                          banks?.map((bank: any, index: number) => (
+                            <button
+                              key={`${bank.code || index}-${index}`}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBank(bank);
+                                setBankOpen(false);
+                                if (accountNumber.length === 10) {
+                                  verifyAccount({ accountNumber, bankCode: bank.code });
+                                }
+                              }}
+                              className="w-full px-3 py-2 text-left hover:bg-white/10 transition-colors text-white text-sm truncate"
+                            >
+                              {bank.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Account Number</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => handleAccountNumberChange(e.target.value)}
+                      placeholder="Enter account number"
+                      maxLength={10}
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 pr-10 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                    {(verifyLoading || isDetectingBank || matchedBanksLoading) && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <SpinnerLoader width={18} height={18} color="#D4B139" />
+                      </div>
+                    )}
+                  </div>
+                  {beneficiaryName && (
+                    <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded text-emerald-400 text-xs flex items-center gap-2">
+                      <FiCheckCircle className="text-emerald-500" />
+                      <p className="font-medium truncate">{beneficiaryName}</p>
                     </div>
                   )}
                 </div>
-              ) : (
-                <input
-                  type="text"
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  placeholder="Enter bank name"
-                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3.5 px-3 text-white placeholder:text-white/50 outline-none focus:border-primary"
-                />
-              )}
-            </div>
-          )}
+                <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Beneficiary Name</label>
+                  <input
+                    type="text"
+                    value={beneficiaryName}
+                    onChange={(e) => setBeneficiaryName(e.target.value)}
+                    disabled={verifyLoading || isDetectingBank}
+                    placeholder="Enter beneficiary name"
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm disabled:opacity-50"
+                  />
+                </div>
+              </>
+            )}
 
-          <div className="flex gap-3 pt-2">
-            <CustomButton
-              type="button"
-              onClick={handleClose}
-              className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg transition-colors"
-            >
-              Cancel
-            </CustomButton>
-            <CustomButton
-              type="submit"
-              isLoading={isPending}
-              disabled={!canSubmit || isPending}
-              className="flex-1 bg-primary hover:bg-primary/90 text-black font-medium py-3 rounded-lg transition-colors"
-            >
-              Create Destination
-            </CustomButton>
-          </div>
-        </form>
+            {/* WIRE FORM */}
+            {type === "wire" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Wire Type</label>
+                    <div className="relative">
+                      <select
+                        value={wireType}
+                        onChange={(e) => setWireType(e.target.value as any)}
+                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
+                      >
+                        <option value="swift">SWIFT</option>
+                        <option value="aba">ABA</option>
+                      </select>
+                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Account Type</label>
+                    <div className="relative">
+                      <select
+                        value={accountType}
+                        onChange={(e) => setAccountType(e.target.value as any)}
+                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
+                      >
+                        <option value="personal">Personal</option>
+                        <option value="business">Business</option>
+                      </select>
+                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Bank Name</label>
+                    <input
+                      type="text"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      placeholder="Bank Name"
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Routing Number</label>
+                    <input
+                      type="text"
+                      value={routingNumber}
+                      onChange={(e) => setRoutingNumber(e.target.value)}
+                      placeholder="Routing / SWIFT Code"
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Bank Address</label>
+                  <input
+                    type="text"
+                    value={bankAddress}
+                    onChange={(e) => setBankAddress(e.target.value)}
+                    placeholder="e.g. 123 Bank Street, City, Country"
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Account Number</label>
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      placeholder="Account Number"
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Beneficiary Name</label>
+                    <input
+                      type="text"
+                      value={beneficiaryName}
+                      onChange={(e) => setBeneficiaryName(e.target.value)}
+                      placeholder="Beneficiary Name"
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Beneficiary Address</label>
+                  <input
+                    type="text"
+                    value={beneficiaryAddress}
+                    onChange={(e) => setBeneficiaryAddress(e.target.value)}
+                    placeholder="e.g. 456 Main Street, City, Country"
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                  />
+                </div>
+              </>
+            )}
+          </form>
+        </div>
+
+        <div className="px-5 sm:px-6 py-4 flex-shrink-0 bg-bg-600 dark:bg-bg-1100 border-t border-white/5 flex gap-3">
+          <CustomButton
+            type="button"
+            onClick={handleClose}
+            className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg transition-colors"
+          >
+            Cancel
+          </CustomButton>
+          <CustomButton
+            type="button"
+            onClick={handleSubmit}
+            isLoading={isPending}
+            disabled={!canSubmit || isPending}
+            className="flex-1 bg-primary hover:bg-primary/90 text-black font-medium py-3 rounded-lg transition-colors"
+          >
+            Create Destination
+          </CustomButton>
+        </div>
       </div>
     </div>
   );
 };
 
 export default CreatePayoutDestinationModal;
-
-
-
-
-
-

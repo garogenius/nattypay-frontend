@@ -1,6 +1,7 @@
 export interface ICreateCurrencyAccount {
   currency: "USD" | "EUR" | "GBP";
   label: string;
+  kycDocuments?: any[];
 }
 
 export interface IGetCurrencyAccount {
@@ -24,7 +25,7 @@ export interface ICreateCard {
   label: string;
   currency: "USD" | "NGN"; // Virtual cards are available for USD and NGN (required)
   pin: string; // Card PIN (8 digits) required when creating a virtual card
-  initialBalance?: number; // Optional initial balance for the card
+  fundingAmount: number; // Required initial funding amount for the card
 }
 
 export interface IFundCard {
@@ -149,9 +150,27 @@ export interface IPayoutDestination {
 
 export interface ICreatePayoutDestination {
   type: "wire" | "nip" | "stablecoin";
-  account_number: string;
+  label: string;
+  // Common / Wire / NIP
+  account_number?: string;
+  account_name?: string; // Kept for backward compat, but use beneficiary_name for new payloads if needed or map it
+  beneficiary_name?: string;
+
+  // NIP
+  account_type?: "personal" | "business";
+  bank_code?: string;
+
+  // Wire
+  wire_type?: "swift" | "aba";
+  routing_number?: string;
+  beneficiary_address?: string;
   bank_name?: string;
-  account_name: string;
+  bank_address?: string;
+
+  // Stablecoin
+  currency?: string;
+  address_code?: string;
+  address_network?: string;
 }
 
 export interface ICreatePayout {

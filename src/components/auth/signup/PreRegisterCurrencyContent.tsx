@@ -80,7 +80,7 @@ const PreRegisterCurrencyContent = () => {
       title: "Currency account created!",
       description: `Your ${selectedCurrency} account has been created successfully.`,
     });
-    
+
     // Navigate to email verification if email was used
     if (registrationData?.email) {
       navigate("/verify-email");
@@ -95,13 +95,13 @@ const PreRegisterCurrencyContent = () => {
       onCreateAccountSuccess();
       return;
     }
-    
+
     const errorMessage = error?.response?.data?.message;
     ErrorToast({
       title: "Account creation failed",
       descriptions: Array.isArray(errorMessage) ? errorMessage : [errorMessage || "Could not create currency account"],
     });
-    
+
     // Still proceed to verification even if account creation fails
     if (registrationData?.email) {
       navigate("/verify-email");
@@ -133,6 +133,7 @@ const PreRegisterCurrencyContent = () => {
       createCurrencyAccount({
         currency: selectedCurrency as "USD" | "EUR" | "GBP",
         label: `My ${selectedCurrency} Account`,
+        kycDocuments: []
       });
     } else {
       // For NGN, proceed directly to verification
@@ -163,11 +164,11 @@ const PreRegisterCurrencyContent = () => {
         navigate("/account-type");
         return;
       }
-      
+
       // Store currency in store for registration form to use
       setCurrency(selectedCurrency);
       setCountryCode(selectedCurrency);
-      
+
       // Navigate to registration form with account type pre-selected
       navigate(`/signup/${selectedAccountType.toLowerCase()}?currency=${selectedCurrency}`);
       return;
@@ -175,8 +176,8 @@ const PreRegisterCurrencyContent = () => {
 
     // Ensure selectedCurrency is a valid currency code (NGN, USD, EUR, GBP)
     // API expects currency codes, not country codes like "NG"
-    const validCurrency = (selectedCurrency === "NGN" || selectedCurrency === "USD" || selectedCurrency === "EUR" || selectedCurrency === "GBP") 
-      ? selectedCurrency 
+    const validCurrency = (selectedCurrency === "NGN" || selectedCurrency === "USD" || selectedCurrency === "EUR" || selectedCurrency === "GBP")
+      ? selectedCurrency
       : "NGN"; // Default to NGN if invalid
 
     // Set currency and countryCode in store
@@ -204,7 +205,7 @@ const PreRegisterCurrencyContent = () => {
         referralCode: registrationData.invitationCode || "",
         countryCode: validCurrency, // Use currency code as countryCode (NGN, USD, EUR, GBP)
       };
-      
+
       // Only include fullname and dateOfBirth if they have values (not needed for business)
       if (registrationData.fullname && registrationData.fullname.trim()) {
         businessPayload.fullname = registrationData.fullname.trim();
@@ -212,13 +213,13 @@ const PreRegisterCurrencyContent = () => {
       if (registrationData.dateOfBirth && registrationData.dateOfBirth.trim()) {
         businessPayload.dateOfBirth = registrationData.dateOfBirth.trim();
       }
-      
+
       if (registrationData.email) {
         businessPayload.email = registrationData.email;
       } else if (registrationData.phoneNumber) {
         businessPayload.email = registrationData.phoneNumber;
       }
-      
+
       signupBusiness(businessPayload);
     } else {
       // Personal registration
@@ -227,7 +228,7 @@ const PreRegisterCurrencyContent = () => {
       } else if (registrationData.phoneNumber) {
         registrationPayload.email = registrationData.phoneNumber;
       }
-      
+
       signupPersonal(registrationPayload);
     }
   };
@@ -281,11 +282,10 @@ const PreRegisterCurrencyContent = () => {
                     setCurrency(currency.code); // Store in registration store immediately
                     setCountryCode(currency.code); // Also set countryCode
                   }}
-                  className={`w-full flex items-center justify-between p-4 border-2 rounded-lg transition-all ${
-                    selectedCurrency === currency.code
+                  className={`w-full flex items-center justify-between p-4 border-2 rounded-lg transition-all ${selectedCurrency === currency.code
                       ? "border-[#D4B139] bg-[#D4B139]/5"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-2xl">{currency.flag}</div>
@@ -295,11 +295,10 @@ const PreRegisterCurrencyContent = () => {
                     </div>
                   </div>
                   <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedCurrency === currency.code
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedCurrency === currency.code
                         ? "border-[#D4B139] bg-[#D4B139]"
                         : "border-gray-300"
-                    }`}
+                      }`}
                   >
                     {selectedCurrency === currency.code && (
                       <div className="w-3 h-3 rounded-full bg-white"></div>

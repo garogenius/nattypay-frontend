@@ -41,45 +41,47 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
       ? errorMessage
       : [errorMessage || "Failed to create account"];
 
-      // Check if the error is about ID validation (tier verification required) - only for foreign accounts
-      if (accountType === "foreign") {
-        // Check if the error is about missing KYC documents (passport, bank statement, etc.)
-        const hasKycError = errorMessages.some((msg: string) =>
-          msg.toLowerCase().includes("passport") || 
-          msg.toLowerCase().includes("kyc") ||
-          msg.toLowerCase().includes("document") ||
-          msg.toLowerCase().includes("international passport") ||
-          msg.toLowerCase().includes("utilities bill") ||
-          msg.toLowerCase().includes("bank statement")
-        );
+    // Check if the error is about ID validation (tier verification required) - only for foreign accounts
+    if (accountType === "foreign") {
+      // Check if the error is about missing KYC documents (passport, bank statement, etc.)
+      const hasKycError = errorMessages.some((msg: string) =>
+        msg.toLowerCase().includes("passport") ||
+        msg.toLowerCase().includes("kyc") ||
+        msg.toLowerCase().includes("document") ||
+        msg.toLowerCase().includes("international passport") ||
+        msg.toLowerCase().includes("utilities bill") ||
+        msg.toLowerCase().includes("utility bill") ||
+        msg.toLowerCase().includes("bank statement") ||
+        msg.toLowerCase().includes("proof of address")
+      );
 
-        if (hasKycError) {
-          ErrorToast({
-            title: "KYC Profile Incomplete",
-            descriptions: [
-              "To create a foreign currency account, you need to complete your KYC profile.",
-              "Please go to Profile Settings and complete your KYC information."
-            ],
-          });
-          return;
-        }
+      if (hasKycError) {
+        ErrorToast({
+          title: "KYC Profile Incomplete",
+          descriptions: [
+            "To create a foreign currency account, you need to complete your KYC profile.",
+            "Please go to Profile Settings and complete your KYC information."
+          ],
+        });
+        return;
+      }
 
-        const hasIdValidationError = errorMessages.some((msg: string) =>
-          msg.toLowerCase().includes("unable to validate") || 
-          msg.toLowerCase().includes("verify provided id") ||
-          msg.toLowerCase().includes("invalid id number")
-        );
+      const hasIdValidationError = errorMessages.some((msg: string) =>
+        msg.toLowerCase().includes("unable to validate") ||
+        msg.toLowerCase().includes("verify provided id") ||
+        msg.toLowerCase().includes("invalid id number")
+      );
 
-        if (hasIdValidationError) {
-          ErrorToast({
-            title: "Tier Verification Required",
-            descriptions: [
-              "To create a foreign currency account, you need to complete tier verification.",
-              "Please upgrade your tier by verifying your identity in Settings."
-            ],
-          });
-          return;
-        }
+      if (hasIdValidationError) {
+        ErrorToast({
+          title: "Tier Verification Required",
+          descriptions: [
+            "To create a foreign currency account, you need to complete tier verification.",
+            "Please upgrade your tier by verifying your identity in Settings."
+          ],
+        });
+        return;
+      }
 
       // Check if the error is about missing phone number or email
       const hasPhoneError = errorMessages.some((msg: string) =>
@@ -159,7 +161,69 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
         });
         return;
       }
-      createForeign({ currency, label });
+      const kycDocuments: any[] = [];
+
+      // Use kycDocuments array if available
+      if (user?.kycDocuments && user.kycDocuments.length > 0) {
+        user.kycDocuments.forEach(doc => {
+          kycDocuments.push({
+            type: doc.type,
+            url: doc.url,
+            issueDate: doc.issueDate,
+            expiryDate: doc.expiryDate,
+            documentNumber: doc.documentNumber
+          });
+        });
+      } else {
+        // Fallback to object properties if array is not available or empty
+        if (user?.passportDocumentUrl) {
+          kycDocuments.push({
+            type: "PASSPORT",
+            url: user.passportDocumentUrl,
+            issueDate: user.passportIssueDate || null,
+            expiryDate: user.passportExpiryDate || null,
+            documentNumber: user.passportNumber || null
+          });
+        }
+        if (user?.bankStatementUrl) {
+          kycDocuments.push({
+            type: "BANK_STATEMENT",
+            url: user.bankStatementUrl,
+            issueDate: user.bankStatementIssueDate || null,
+            expiryDate: user.bankStatementExpiryDate || null
+          });
+        }
+        if (user?.utilityBillUrl) {
+          kycDocuments.push({
+            type: "UTILITY_BILL",
+            url: user.utilityBillUrl,
+            issueDate: user.utilityBillIssueDate || null,
+            expiryDate: user.utilityBillExpiryDate || null
+          });
+        }
+      }
+
+      // Validation for USD account: Proof of address is required
+      const hasProofOfAddress = kycDocuments.some(doc =>
+        doc.type === "BANK_STATEMENT" || doc.type === "UTILITY_BILL"
+      );
+
+      if (currency === "USD" && !hasProofOfAddress) {
+        ErrorToast({
+          title: "Proof of Address Required",
+          descriptions: [
+            "To create a USD account, you must upload either a bank statement or utility bill.",
+            "Please go to Profile Settings and upload your proof of address documents."
+          ],
+        });
+        return;
+      }
+
+      createForeign({
+        currency,
+        label,
+        kycDocuments: kycDocuments.length > 0 ? kycDocuments : undefined
+      });
     }
   };
 

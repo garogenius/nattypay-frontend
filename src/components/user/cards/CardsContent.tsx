@@ -41,7 +41,7 @@ const CardsContent: React.FC = () => {
   const [selectedCard, setSelectedCard] = React.useState<IVirtualCard | null>(null);
   const [cardLabel, setCardLabel] = React.useState("");
   const [cardPin, setCardPin] = React.useState("");
-  const [initialBalance, setInitialBalance] = React.useState<string>("");
+  const [fundingAmount, setFundingAmount] = React.useState("");
   const [selectedCurrency, setSelectedCurrency] = React.useState<"USD" | "NGN">("USD");
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = React.useState(false);
   const [errorModal, setErrorModal] = React.useState<{
@@ -54,29 +54,29 @@ const CardsContent: React.FC = () => {
     descriptions: [],
   });
   const currencyDropdownRef = React.useRef<HTMLDivElement>(null);
-  
+
   useOnClickOutside(currencyDropdownRef, () => setCurrencyDropdownOpen(false));
 
   // Fetch all virtual cards (USD, NGN)
   const { cards, isPending: cardsLoading, refetch: refetchCards } = useGetCards();
   const safeCards = Array.isArray(cards) ? cards : [];
-  const virtualCards = safeCards.filter((card: IVirtualCard) => 
-    card.isVirtual && 
+  const virtualCards = safeCards.filter((card: IVirtualCard) =>
+    card.isVirtual &&
     (card.currency === "USD" || card.currency === "NGN")
   );
 
   // Fetch currency accounts to check for account availability
   const { accounts: currencyAccounts } = useGetCurrencyAccounts();
-  
+
   // Also fetch the specific account for the selected currency to ensure we have the latest data
   const { account: fetchedCurrencyAccount, isNotFound: accountNotFound } = useGetCurrencyAccountByCurrency(
     selectedCurrency === "NGN" ? "" : selectedCurrency
   );
-  
+
   // Only USD and NGN cards are available
   const availableAccountCurrencies: Array<"USD"> = ["USD"]; // Only USD can be created
   const supportedCardCurrencies: Array<"USD" | "NGN"> = ["USD", "NGN"];
-  
+
   // Check if account exists and is active - check both the list and the fetched account
   const hasCurrencyAccount = (currency: "USD" | "NGN") => {
     // For NGN, check wallet
@@ -87,43 +87,43 @@ const CardsContent: React.FC = () => {
       });
       return !!hasNGNWallet;
     }
-    
+
     // For USD, check currency accounts
-    const accountInList = Array.isArray(currencyAccounts) 
+    const accountInList = Array.isArray(currencyAccounts)
       ? currencyAccounts.find((acc: any) => {
-          if (!acc || !acc.currency) return false;
-          const accCurrency = String(acc.currency).toUpperCase().trim();
-          const targetCurrency = currency.toUpperCase().trim();
-          return accCurrency === targetCurrency;
-        })
+        if (!acc || !acc.currency) return false;
+        const accCurrency = String(acc.currency).toUpperCase().trim();
+        const targetCurrency = currency.toUpperCase().trim();
+        return accCurrency === targetCurrency;
+      })
       : null;
-    
+
     const hasInList = !!accountInList;
-    
+
     // Also check if we have a fetched account for the selected currency
-    const hasFetched = currency === selectedCurrency && 
-      fetchedCurrencyAccount && 
+    const hasFetched = currency === selectedCurrency &&
+      fetchedCurrencyAccount &&
       fetchedCurrencyAccount.currency &&
       String(fetchedCurrencyAccount.currency).toUpperCase().trim() === currency.toUpperCase().trim() &&
       !accountNotFound;
-    
+
     return hasInList || hasFetched;
   };
-  
+
   // Get the actual account for the selected currency to check its status
   const getCurrencyAccount = (currency: "USD" | "NGN") => {
     // For NGN, return null (uses wallet, not currency account)
     if (currency === "NGN") {
       return null;
     }
-    
+
     // For USD, check fetched account first
-    if (currency === selectedCurrency && fetchedCurrencyAccount && 
-        String(fetchedCurrencyAccount.currency).toUpperCase().trim() === currency.toUpperCase().trim() &&
-        !accountNotFound) {
+    if (currency === selectedCurrency && fetchedCurrencyAccount &&
+      String(fetchedCurrencyAccount.currency).toUpperCase().trim() === currency.toUpperCase().trim() &&
+      !accountNotFound) {
       return fetchedCurrencyAccount;
     }
-    
+
     // Then check list
     if (Array.isArray(currencyAccounts)) {
       const account = currencyAccounts.find((acc: any) => {
@@ -134,7 +134,7 @@ const CardsContent: React.FC = () => {
       });
       if (account) return account;
     }
-    
+
     return null;
   };
 
@@ -142,7 +142,7 @@ const CardsContent: React.FC = () => {
     // Extract error message from response
     const errorData = error?.response?.data;
     let errorMessage = errorData?.message;
-    
+
     // Handle array of messages
     if (Array.isArray(errorMessage)) {
       errorMessage = errorMessage;
@@ -153,16 +153,16 @@ const CardsContent: React.FC = () => {
       errorMessage = [errorData.error];
     } else if (errorData?.errors) {
       // Handle validation errors
-      errorMessage = Array.isArray(errorData.errors) 
-        ? errorData.errors 
+      errorMessage = Array.isArray(errorData.errors)
+        ? errorData.errors
         : [String(errorData.errors)];
     } else {
       errorMessage = [error?.message || "Failed to create virtual card"];
     }
 
     // Add helpful context for validation errors
-    if (error?.response?.status === 400 && errorMessage.some((msg: string) => 
-      msg.toLowerCase().includes("validate") || 
+    if (error?.response?.status === 400 && errorMessage.some((msg: string) =>
+      msg.toLowerCase().includes("validate") ||
       msg.toLowerCase().includes("parameter")
     )) {
       const account = getCurrencyAccount(selectedCurrency);
@@ -171,11 +171,11 @@ const CardsContent: React.FC = () => {
         id: account.id,
         accountNumber: account.accountNumber,
       } : null;
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.warn('Validation error - Account info:', accountInfo);
       }
-      
+
       errorMessage = [
         ...errorMessage,
         `Your ${selectedCurrency} account ${accountInfo ? `(Status: ${accountInfo.status || 'unknown'})` : ''} may need to be fully activated.`,
@@ -216,7 +216,9 @@ const CardsContent: React.FC = () => {
     setOpenCreateCard(false);
     setCardLabel("");
     setCardPin("");
-    setInitialBalance("");
+    setCardLabel("");
+    setCardPin("");
+    setFundingAmount("");
     setSelectedCurrency("USD"); // Reset to USD after creation
     refetchCards();
   };
@@ -314,16 +316,18 @@ const CardsContent: React.FC = () => {
   const { mutate: unfreezeCard } = useUnfreezeCard(onUnfreezeError, onUnfreezeSuccess);
 
   const handleCreateCard = () => {
-    if (!hasCurrencyAccount(selectedCurrency)) {
-      if (selectedCurrency === "NGN") {
+    const currencyType = selectedCurrency as "USD" | "NGN";
+
+    if (!hasCurrencyAccount(currencyType)) {
+      if (currencyType === "NGN") {
         ErrorToast({
           title: "NGN Wallet Required",
           descriptions: ["You must have a NGN wallet before creating a virtual card. Please contact support if you don't have a NGN wallet."],
         });
       } else {
         ErrorToast({
-          title: `${selectedCurrency} Account Required`,
-          descriptions: [`You must have a ${selectedCurrency} account before creating a virtual card. Please create a ${selectedCurrency} account first.`],
+          title: `${currencyType} Account Required`,
+          descriptions: [`You must have a ${currencyType} account before creating a virtual card. Please create a ${currencyType} account first.`],
         });
       }
       return;
@@ -331,13 +335,13 @@ const CardsContent: React.FC = () => {
 
     // Check account status (only for USD, NGN uses wallet)
     let account = null;
-    if (selectedCurrency !== "NGN") {
-      account = getCurrencyAccount(selectedCurrency);
+    if (currencyType !== "NGN") {
+      account = getCurrencyAccount(currencyType);
       if (account && account.status && account.status !== "ACTIVE") {
         ErrorToast({
           title: "Account Not Active",
           descriptions: [
-            `Your ${selectedCurrency} account is ${account.status.toLowerCase()}.`,
+            `Your ${currencyType} account is ${account.status.toLowerCase()}.`,
             "Please ensure your account is active before creating a virtual card.",
             "If you just created the account, please wait a moment for it to be activated."
           ],
@@ -362,37 +366,34 @@ const CardsContent: React.FC = () => {
       return;
     }
 
-    // Parse initial balance if provided
-    const parsedInitialBalance = initialBalance.trim() 
-      ? parseFloat(initialBalance.trim()) 
-      : undefined;
-    
-    // Validate initial balance if provided
-    if (initialBalance.trim() && (isNaN(parsedInitialBalance!) || parsedInitialBalance! < 0)) {
+    // Parse funding amount
+    const parsedAmount = fundingAmount.trim()
+      ? parseFloat(fundingAmount.trim())
+      : 0;
+
+    // Validate funding amount
+    if (!fundingAmount.trim() || isNaN(parsedAmount) || parsedAmount <= 0) {
       ErrorToast({
         title: "Validation Error",
-        descriptions: ["Initial balance must be a valid positive number."],
+        descriptions: ["Funding amount is required and must be greater than 0."],
       });
       return;
     }
 
-    // Build payload with optional initialBalance
+    // Build payload
     const payload: any = {
       label: cardLabel.trim(),
       currency: selectedCurrency === "NGN" ? "NGN" : selectedCurrency,
       pin: cardPin,
+      fundingAmount: parsedAmount,
     };
-    
-    if (parsedInitialBalance !== undefined && parsedInitialBalance > 0) {
-      payload.initialBalance = parsedInitialBalance;
-    }
 
     // Log account details before creating card
     if (process.env.NODE_ENV === 'development') {
       console.log('Creating card with account:', {
         currency: selectedCurrency,
         label: cardLabel.trim(),
-        initialBalance: parsedInitialBalance,
+        fundingAmount: parsedAmount,
         account: account ? {
           id: account.id,
           currency: account.currency,
@@ -455,7 +456,7 @@ const CardsContent: React.FC = () => {
             <p className="text-white/40 text-xs">Please create a currency account in the Accounts page first.</p>
           </div>
         ) : (
-        <p className="text-white text-sm sm:text-base mb-2">You currently do not have any virtual cards (USD or NGN) linked to this account.</p>
+          <p className="text-white text-sm sm:text-base mb-2">You currently do not have any virtual cards (USD or NGN) linked to this account.</p>
         )}
       </div>
       <CustomButton
@@ -488,7 +489,7 @@ const CardsContent: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-          <button onClick={()=> setOpenDetails(true)} className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-colors">
+          <button onClick={() => setOpenDetails(true)} className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-colors">
             <FiEye />
             <span className="text-sm">Show Details</span>
           </button>
@@ -501,19 +502,19 @@ const CardsContent: React.FC = () => {
         <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-3 w-full max-w-sm">
           <p className="text-white/80 text-sm mb-2">Manage Card</p>
           <div className="divide-y divide-white/10">
-            <button onClick={()=> setOpenChangePin(true)} className="w-full flex items-center justify-between py-3 text-left">
+            <button onClick={() => setOpenChangePin(true)} className="w-full flex items-center justify-between py-3 text-left">
               <span className="text-white text-sm">Change Pin</span>
               <FiLock className="text-white/70" />
             </button>
-            <button onClick={()=> setOpenResetPin(true)} className="w-full flex items-center justify-between py-3 text-left">
+            <button onClick={() => setOpenResetPin(true)} className="w-full flex items-center justify-between py-3 text-left">
               <span className="text-white text-sm">Reset Pin</span>
               <FiLock className="text-white/70" />
             </button>
-            <button onClick={()=> setOpenLimit(true)} className="w-full flex items-center justify-between py-3 text-left">
+            <button onClick={() => setOpenLimit(true)} className="w-full flex items-center justify-between py-3 text-left">
               <span className="text-white text-sm">Set Spending Limit</span>
               <FiAlertCircle className="text-white/70" />
             </button>
-            <button onClick={()=> setOpenBlock(true)} className="w-full flex items-center justify-between py-3 text-left">
+            <button onClick={() => setOpenBlock(true)} className="w-full flex items-center justify-between py-3 text-left">
               <span className="text-red-400 text-sm">Block Card</span>
               <FiAlertCircle className="text-red-400" />
             </button>
@@ -541,7 +542,7 @@ const CardsContent: React.FC = () => {
         {filteredVirtualCards.map((card: IVirtualCard) => {
           const isDisabled = isCardDisabled(card);
           const isFrozen = card.status === "FROZEN";
-          
+
           return (
             <div key={card.id} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-4 items-center md:items-start">
@@ -565,12 +566,11 @@ const CardsContent: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-white/60 text-xs">Status</p>
-                    <p className={`text-xs font-medium capitalize ${
-                      card.status === "ACTIVE" ? "text-green-400" :
+                    <p className={`text-xs font-medium capitalize ${card.status === "ACTIVE" ? "text-green-400" :
                       card.status === "FROZEN" ? "text-yellow-400" :
-                      card.status === "BLOCKED" ? "text-red-400" :
-                      "text-gray-400"
-                    }`}>
+                        card.status === "BLOCKED" ? "text-red-400" :
+                          "text-gray-400"
+                      }`}>
                       {card.status.toLowerCase()}
                     </p>
                   </div>
@@ -718,7 +718,7 @@ const CardsContent: React.FC = () => {
   };
 
   // Filter cards by selected currency
-  const filteredVirtualCards = virtualCards.filter((card: IVirtualCard) => 
+  const filteredVirtualCards = virtualCards.filter((card: IVirtualCard) =>
     (card.currency || "").toUpperCase() === selectedCurrency
   );
 
@@ -729,58 +729,58 @@ const CardsContent: React.FC = () => {
         <div className="w-full flex flex-col gap-3">
           <div className="w-full flex items-center justify-between gap-3 sm:gap-4">
             <h1 className="text-white text-xl sm:text-2xl font-semibold">Cards</h1>
-          <div className="relative flex-shrink-0" ref={currencyDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#D4B139] text-black text-xs sm:text-sm font-semibold px-3 py-1.5 uppercase whitespace-nowrap hover:bg-[#c7a42f] transition-colors"
-            >
-              <NextImage 
-                src={getCurrencyIconByString(selectedCurrency.toLowerCase()) || ""} 
-                alt="flag" 
-                width={16} 
-                height={16} 
-                className="w-4 h-4" 
-              />
-              <span>{selectedCurrency} Cards</span>
-              <FiChevronDown className={`text-black/80 transition-transform ${currencyDropdownOpen ? "rotate-180" : ""}`} />
-            </button>
-            {currencyDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-2 text-white z-50">
-                {supportedCardCurrencies.map((currency) => {
-                  const hasAccount = hasCurrencyAccount(currency);
-                  
-                  return (
-                    <button
-                      key={currency}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCurrency(currency);
-                        setCurrencyDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 ${selectedCurrency === currency ? "bg-white/10" : ""}`}
-                    >
-                      <NextImage 
-                        src={getCurrencyIconByString(currency.toLowerCase()) || ""} 
-                        alt="flag" 
-                        width={18} 
-                        height={18} 
-                        className="w-5 h-5" 
-                      />
-                      <span className="text-sm flex-1 text-white">{currency} Cards</span>
-                      {!hasAccount && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                          {currency === "NGN" ? "No Wallet" : "No Account"}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <div className="relative flex-shrink-0" ref={currencyDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#D4B139] text-black text-xs sm:text-sm font-semibold px-3 py-1.5 uppercase whitespace-nowrap hover:bg-[#c7a42f] transition-colors"
+              >
+                <NextImage
+                  src={getCurrencyIconByString(selectedCurrency.toLowerCase()) || ""}
+                  alt="flag"
+                  width={16}
+                  height={16}
+                  className="w-4 h-4"
+                />
+                <span>{selectedCurrency} Cards</span>
+                <FiChevronDown className={`text-black/80 transition-transform ${currencyDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {currencyDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-bg-600 dark:bg-bg-2200 border border-border-800 dark:border-border-700 shadow-2xl p-2 text-white z-50">
+                  {supportedCardCurrencies.map((currency) => {
+                    const hasAccount = hasCurrencyAccount(currency);
+
+                    return (
+                      <button
+                        key={currency}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCurrency(currency);
+                          setCurrencyDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 ${selectedCurrency === currency ? "bg-white/10" : ""}`}
+                      >
+                        <NextImage
+                          src={getCurrencyIconByString(currency.toLowerCase()) || ""}
+                          alt="flag"
+                          width={18}
+                          height={18}
+                          className="w-5 h-5"
+                        />
+                        <span className="text-sm flex-1 text-white">{currency} Cards</span>
+                        {!hasAccount && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                            {currency === "NGN" ? "No Wallet" : "No Account"}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <p className="text-white/60 text-xs sm:text-sm">Manage your virtual cards</p>
+          <p className="text-white/60 text-xs sm:text-sm">Manage your virtual cards</p>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -792,9 +792,8 @@ const CardsContent: React.FC = () => {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key as any)}
-                className={`rounded-full py-1.5 sm:py-2 text-[11px] xs:text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex items-center justify-center ${
-                  tab === (t.key as any) ? "bg-white/15 text-white" : "text-white/70 hover:text-white"
-                }`}
+                className={`rounded-full py-1.5 sm:py-2 text-[11px] xs:text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex items-center justify-center ${tab === (t.key as any) ? "bg-white/15 text-white" : "text-white/70 hover:text-white"
+                  }`}
               >
                 {t.label}
               </button>
@@ -806,13 +805,13 @@ const CardsContent: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <ShowCardDetailsModal isOpen={openDetails} onClose={()=> { setOpenDetails(false); setSelectedCard(null); }} card={selectedCard} />
-      <ChangePinModal isOpen={openChangePin} onClose={()=> { setOpenChangePin(false); setSelectedCard(null); }} />
-      <ResetPinModal isOpen={openResetPin} onClose={()=> { setOpenResetPin(false); setSelectedCard(null); }} />
-      <SpendingLimitModal isOpen={openLimit} onClose={()=> { setOpenLimit(false); setSelectedCard(null); }} card={selectedCard} />
-      <ConfirmActionModal 
+      <ShowCardDetailsModal isOpen={openDetails} onClose={() => { setOpenDetails(false); setSelectedCard(null); }} card={selectedCard} />
+      <ChangePinModal isOpen={openChangePin} onClose={() => { setOpenChangePin(false); setSelectedCard(null); }} />
+      <ResetPinModal isOpen={openResetPin} onClose={() => { setOpenResetPin(false); setSelectedCard(null); }} />
+      <SpendingLimitModal isOpen={openLimit} onClose={() => { setOpenLimit(false); setSelectedCard(null); }} card={selectedCard} />
+      <ConfirmActionModal
         isOpen={openFreeze}
-        onClose={()=> { setOpenFreeze(false); setSelectedCard(null); }}
+        onClose={() => { setOpenFreeze(false); setSelectedCard(null); }}
         onConfirm={handleFreeze}
         title={selectedCard?.status === "FROZEN" ? "Un-freeze Card?" : "Freeze Card?"}
         description={selectedCard?.status === "FROZEN" ? "Your card will become active for transactions." : "This will temporarily disable card transactions until un-frozen."}
@@ -842,7 +841,7 @@ const CardsContent: React.FC = () => {
           }}
         />
       )}
-      
+
       {/* Error Modal for Card Creation */}
       <ValidationErrorModal
         isOpen={errorModal.isOpen}
@@ -850,7 +849,7 @@ const CardsContent: React.FC = () => {
         title={errorModal.title}
         descriptions={errorModal.descriptions}
       />
-      
+
       {/* Create Card Modal */}
       {openCreateCard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -860,7 +859,7 @@ const CardsContent: React.FC = () => {
               setOpenCreateCard(false);
               setCardLabel("");
               setCardPin("");
-              setInitialBalance("");
+              setFundingAmount("");
               setSelectedCurrency("USD");
             }}
           />
@@ -873,7 +872,7 @@ const CardsContent: React.FC = () => {
                     {selectedCurrency === "NGN" ? "NGN Wallet Required" : `${selectedCurrency} Account Required`}
                   </p>
                   <p className="text-white/80 text-xs">
-                    {selectedCurrency === "NGN" 
+                    {selectedCurrency === "NGN"
                       ? "You must have a NGN wallet before creating a virtual card. Please contact support if you don't have a NGN wallet."
                       : `You must have a ${selectedCurrency} account before creating a virtual card. Please create a ${selectedCurrency} account in the Accounts page first.`}
                   </p>
@@ -910,7 +909,7 @@ const CardsContent: React.FC = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-white/70 text-xs">
-                  Initial Balance (Optional)
+                  Funding Amount <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -918,40 +917,40 @@ const CardsContent: React.FC = () => {
                   step="0.01"
                   className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white text-sm placeholder:text-white/50 outline-none"
                   placeholder={`e.g., 100.00`}
-                  value={initialBalance}
+                  value={fundingAmount}
                   onChange={(e) => {
                     const value = e.target.value;
                     // Allow empty, numbers, and decimal point
                     if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                      setInitialBalance(value);
+                      setFundingAmount(value);
                     }
                   }}
                 />
                 <p className="text-white/50 text-[10px] mt-1">
-                  Optional: Set an initial balance for your card in {selectedCurrency}
+                  Required: Set an initial funding amount in {selectedCurrency}
                 </p>
               </div>
               <div className="flex gap-3 mt-2">
                 <CustomButton
-                  onClick={() => { 
-                    setOpenCreateCard(false); 
-                    setCardLabel(""); 
+                  onClick={() => {
+                    setOpenCreateCard(false);
+                    setCardLabel("");
                     setCardPin("");
-                    setInitialBalance("");
-                    setSelectedCurrency("USD"); 
+                    setFundingAmount("");
+                    setSelectedCurrency("USD");
                   }}
                   className="flex-1 bg-transparent border border-white/15 text-white rounded-lg py-2.5"
                 >
                   Cancel
                 </CustomButton>
-                                  <CustomButton
-                                    onClick={handleCreateCard}
-                                    disabled={creatingCard || !cardLabel.trim() || cardPin.length !== 8 || !hasCurrencyAccount(selectedCurrency)}
-                                    isLoading={creatingCard}
-                                    className="flex-1 bg-[#D4B139] hover:bg-[#c7a42f] text-black rounded-lg py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    Create Card
-                                  </CustomButton>
+                <CustomButton
+                  onClick={handleCreateCard}
+                  disabled={creatingCard || !cardLabel.trim() || cardPin.length !== 8 || !hasCurrencyAccount(selectedCurrency)}
+                  isLoading={creatingCard}
+                  className="flex-1 bg-[#D4B139] hover:bg-[#c7a42f] text-black rounded-lg py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Create Card
+                </CustomButton>
               </div>
             </div>
           </div>

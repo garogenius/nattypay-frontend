@@ -35,6 +35,19 @@ export enum TIER_LEVEL {
   three = "three",
 }
 
+export interface KycDocument {
+  id: string;
+  userId: string;
+  type: "PASSPORT" | "BANK_STATEMENT" | "UTILITY_BILL" | "DRIVERS_LICENSE" | "NATIONAL_ID";
+  url: string;
+  country: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  documentNumber: string | null;
+  uploadedAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -45,27 +58,60 @@ export interface User {
   currency: CURRENCY;
   businessName: string | null;
   isBusiness: boolean | null;
+  companyRegistrationNumber: string | null;
   phoneNumber: string | null;
   isPasscodeSet: boolean;
   isPhoneVerified: boolean;
   isEmailVerified: boolean;
   isBvnVerified: boolean;
   isNinVerified: boolean;
+  isAddressVerified: boolean;
   nin: string | null;
+  address: string | null;
+  state: string | null;
+  city: string | null;
+  postalCode: string | null;
   selfieBase64Image: string | null;
   accountType: ACCOUNT_TYPE;
+  passportNumber: string | null;
+  passportCountry: string | null;
+  passportIssueDate: string | null;
+  passportExpiryDate: string | null;
+  passportDocumentUrl: string | null;
+  employmentStatus: string | null;
+  occupation: string | null;
+  primaryPurpose: string | null;
+  sourceOfFunds: string | null;
+  expectedMonthlyInflow: number | null;
+  bankStatementUrl: string | null;
+  bankStatementIssueDate: string | null;
+  bankStatementExpiryDate: string | null;
+  utilityBillUrl: string | null;
+  utilityBillIssueDate: string | null;
+  utilityBillExpiryDate: string | null;
+  graphPersonId: string | null;
   isWalletPinSet: boolean;
   profileImageFilename: string | null;
   profileImageUrl: string | null;
   referralCode: string | null;
   dateOfBirth: string | null;
+  enabledTwoFa?: boolean;
   status: USER_ACCOUNT_STATUS;
   role: USER_ROLE;
   dailyCummulativeTransactionLimit: number;
   cummulativeBalanceLimit: number;
   tierLevel: TIER_LEVEL;
+  name_first?: string | null;
+  name_last?: string | null;
+  name_other?: string | null;
+  id_level?: "primary" | "secondary" | null;
+  id_number?: string | null;
+  id_country?: string | null;
+  bank_id_number?: string | null;
+  id_type?: "passport" | "drivers_license" | "national_id" | null;
   wallet?: Wallet[];
   scamTicket?: ScamTicket[];
+  kycDocuments?: KycDocument[];
 }
 
 export interface Wallet {

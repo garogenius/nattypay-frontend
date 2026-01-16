@@ -95,6 +95,7 @@ export interface ICreateBusinessAccount {
 export interface ICreateForeignAccount {
   currency: "USD" | "EUR" | "GBP";
   label: string;
+  kycDocuments?: any[];
 }
 
 // User Statistics
