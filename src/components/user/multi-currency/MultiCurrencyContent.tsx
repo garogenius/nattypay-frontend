@@ -262,7 +262,14 @@ const MultiCurrencyContent: React.FC = () => {
                               {isVisible ? <FiEyeOff className="text-2xl" /> : <FiEye className="text-2xl" />}
                             </div>
                           </div>
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? "bg-black text-[#D4B139]" : "bg-[#D4B139] text-black"}`}>
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.dispatchEvent(new CustomEvent('trigger-payout'));
+                              const el = document.getElementById('account-details-section');
+                              el?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform ${isActive ? "bg-black text-[#D4B139]" : "bg-[#D4B139] text-black"}`}>
                             <FiPlus className="text-2xl font-bold" />
                           </div>
                         </div>
@@ -321,7 +328,7 @@ const MultiCurrencyContent: React.FC = () => {
                 <div className="grid grid-cols-4 gap-2 2xs:gap-3">
                   <QuickAction
                     icon={RiSendPlane2Line}
-                    title="Add Destination"
+                    title="Destination"
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('trigger-destination'));
                       const el = document.getElementById('account-details-section');
@@ -449,7 +456,9 @@ const MultiCurrencyContent: React.FC = () => {
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
-                          setIsAddMoneyModalOpen(true);
+                          window.dispatchEvent(new CustomEvent('trigger-payout'));
+                          const el = document.getElementById('account-details-section');
+                          el?.scrollIntoView({ behavior: 'smooth' });
                         }}
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${isActive ? "bg-black text-[#D4B139]" : "bg-[#D4B139] text-black"}`}
                       >
