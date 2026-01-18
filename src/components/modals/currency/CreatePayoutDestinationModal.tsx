@@ -38,10 +38,8 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
   const [accountType, setAccountType] = React.useState<"personal" | "business">("personal");
   const [beneficiaryName, setBeneficiaryName] = React.useState("");
   const [bankName, setBankName] = React.useState(""); // For Wire manual entry
-  const [bankAddress, setBankAddress] = React.useState("");
   const [routingNumber, setRoutingNumber] = React.useState("");
   const [beneficiaryAddress, setBeneficiaryAddress] = React.useState("");
-  const [wireType, setWireType] = React.useState<"swift" | "aba">("swift");
 
   // NIP Specific
   const [nipCurrency, setNipCurrency] = React.useState("NGN");
@@ -51,7 +49,6 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
   const [isDetectingBank, setIsDetectingBank] = React.useState(false);
   const detectReqIdRef = React.useRef(0);
   const [matchedBanks, setMatchedBanks] = React.useState<Array<{ bankCode: string; name: string }>>([]);
-  const [isVerifying, setIsVerifying] = React.useState(false);
 
   // Stablecoin State
   const [stablecoinCurrency, setStablecoinCurrency] = React.useState("USDC");
@@ -81,10 +78,8 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     setAccountType("personal");
     setBeneficiaryName("");
     setBankName("");
-    setBankAddress("");
     setRoutingNumber("");
     setBeneficiaryAddress("");
-    setWireType("swift");
     setNipCurrency("NGN");
     setSelectedBank(null);
     setBankOpen(false);
@@ -202,45 +197,40 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload: any = {
-      type,
-      label: label.trim(),
-    };
+    const payload: any = { type };
 
     if (type === "stablecoin") {
       if (!stablecoinCurrency || !stablecoinNetwork || !addressCode.trim()) return;
+      payload.label = label.trim();
       payload.currency = stablecoinCurrency;
       payload.address_network = stablecoinNetwork;
       payload.address_code = addressCode.trim();
     } else if (type === "nip") {
       if (!accountNumber.trim() || !beneficiaryName.trim() || !selectedBank || !selectedBank.code) return;
-      payload.currency = nipCurrency;
+      // Payload for NIP
+      payload.label = label.trim();
+      // payload.type set above
       payload.account_type = accountType;
       payload.account_number = accountNumber.trim();
       payload.bank_code = String(selectedBank.code);
       payload.beneficiary_name = beneficiaryName.trim();
-      // Also map to account_name for backward compatibility if backend needs it?
-      // Assuming backend updated to use beneficiary_name based on user request.
-      // But let's add account_name just in case if the API expects it.
-      payload.account_name = beneficiaryName.trim();
     } else if (type === "wire") {
       if (!accountNumber.trim() || !beneficiaryName.trim() || !routingNumber.trim() || !bankName.trim()) return;
-      payload.wire_type = wireType;
-      payload.account_type = accountType;
+      // Payload for Wire - No Label
+      // payload.type set above
       payload.account_number = accountNumber.trim();
       payload.routing_number = routingNumber.trim();
-      payload.beneficiary_name = beneficiaryName.trim();
+      payload.account_name = beneficiaryName.trim();
       payload.beneficiary_address = beneficiaryAddress.trim();
       payload.bank_name = bankName.trim();
-      payload.bank_address = bankAddress.trim();
-      payload.account_name = beneficiaryName.trim();
     }
 
     createDestination({ currency, formdata: payload });
   };
 
   const canSubmit = React.useMemo(() => {
-    if (!label.trim()) return false;
+    if (type !== 'wire' && !label.trim()) return false;
+
     if (type === "stablecoin") {
       return !!stablecoinCurrency && !!stablecoinNetwork && !!addressCode.trim();
     }
@@ -253,8 +243,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
         !!beneficiaryName.trim() &&
         !!routingNumber.trim() &&
         !!bankName.trim() &&
-        !!beneficiaryAddress.trim() &&
-        !!bankAddress.trim()
+        !!beneficiaryAddress.trim()
       );
     }
     return false;
@@ -270,7 +259,6 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     routingNumber,
     bankName,
     beneficiaryAddress,
-    bankAddress,
   ]);
 
   if (!isOpen || !account) return null;
@@ -319,16 +307,18 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
             </div>
 
             {/* Common Label Field */}
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">Label (Alias)</label>
-              <input
-                type="text"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder="e.g. Supplier Payment"
-                className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
-              />
-            </div>
+            {type !== "wire" && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">Label (Alias)</label>
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="e.g. Supplier Payment"
+                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                />
+              </div>
+            )}
 
             {/* STABLECOIN FORM */}
             {type === "stablecoin" && (
@@ -380,23 +370,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
             {/* NIP FORM */}
             {type === "nip" && (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-white/80 mb-1.5">Currency</label>
-                    <div className="relative">
-                      <select
-                        value={nipCurrency}
-                        onChange={(e) => setNipCurrency(e.target.value)}
-                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm uppercase"
-                      >
-                        <option value="NGN">NGN</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                      </select>
-                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm text-white/80 mb-1.5">Account Type</label>
                     <div className="relative">
@@ -471,22 +445,11 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                     )}
                   </div>
                   {beneficiaryName && (
-                    <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded text-emerald-400 text-xs flex items-center gap-2">
-                      <FiCheckCircle className="text-emerald-500" />
-                      <p className="font-medium truncate">{beneficiaryName}</p>
+                    <div className="w-full rounded-md bg-[#0E2C25] text-emerald-200 text-sm px-3 py-2 flex items-center gap-2 mt-2">
+                      <FiCheckCircle className="text-emerald-400" />
+                      <span className="truncate">{beneficiaryName}</span>
                     </div>
                   )}
-                </div>
-                <div>
-                  <label className="block text-sm text-white/80 mb-1.5">Beneficiary Name</label>
-                  <input
-                    type="text"
-                    value={beneficiaryName}
-                    onChange={(e) => setBeneficiaryName(e.target.value)}
-                    disabled={verifyLoading || isDetectingBank}
-                    placeholder="Enter beneficiary name"
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm disabled:opacity-50"
-                  />
                 </div>
               </>
             )}
@@ -494,37 +457,6 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
             {/* WIRE FORM */}
             {type === "wire" && (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-white/80 mb-1.5">Wire Type</label>
-                    <div className="relative">
-                      <select
-                        value={wireType}
-                        onChange={(e) => setWireType(e.target.value as any)}
-                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
-                      >
-                        <option value="swift">SWIFT</option>
-                        <option value="aba">ABA</option>
-                      </select>
-                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-white/80 mb-1.5">Account Type</label>
-                    <div className="relative">
-                      <select
-                        value={accountType}
-                        onChange={(e) => setAccountType(e.target.value as any)}
-                        className="w-full appearance-none bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white outline-none focus:border-primary text-sm"
-                      >
-                        <option value="personal">Personal</option>
-                        <option value="business">Business</option>
-                      </select>
-                      <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-white/80 mb-1.5">Bank Name</label>
@@ -546,17 +478,6 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                       className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-white/80 mb-1.5">Bank Address</label>
-                  <input
-                    type="text"
-                    value={bankAddress}
-                    onChange={(e) => setBankAddress(e.target.value)}
-                    placeholder="e.g. 123 Bank Street, City, Country"
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
-                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -614,6 +535,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
           >
             Create Destination
           </CustomButton>
+
         </div>
       </div>
     </div>
