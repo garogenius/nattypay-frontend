@@ -12,6 +12,7 @@ import SuccessToast from "@/components/toast/SuccessToast";
 import { ICurrencyAccount } from "@/api/currency/currency.types";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 import { FiChevronDown, FiCheckCircle } from "react-icons/fi";
+import SearchableDropdown from "@/components/shared/SearchableDropdown";
 
 interface CreatePayoutDestinationModalProps {
   isOpen: boolean;
@@ -473,28 +474,29 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                       <FiChevronDown className={`transition-transform ${bankOpen ? "rotate-180" : ""}`} />
                     </button>
                     {bankOpen && (
-                      <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-lg shadow-lg">
+                      <div className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-lg shadow-lg">
                         {banksLoading ? (
                           <div className="p-3 text-white/60 text-xs">Loading banks for {nipCurrency}...</div>
                         ) : banks?.length === 0 ? (
                           <div className="p-3 text-white/60 text-xs">No banks found for {nipCurrency}</div>
                         ) : (
-                          banks?.map((bank: any, index: number) => (
-                            <button
-                              key={`${bank.code || index}-${index}`}
-                              type="button"
-                              onClick={() => {
-                                setSelectedBank(bank);
-                                setBankOpen(false);
-                                if (accountNumber.length === 10) {
-                                  verifyAccount({ accountNumber, bankCode: bank.code });
-                                }
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-white/10 transition-colors text-white text-sm truncate"
-                            >
-                              {bank.name}
-                            </button>
-                          ))
+                          <SearchableDropdown
+                            items={banks || []}
+                            searchKey="name"
+                            displayFormat={(bank: any) => (
+                              <div className="text-white text-sm">{bank.name}</div>
+                            )}
+                            onSelect={(bank: any) => {
+                              setSelectedBank(bank);
+                              setBankOpen(false);
+                              if (accountNumber.length === 10) {
+                                verifyAccount({ accountNumber, bankCode: bank.code });
+                              }
+                            }}
+                            placeholder="Search bank..."
+                            isOpen={bankOpen}
+                            onClose={() => setBankOpen(false)}
+                          />
                         )}
                       </div>
                     )}
