@@ -168,26 +168,64 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     const v = val.replace(/\D/g, "");
     setAccountNumber(v);
     setBeneficiaryName("");
-    if (type === "nip") {
-      if (v.length === 10) {
-        if (selectedBank) {
-          verifyAccount({ accountNumber: v, bankCode: selectedBank.code });
-        } else {
-          if (nipCurrency === "NGN") {
-            getMatchedBanks(v);
-          } else {
-            tryAutoDetectBank(v);
-          }
-        }
+    setMatchedBanks([]);
+    if (type === "nip" && selectedBank) {
+      // clear selected bank on number change to force re-verify? 
+      // PaymentTransferForm clears bankCode if auto-detected. 
+      // Here we can keep it if user manually selected it, but we need to re-verify.
+      // Actually, better to reset verification state.
+      // If it was auto-detected, we should probably clear it.
+      if (isDetectingBank) {
+        setSelectedBank(null);
       }
     }
   };
 
+  // Fetch matched banks for NIP/NGN
   React.useEffect(() => {
-    if (type === "nip" && accountNumber.length === 10 && nipCurrency === "NGN" && matchedBanks.length > 0 && !selectedBank && !isDetectingBank) {
-      tryAutoDetectBank(accountNumber, matchedBanks);
+    if (type !== "nip") return;
+    if (nipCurrency !== "NGN") return;
+
+    if (accountNumber && accountNumber.length === 10) {
+      const t = setTimeout(() => {
+        getMatchedBanks(accountNumber);
+      }, 250);
+      return () => clearTimeout(t);
     }
-  }, [matchedBanks, nipCurrency, type, accountNumber]);
+
+    setMatchedBanks([]);
+  }, [accountNumber, getMatchedBanks, nipCurrency, type]);
+
+  // Handle Verification / Auto-detect for NIP
+  React.useEffect(() => {
+    if (type !== "nip") return;
+    if (accountNumber && accountNumber.length === 10) {
+      if (selectedBank) {
+        // If bank is selected, verify
+        if (!beneficiaryName && !verifyLoading) {
+          verifyAccount({ accountNumber, bankCode: selectedBank.code });
+        }
+      } else {
+        // If no bank, try auto-detect
+        if (nipCurrency === "NGN" && matchedBanksLoading) return; // wait for match
+
+        const t = setTimeout(() => {
+          // If we have matched banks, use them. If not, if currency is not NGN, we might try all banks (though expensive)
+          // PaymentTransferForm logic:
+          const candidates = matchedBanks.length > 0 ? matchedBanks : undefined;
+          if ((candidates && candidates.length > 0) || nipCurrency !== "NGN") {
+            tryAutoDetectBank(accountNumber, candidates);
+          }
+        }, 350);
+        return () => clearTimeout(t);
+      }
+    } else {
+      // invalid account number
+      detectReqIdRef.current += 1;
+      setIsDetectingBank(false);
+      setBeneficiaryName("");
+    }
+  }, [accountNumber, selectedBank, matchedBanks, matchedBanksLoading, nipCurrency, type, verifyAccount, beneficiaryName, verifyLoading]);
 
   const { mutate: createDestination, isPending } = useCreateCurrencyAccountPayoutDestination(
     onError,
@@ -220,7 +258,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
       // payload.type set above
       payload.account_number = accountNumber.trim();
       payload.routing_number = routingNumber.trim();
-      payload.account_name = beneficiaryName.trim();
+      payload.beneficiary_name = beneficiaryName.trim();
       payload.beneficiary_address = beneficiaryAddress.trim();
       payload.bank_name = bankName.trim();
     }
@@ -444,6 +482,15 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                       </div>
                     )}
                   </div>
+                  {type === "nip" && accountNumber.length === 10 && !selectedBank && !isDetectingBank && !beneficiaryName && (
+                    <p className="text-white/50 text-xs mt-1">
+                      {matchedBanksLoading
+                        ? "Finding matched banks..."
+                        : matchedBanks.length > 0
+                          ? "Auto-detecting bank..."
+                          : "No matched banks found. Please select the bank manually."}
+                    </p>
+                  )}
                   {beneficiaryName && (
                     <div className="w-full rounded-md bg-[#0E2C25] text-emerald-200 text-sm px-3 py-2 flex items-center gap-2 mt-2">
                       <FiCheckCircle className="text-emerald-400" />
