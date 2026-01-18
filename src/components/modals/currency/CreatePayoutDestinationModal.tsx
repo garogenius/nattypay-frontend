@@ -41,6 +41,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
   const [bankName, setBankName] = React.useState(""); // For Wire manual entry
   const [routingNumber, setRoutingNumber] = React.useState("");
   const [beneficiaryAddress, setBeneficiaryAddress] = React.useState("");
+  const [bankAddress, setBankAddress] = React.useState("");
 
   // NIP Specific
   const [nipCurrency, setNipCurrency] = React.useState("NGN");
@@ -81,6 +82,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     setBankName("");
     setRoutingNumber("");
     setBeneficiaryAddress("");
+    setBankAddress("");
     setNipCurrency("NGN");
     setSelectedBank(null);
     setBankOpen(false);
@@ -254,7 +256,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
       payload.bank_code = String(selectedBank.code);
       payload.beneficiary_name = beneficiaryName.trim();
     } else if (type === "wire") {
-      if (!accountNumber.trim() || !beneficiaryName.trim() || !routingNumber.trim() || !bankName.trim() || !label.trim()) return;
+      if (!accountNumber.trim() || !beneficiaryName.trim() || !routingNumber.trim() || !bankName.trim() || !label.trim() || !bankAddress.trim()) return;
       // Payload for Wire
       // payload.type set above
       payload.label = label.trim();
@@ -265,6 +267,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
       payload.bank_name = bankName.trim();
       payload.wire_type = "swift";
       payload.account_type = "personal";
+      payload.bank_address = bankAddress.trim();
     }
 
     createDestination({ currency, formdata: payload });
@@ -285,7 +288,8 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
         !!beneficiaryName.trim() &&
         !!routingNumber.trim() &&
         !!bankName.trim() &&
-        !!beneficiaryAddress.trim()
+        !!beneficiaryAddress.trim() &&
+        !!bankAddress.trim()
       );
     }
     return false;
@@ -553,15 +557,27 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-white/80 mb-1.5">Beneficiary Address</label>
-                  <input
-                    type="text"
-                    value={beneficiaryAddress}
-                    onChange={(e) => setBeneficiaryAddress(e.target.value)}
-                    placeholder="e.g. 456 Main Street, City, Country"
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Beneficiary Address</label>
+                    <input
+                      type="text"
+                      value={beneficiaryAddress}
+                      onChange={(e) => setBeneficiaryAddress(e.target.value)}
+                      placeholder="e.g. 456 Main Street, City, Country"
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/80 mb-1.5">Bank Address</label>
+                    <input
+                      type="text"
+                      value={bankAddress}
+                      onChange={(e) => setBankAddress(e.target.value)}
+                      placeholder="e.g. 789 Bank Street, City, Country"
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                  </div>
                 </div>
               </>
             )}
