@@ -254,9 +254,10 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
       payload.bank_code = String(selectedBank.code);
       payload.beneficiary_name = beneficiaryName.trim();
     } else if (type === "wire") {
-      if (!accountNumber.trim() || !beneficiaryName.trim() || !routingNumber.trim() || !bankName.trim()) return;
-      // Payload for Wire - No Label
+      if (!accountNumber.trim() || !beneficiaryName.trim() || !routingNumber.trim() || !bankName.trim() || !label.trim()) return;
+      // Payload for Wire
       // payload.type set above
+      payload.label = label.trim();
       payload.account_number = accountNumber.trim();
       payload.routing_number = routingNumber.trim();
       payload.beneficiary_name = beneficiaryName.trim();
@@ -270,7 +271,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
   };
 
   const canSubmit = React.useMemo(() => {
-    if (type !== 'wire' && !label.trim()) return false;
+    if (!label.trim()) return false;
 
     if (type === "stablecoin") {
       return !!stablecoinCurrency && !!stablecoinNetwork && !!addressCode.trim();
@@ -348,18 +349,16 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
             </div>
 
             {/* Common Label Field */}
-            {type !== "wire" && (
-              <div>
-                <label className="block text-sm text-white/80 mb-1.5">Label</label>
-                <input
-                  type="text"
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder="e.g. Supplier Payment"
-                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
-                />
-              </div>
-            )}
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">Label</label>
+              <input
+                type="text"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="e.g. Supplier Payment"
+                className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+              />
+            </div>
 
             {/* STABLECOIN FORM */}
             {type === "stablecoin" && (
