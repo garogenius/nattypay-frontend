@@ -61,7 +61,15 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
 
   const currency = account?.currency || "USD";
   const banksCurrency = type === "nip" ? nipCurrency : currency;
-  const { banks, isPending: banksLoading } = useGetBanksByCurrency(banksCurrency);
+  const { banks: rawBanks, isPending: banksLoading } = useGetBanksByCurrency(banksCurrency);
+
+  const normalizedBanks = React.useMemo(() => {
+    return (rawBanks || []).map((b: any) => ({
+      ...b,
+      code: String(b?.code ?? b?.bankCode ?? b?.bank_code ?? ""),
+      name: String(b?.name ?? b?.bankName ?? b?.bank_name ?? ""),
+    })).filter((b: any) => !!b.code && !!b.name);
+  }, [rawBanks]);
 
   React.useEffect(() => {
     setSelectedBank(null);
@@ -144,10 +152,10 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
     const reqId = ++detectReqIdRef.current;
     setIsDetectingBank(true);
     try {
-      const sourceBanks = candidates && candidates.length > 0 ? candidates : (banks || []).map((b: any) => ({
-        bankCode: String(b?.code ?? b?.bankCode ?? b?.bank_code ?? ""),
-        name: String(b?.name ?? b?.bankName ?? b?.bank_name ?? ""),
-      })).filter((b: any) => !!b.bankCode);
+      const sourceBanks = candidates && candidates.length > 0 ? candidates : (normalizedBanks || []).map((b: any) => ({
+        bankCode: b.code,
+        name: b.name,
+      }));
 
       for (const b of sourceBanks) {
         try {
@@ -480,11 +488,11 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                       <div className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-bg-600 dark:bg-bg-1100 border border-border-600 rounded-lg shadow-lg">
                         {banksLoading ? (
                           <div className="p-3 text-white/60 text-xs">Loading banks for {nipCurrency}...</div>
-                        ) : banks?.length === 0 ? (
+                        ) : normalizedBanks?.length === 0 ? (
                           <div className="p-3 text-white/60 text-xs">No banks found for {nipCurrency}</div>
                         ) : (
                           <SearchableDropdown
-                            items={banks || []}
+                            items={normalizedBanks || []}
                             searchKey="name"
                             displayFormat={(bank: any) => (
                               <div className="text-white text-sm">{bank.name}</div>
