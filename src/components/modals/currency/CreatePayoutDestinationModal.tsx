@@ -261,6 +261,8 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
       payload.beneficiary_name = beneficiaryName.trim();
       payload.beneficiary_address = beneficiaryAddress.trim();
       payload.bank_name = bankName.trim();
+      payload.wire_type = "swift";
+      payload.account_type = "personal";
     }
 
     createDestination({ currency, formdata: payload });
@@ -347,7 +349,7 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
             {/* Common Label Field */}
             {type !== "wire" && (
               <div>
-                <label className="block text-sm text-white/80 mb-1.5">Label (Alias)</label>
+                <label className="block text-sm text-white/80 mb-1.5">Label</label>
                 <input
                   type="text"
                   value={label}
@@ -426,6 +428,40 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                 </div>
 
                 <div>
+                  <label className="block text-sm text-white/80 mb-1.5">Account Number</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => handleAccountNumberChange(e.target.value)}
+                      placeholder="Enter account number"
+                      maxLength={10}
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 pr-10 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
+                    />
+                    {(verifyLoading || isDetectingBank || matchedBanksLoading) && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <SpinnerLoader width={18} height={18} color="#D4B139" />
+                      </div>
+                    )}
+                  </div>
+                  {type === "nip" && accountNumber.length === 10 && !selectedBank && !isDetectingBank && !beneficiaryName && (
+                    <p className="text-white/50 text-xs mt-1">
+                      {matchedBanksLoading
+                        ? "Finding matched banks..."
+                        : matchedBanks.length > 0
+                          ? "Auto-detecting bank..."
+                          : "No matched banks found. Please select the bank manually."}
+                    </p>
+                  )}
+                  {beneficiaryName && (
+                    <div className="w-full rounded-md bg-[#0E2C25] text-emerald-200 text-sm px-3 py-2 flex items-center gap-2 mt-2">
+                      <FiCheckCircle className="text-emerald-400" />
+                      <span className="truncate">{beneficiaryName}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   <label className="block text-sm text-white/80 mb-1.5">Bank</label>
                   <div className="relative" ref={bankRef}>
                     <button
@@ -463,40 +499,6 @@ const CreatePayoutDestinationModal: React.FC<CreatePayoutDestinationModalProps> 
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-white/80 mb-1.5">Account Number</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={accountNumber}
-                      onChange={(e) => handleAccountNumberChange(e.target.value)}
-                      placeholder="Enter account number"
-                      maxLength={10}
-                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-3 pr-10 text-white placeholder:text-white/30 outline-none focus:border-primary text-sm"
-                    />
-                    {(verifyLoading || isDetectingBank || matchedBanksLoading) && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <SpinnerLoader width={18} height={18} color="#D4B139" />
-                      </div>
-                    )}
-                  </div>
-                  {type === "nip" && accountNumber.length === 10 && !selectedBank && !isDetectingBank && !beneficiaryName && (
-                    <p className="text-white/50 text-xs mt-1">
-                      {matchedBanksLoading
-                        ? "Finding matched banks..."
-                        : matchedBanks.length > 0
-                          ? "Auto-detecting bank..."
-                          : "No matched banks found. Please select the bank manually."}
-                    </p>
-                  )}
-                  {beneficiaryName && (
-                    <div className="w-full rounded-md bg-[#0E2C25] text-emerald-200 text-sm px-3 py-2 flex items-center gap-2 mt-2">
-                      <FiCheckCircle className="text-emerald-400" />
-                      <span className="truncate">{beneficiaryName}</span>
-                    </div>
-                  )}
                 </div>
               </>
             )}
