@@ -19,7 +19,7 @@ const EnterCodeContent = () => {
   const { authEmail, setAuthCode, setAuthEmail } = useAuthEmailStore();
   const [token, setToken] = useState("");
 
-  const isValid = token.length === 4;
+  const isValid = token.length === 6;
 
   const onVerificationSuccess = () => {
     setAuthCode(token);
@@ -126,7 +126,7 @@ const EnterCodeContent = () => {
   };
 
   const handlePaste: React.ClipboardEventHandler = (event) => {
-    const data = event.clipboardData.getData("text").slice(0, 4);
+    const data = event.clipboardData.getData("text").slice(0, 6);
     setToken(data);
   };
 
@@ -182,7 +182,7 @@ const EnterCodeContent = () => {
                   value={token}
                   onChange={setToken}
                   onPaste={handlePaste}
-                  numInputs={4}
+                  numInputs={6}
                   renderSeparator={<span className="w-2"></span>}
                   containerStyle={{}}
                   skipDefaultStyles
