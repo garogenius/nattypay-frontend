@@ -231,16 +231,16 @@ const MultiCurrencyContent: React.FC = () => {
                           }`}
                       >
                         {/* Header: icon + Main Balance + Transaction History */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isActive ? "bg-black/15" : "bg-white/10"}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? "bg-black/15" : "bg-white/10"}`}>
                               <IoWalletOutline className={`text-lg ${isActive ? "text-black" : "text-white"}`} />
                             </div>
-                            <span className="font-semibold text-base sm:text-lg">Main Balance</span>
+                            <span className="font-semibold text-sm 2xs:text-base sm:text-lg whitespace-nowrap">Main Balance</span>
                           </div>
-                          <div className="flex items-center gap-1 font-semibold text-sm sm:text-base opacity-90">
+                          <div className="flex items-center gap-0.5 2xs:gap-1 font-semibold text-[10px] 2xs:text-xs xs:text-sm sm:text-base opacity-90 whitespace-nowrap">
                             <span>Transaction History</span>
-                            <MdKeyboardArrowRight className="text-xl" />
+                            <MdKeyboardArrowRight className="text-lg 2xs:text-xl" />
                           </div>
                         </div>
 
