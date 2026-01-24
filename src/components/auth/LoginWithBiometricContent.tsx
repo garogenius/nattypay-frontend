@@ -4,7 +4,7 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useLogin, useBiometricLoginV1 } from "@/api/auth/auth.queries";
+import { useLogin, useBiometricLoginV1, usePasscodeLogin } from "@/api/auth/auth.queries";
 import { biometricChallengeV1Request } from "@/api/auth/auth.apis";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -60,8 +60,15 @@ const schema = yup.object().shape({
   }),
   password: yup
     .string()
-    .min(8, "Passcode must be at least 8 characters")
-    .required("Passcode is required"),
+    .test("password-or-passcode", "Field is required", (value, context) => {
+      const { loginMethod } = context.options.context as any;
+      if (!value) return false;
+      if (loginMethod === "passcode") {
+        return value.length === 6 && /^\d+$/.test(value);
+      }
+      return value.length >= 8;
+    })
+    .required("This field is required"),
   ipAddress: yup.string(),
   deviceName: yup.string(),
   operatingSystem: yup.string(),
@@ -80,6 +87,7 @@ const LoginWithBiometricContent = () => {
   const [biometricType, setBiometricType] = useState<"fingerprint" | "face">("fingerprint");
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [showPasscodeForm, setShowPasscodeForm] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<"password" | "passcode">("password");
   const [storedIdentifier, setStoredIdentifier] = useState<{
     type: "email" | "phone";
     value: string;
@@ -98,10 +106,16 @@ const LoginWithBiometricContent = () => {
     },
     resolver: yupResolver(schema) as any,
     mode: "onChange",
+    context: { loginMethod },
   });
 
   const { register, handleSubmit, formState, reset, setValue } = form;
   const { errors, isValid } = formState;
+
+  useEffect(() => {
+    // Update context when loginMethod changes
+    form.clearErrors("password");
+  }, [loginMethod, form]);
 
   useEffect(() => {
     // Check biometric availability
@@ -146,12 +160,12 @@ const LoginWithBiometricContent = () => {
 
     const getDeviceName = () => {
       const userAgent = window.navigator.userAgent;
-      
+
       // Check for Mac
       if (/Mac/.test(userAgent)) {
         return "Mac Os";
       }
-      
+
       // Check for Windows
       if (/Windows/.test(userAgent)) {
         if (/Windows NT 10.0/.test(userAgent)) return "Windows 10";
@@ -159,25 +173,25 @@ const LoginWithBiometricContent = () => {
         if (/Windows NT 6.2/.test(userAgent)) return "Windows 8";
         return "Windows";
       }
-      
+
       // Check for Linux
       if (/Linux/.test(userAgent)) {
         return "Linux";
       }
-      
+
       // Check for Android
       if (/Android/.test(userAgent)) {
         const match = userAgent.match(/Android\s([\d.]+)/);
         return match ? `Android ${match[1]}` : "Android";
       }
-      
+
       // Check for iOS
       if (/iPhone|iPad|iPod/.test(userAgent)) {
         if (/iPhone/.test(userAgent)) return "iPhone";
         if (/iPad/.test(userAgent)) return "iPad";
         return "iOS";
       }
-      
+
       // Fallback: extract from user agent
       const deviceInfo = userAgent.split(") ")[0].split("(")[1] || "Unknown Device";
       return deviceInfo;
@@ -201,13 +215,13 @@ const LoginWithBiometricContent = () => {
 
   const onError = async (error: any) => {
     const identifier = storedIdentifier?.value || form.getValues("identifier") || "";
-    
+
     // Record failed attempt for rate limiting
     if (identifier) {
       const { rateLimiter, sanitizeInput } = await import("@/utils/security.utils");
       const sanitizedIdentifier = sanitizeInput(identifier);
       rateLimiter.recordFailedAttempt(sanitizedIdentifier);
-      
+
       // Check rate limit
       const rateLimit = rateLimiter.checkRateLimit(sanitizedIdentifier);
       if (!rateLimit.allowed) {
@@ -242,27 +256,27 @@ const LoginWithBiometricContent = () => {
   const onSuccess = async (data: any) => {
     const user: User = data?.data?.user;
     const identifier = storedIdentifier?.value || (form.getValues("identifier") as string) || "";
-    
+
     // Clear rate limiting on successful login
     if (identifier) {
       const { rateLimiter, sanitizeInput } = await import("@/utils/security.utils");
       const sanitizedIdentifier = sanitizeInput(identifier);
       rateLimiter.clearAttempts(sanitizedIdentifier);
     }
-    
+
     setAuthEmail(user?.email);
-    
+
     // Store user temporarily (but don't set logged in yet - wait for 2FA)
     const { setInitialized } = useUserStore.getState();
-    
+
     // DO NOT set token here - token will be set after 2FA verification
     // The login API might return a token, but we should only use it after 2FA is verified
-    
+
     // Store user info temporarily (not logged in yet)
     setUser(user);
     setIsLoggedIn(false); // Not logged in until 2FA is verified
     setInitialized(true);
-    
+
     // SECURITY: Clear password from memory
     form.setValue("password", "");
     form.resetField("password");
@@ -309,11 +323,57 @@ const LoginWithBiometricContent = () => {
     isError: loginError,
   } = useLogin(onError, onSuccess);
 
-  const loginLoading = loginPending && !loginError;
+  const onPasscodeLoginSuccess = async (data: any) => {
+    const accessToken = data?.data?.accessToken;
+    const user: User = data?.data?.user;
+
+    if (accessToken && user) {
+      Cookies.set("accessToken", accessToken, {
+        expires: 7,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      setAuthEmail(user?.email);
+      setUser(user);
+      setIsLoggedIn(true);
+      useUserStore.getState().setInitialized(true);
+
+      initializeFCM().catch(() => {
+        // SECURITY: avoid leaking error details
+      });
+
+      setTimeout(async () => {
+        await queryClient.invalidateQueries({ queryKey: ["user"] });
+        await queryClient.refetchQueries({ queryKey: ["user"] });
+      }, 100);
+
+      SuccessToast({
+        title: "Login successful!",
+        description: "Passcode verified.",
+      });
+      setTimeout(() => {
+        navigate("/user/dashboard", "replace");
+      }, 100);
+      return;
+    }
+
+    // Fallback if no token (though user says it should have one)
+    onSuccess(data);
+  };
+
+  const {
+    mutate: passcodeLogin,
+    isPending: passcodeLoginPending,
+    isError: passcodeLoginError,
+  } = usePasscodeLogin(onError, onPasscodeLoginSuccess);
+
+  const loginLoading = (loginPending && !loginError) || (passcodeLoginPending && !passcodeLoginError);
 
   const onSubmit = async (data: LoginFormData & { identifier?: string }) => {
     const { sanitizeInput, rateLimiter } = await import("@/utils/security.utils");
-    
+
     const identifier = storedIdentifier
       ? storedIdentifier.value
       : data.identifier || "";
@@ -328,7 +388,7 @@ const LoginWithBiometricContent = () => {
 
     // Sanitize inputs
     const sanitizedIdentifier = sanitizeInput(identifier);
-    
+
     // Check rate limiting before attempting login
     const rateLimit = rateLimiter.checkRateLimit(sanitizedIdentifier);
     if (!rateLimit.allowed) {
@@ -341,13 +401,23 @@ const LoginWithBiometricContent = () => {
       return;
     }
 
-    login({
-      identifier: sanitizedIdentifier,
-      password: data.password, // Password is sent securely via HTTPS
-      ipAddress: data.ipAddress || "",
-      deviceName: data.deviceName || "",
-      operatingSystem: data.operatingSystem || "",
-    });
+    if (loginMethod === "passcode") {
+      passcodeLogin({
+        identifier: sanitizedIdentifier,
+        passcode: data.password,
+        ipAddress: data.ipAddress || "",
+        deviceName: data.deviceName || "",
+        operatingSystem: data.operatingSystem || "",
+      });
+    } else {
+      login({
+        identifier: sanitizedIdentifier,
+        password: data.password, // Password is sent securely via HTTPS
+        ipAddress: data.ipAddress || "",
+        deviceName: data.deviceName || "",
+        operatingSystem: data.operatingSystem || "",
+      });
+    }
 
     // SECURITY: Clear password field after submission
     form.setValue("password", "");
@@ -477,12 +547,12 @@ const LoginWithBiometricContent = () => {
 
       // Step 2: Sign challenge (browser)
       const assertion = await authenticateBiometric(challenge, storedCredentialId);
-      
+
       // Convert ArrayBuffers to base64url for API
       const authenticatorData = arrayBufferToBase64Url(assertion.response.authenticatorData);
       const clientDataJSON = arrayBufferToBase64Url(assertion.response.clientDataJSON);
       const signature = arrayBufferToBase64Url(assertion.response.signature);
-      const userHandle = assertion.response.userHandle 
+      const userHandle = assertion.response.userHandle
         ? arrayBufferToBase64Url(assertion.response.userHandle)
         : undefined;
 
@@ -544,13 +614,13 @@ const LoginWithBiometricContent = () => {
             <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
               {/* Logo Icon */}
               <div className="flex justify-center mb-6">
-                  <Image
+                <Image
                   src={images.singleLogo}
                   alt="NattyPay Icon"
                   width={80}
                   height={80}
                   className="w-20 h-20 object-contain"
-                  />
+                />
               </div>
 
               {/* Welcome Message */}
@@ -569,23 +639,23 @@ const LoginWithBiometricContent = () => {
               {isBiometricAvailable && !showPasscodeForm && (
                 <div className="mb-6">
                   <div className="flex flex-col items-center">
-                      {biometricType === "fingerprint" ? (
+                    {biometricType === "fingerprint" ? (
                       // Fingerprint Icon - Large dark gray fingerprint
                       <div className="flex flex-col items-center w-full">
                         <div className="w-40 h-40 flex items-center justify-center mb-6">
-                        <svg
+                          <svg
                             className={`w-40 h-40 ${theme === "dark" ? "text-white/80" : "text-gray-700"}`}
-                          fill="none"
-                          stroke="currentColor"
+                            fill="none"
+                            stroke="currentColor"
                             strokeWidth={1.5}
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                               d="M7.864 4.243A7.5 7.5 0 0119.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 004.5 10.5c0 2.92.556 5.709 1.568 8.268M2 13h2a2 2 0 002-2V9a2 2 0 00-2-2H2m16 0h-2a2 2 0 00-2 2v4a2 2 0 002 2h2M7 8h2m-2 4h2m6-4h2m-2 4h2"
-                          />
-                        </svg>
+                            />
+                          </svg>
                         </div>
                         <p className={`text-base font-medium ${theme === "dark" ? "text-white" : "text-gray-700"} mb-6`}>
                           Click to log in with Fingerprint
@@ -607,19 +677,19 @@ const LoginWithBiometricContent = () => {
                           {/* Dashed square outline */}
                           <div className={`relative w-28 h-28 border-2 border-dashed ${theme === "dark" ? "border-white/40" : "border-gray-400"} rounded-lg flex items-center justify-center`}>
                             {/* Face icon inside */}
-                          <svg
+                            <svg
                               className={`w-20 h-20 ${theme === "dark" ? "text-white/80" : "text-gray-700"}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
                           </div>
                           {/* Two dots below */}
                           <div className="flex gap-1.5 mt-3">
@@ -639,8 +709,8 @@ const LoginWithBiometricContent = () => {
                         >
                           Login With FaceID
                         </CustomButton>
-                        </div>
-                      )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Login with Passcode Button */}
@@ -656,64 +726,78 @@ const LoginWithBiometricContent = () => {
 
               {/* Passcode Input - Show when passcode form is requested or biometric is not available */}
               {(showPasscodeForm || !isBiometricAvailable) && (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {!storedIdentifier && (
-                  <div className="flex flex-col gap-1">
-                    <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Email or Phone Number</label>
-                    <input
-                      type="text"
-                      placeholder="Enter your email or phone number"
-                      className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
-                      style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
-                      {...register("identifier")}
-                    />
-                    {errors.identifier && (
-                      <p className="text-red-500 text-xs mt-1">{errors.identifier.message}</p>
-                    )}
-                  </div>
-                )}
-                <div className="flex flex-col gap-1">
-                  <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Passcode</label>
-                  <div className="relative">
-                    <input
-                      type={showPasscode ? "text" : "password"}
-                      placeholder="At least 8 Characters"
-                      className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
-                      style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
-                      {...register("password")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPasscode(!showPasscode)}
-                      className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === "dark" ? "text-white/70" : "text-gray-500"}`}
-                    >
-                      {showPasscode ? (
-                        <AiOutlineEye className="w-5 h-5" />
-                      ) : (
-                        <AiOutlineEyeInvisible className="w-5 h-5" />
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  {!storedIdentifier && (
+                    <div className="flex flex-col gap-1">
+                      <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>Email or Phone Number</label>
+                      <input
+                        type="text"
+                        placeholder="Enter your email or phone number"
+                        className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                        style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
+                        {...register("identifier")}
+                      />
+                      {errors.identifier && (
+                        <p className="text-red-500 text-xs mt-1">{errors.identifier.message}</p>
                       )}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                    </div>
                   )}
-                  <Link
-                    href="/forgot-passcode"
-                    className="text-sm text-[#D4B139] text-right mt-1"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
+                  <div className="flex flex-col gap-1">
+                    <label className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"}`}>
+                      {loginMethod === "passcode" ? "Passcode" : "Password"}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPasscode ? "text" : "password"}
+                        placeholder={loginMethod === "passcode" ? "6-digit Passcode" : "At least 8 Characters"}
+                        className={`w-full border ${theme === "dark" ? "border-gray-600 bg-[#1a1a1a] text-white placeholder:text-gray-400" : "border-gray-300 bg-transparent text-gray-900 placeholder:text-gray-400"} rounded-lg py-3 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent`}
+                        style={theme === "dark" ? { color: "#ffffff", WebkitTextFillColor: "#ffffff", caretColor: "#ffffff" } : { color: "#141414", WebkitTextFillColor: "#141414", caretColor: "#141414" }}
+                        {...register("password")}
+                        maxLength={loginMethod === "passcode" ? 6 : undefined}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasscode(!showPasscode)}
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme === "dark" ? "text-white/70" : "text-gray-500"}`}
+                      >
+                        {showPasscode ? (
+                          <AiOutlineEye className="w-5 h-5" />
+                        ) : (
+                          <AiOutlineEyeInvisible className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                    )}
+                    <div className="flex justify-between items-center mt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginMethod(loginMethod === "password" ? "passcode" : "password");
+                        }}
+                        className="text-sm text-[#D4B139] font-medium"
+                      >
+                        Login with {loginMethod === "password" ? "Passcode" : "Password"}
+                      </button>
+                      <Link
+                        href="/forgot-passcode"
+                        className="text-sm text-[#D4B139]"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+                  </div>
 
-                <CustomButton
-                  type="submit"
-                  disabled={!isValid || loginLoading}
-                  isLoading={loginLoading}
-                  className="w-full bg-[#D4B139] hover:bg-[#c7a42f] text-black font-medium py-3 rounded-lg"
-                >
-                  Login
-                </CustomButton>
-                  
+                  <CustomButton
+                    type="submit"
+                    disabled={!isValid || loginLoading}
+                    isLoading={loginLoading}
+                    className="w-full bg-[#D4B139] hover:bg-[#c7a42f] text-black font-medium py-3 rounded-lg"
+                  >
+                    Login
+                  </CustomButton>
+
                   {/* Back to Biometric Button - Only show if biometric is available */}
                   {isBiometricAvailable && (
                     <CustomButton
@@ -724,7 +808,7 @@ const LoginWithBiometricContent = () => {
                       Use Biometric Instead
                     </CustomButton>
                   )}
-              </form>
+                </form>
               )}
 
               {/* Account Options */}

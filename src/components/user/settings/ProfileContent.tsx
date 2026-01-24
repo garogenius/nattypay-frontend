@@ -34,6 +34,7 @@ import SearchableDropdown from "@/components/shared/SearchableDropdown";
 import dynamic from "next/dynamic";
 import ChangePasswordModal from "@/components/modals/settings/ChangePasswordModal";
 import ChangePasscodeModal from "@/components/modals/settings/ChangePasscodeModal";
+import SetPasscodeModal from "@/components/modals/settings/SetPasscodeModal";
 import SetSecurityQuestionsModal from "@/components/modals/settings/SetSecurityQuestionsModal";
 import LinkedAccountsModal from "@/components/modals/settings/LinkedAccountsModal";
 import DeleteAccountModal from "@/components/modals/settings/DeleteAccountModal";
@@ -425,6 +426,7 @@ const ProfileContent = () => {
   const [openForgetPin, setOpenForgetPin] = useState(false);
   const [openChangePassword, setOpenChangePassword] = useState(false);
   const [openChangePasscode, setOpenChangePasscode] = useState(false);
+  const [openSetPasscode, setOpenSetPasscode] = useState(false);
   const [openSetSecurity, setOpenSetSecurity] = useState(false);
   const [openLinked, setOpenLinked] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -2729,7 +2731,9 @@ const ProfileContent = () => {
                     { icon: <FiKey className="text-[#D4B139]" />, title: "Forget Transaction PIN", desc: "Reset your transaction PIN using an OTP", onClick: () => setOpenForgetPin(true) },
                     { icon: <FiKey className="text-[#D4B139]" />, title: "Change Transaction PIN", desc: "Secure your payments by updating your transaction PIN", onClick: () => setOpenChangePin(true) },
                     { icon: <FiLock className="text-[#D4B139]" />, title: "Change Password", desc: "Protect your account by setting a new, stronger password", onClick: () => setOpenChangePassword(true) },
-                    { icon: <FiLock className="text-[#D4B139]" />, title: "Change Login Passcode", desc: "Update your 6-digit login passcode", onClick: () => setOpenChangePasscode(true) },
+                    user?.isPasscodeSet
+                      ? { icon: <FiLock className="text-[#D4B139]" />, title: "Change Login Passcode", desc: "Update your 6-digit login passcode", onClick: () => setOpenChangePasscode(true) }
+                      : { icon: <FiLock className="text-[#D4B139]" />, title: "Set Login Passcode", desc: "Secure your account with a 6-digit passcode", onClick: () => setOpenSetPasscode(true) },
                     { icon: <FiShield className="text-[#D4B139]" />, title: "Set Security Question", desc: "Add an extra layer of protection with a security question", onClick: () => setOpenSetSecurity(true) }
                   ].map((it, i) => (
                     <button key={i} onClick={it.onClick} className="w-full flex items-center justify-between gap-3 py-3 text-left">
@@ -2980,6 +2984,7 @@ const ProfileContent = () => {
           ) : null}
           <ChangePasswordModal isOpen={openChangePassword} onClose={() => setOpenChangePassword(false)} />
           <ChangePasscodeModal isOpen={openChangePasscode} onClose={() => setOpenChangePasscode(false)} />
+          <SetPasscodeModal isOpen={openSetPasscode} onClose={() => setOpenSetPasscode(false)} />
           <SetSecurityQuestionsModal
             isOpen={openSetSecurity}
             onClose={() => setOpenSetSecurity(false)}

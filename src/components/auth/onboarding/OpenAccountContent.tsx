@@ -94,31 +94,41 @@ const OpenAccountContent = () => {
   // NIN Verification
   const onNinError = async (error: any) => {
     setIsSubmitting(false);
-    const errorMessage = error?.response?.data?.message;
+    let errorMessage = error?.response?.data?.message || "Verification failed";
+
+    // Check if message is technical/generic and replace with friendly message
+    if (!error?.response?.data?.message && error?.message) {
+      if (error.message.includes("Network")) {
+        errorMessage = "Please check your internet connection and try again.";
+      } else if (error.message.includes("timeout")) {
+        errorMessage = "Request timed out. Please try again.";
+      } else {
+        errorMessage = "An unexpected error occurred. Please try again later.";
+      }
+    }
+
     const statusCode = error?.response?.status;
     let descriptions: string[] = [];
-    
+
     if (Array.isArray(errorMessage)) {
       descriptions = errorMessage;
-    } else if (errorMessage) {
-      descriptions = [errorMessage];
     } else {
-      descriptions = ["Failed to verify NIN. Please check your NIN and try again."];
+      descriptions = [errorMessage];
     }
 
     // Check if error is JWT expired (401)
     if (statusCode === 401) {
       const errorText = typeof errorMessage === 'string' ? errorMessage.toLowerCase() : '';
-      const isJwtExpired = errorText.includes('jwt expired') || 
-                          errorText.includes('token expired') ||
-                          errorText.includes('unauthorized');
-      
+      const isJwtExpired = errorText.includes('jwt expired') ||
+        errorText.includes('token expired') ||
+        errorText.includes('unauthorized');
+
       if (isJwtExpired) {
         // Token expired - try to refresh user data to get a new token
         try {
           await queryClient.invalidateQueries({ queryKey: ["user"] });
           await queryClient.refetchQueries({ queryKey: ["user"] });
-          
+
           // Check if we got a new token
           const newToken = Cookies.get("accessToken");
           if (newToken && !isTokenExpired(newToken)) {
@@ -136,7 +146,7 @@ const OpenAccountContent = () => {
         } catch (refreshError) {
           console.warn("Failed to refresh user data:", refreshError);
         }
-        
+
         // If refresh didn't work, show session expired modal
         setShowSessionExpiredModal(true);
         return;
@@ -145,10 +155,10 @@ const OpenAccountContent = () => {
 
     // Check if error is about incomplete registration/verification
     const errorText = typeof errorMessage === 'string' ? errorMessage.toLowerCase() : '';
-    const isRegistrationError = errorText.includes('complete your registration') || 
-                                errorText.includes('complete registration') ||
-                                errorText.includes('verification first') ||
-                                errorText.includes('verify first');
+    const isRegistrationError = errorText.includes('complete your registration') ||
+      errorText.includes('complete registration') ||
+      errorText.includes('verification first') ||
+      errorText.includes('verify first');
 
     if (isRegistrationError) {
       // Provide more helpful guidance
@@ -174,14 +184,14 @@ const OpenAccountContent = () => {
 
   const onNinSuccess = async (data: any) => {
     setIsSubmitting(false);
-    
+
     // Update user data to reflect NIN verification
     const updatedUser = data?.data?.user;
     if (updatedUser) {
       const { setUser } = useUserStore.getState();
       setUser(updatedUser);
     }
-    
+
     // Refresh user data to ensure latest verification status
     try {
       await queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -189,12 +199,12 @@ const OpenAccountContent = () => {
     } catch (error) {
       console.warn("Failed to refresh user data after NIN verification:", error);
     }
-    
+
     SuccessToast({
       title: "NIN Verified Successfully!",
       description: data?.data?.message || "Your NIN has been verified successfully.",
     });
-    
+
     // Navigate to transaction pin page
     navigate("/transaction-pin");
   };
@@ -204,10 +214,17 @@ const OpenAccountContent = () => {
   // BVN Initiate
   const onBvnInitiateError = (error: any) => {
     setIsSubmitting(false);
-    const errorMessage = error?.response?.data?.message;
-    const descriptions = Array.isArray(errorMessage)
-      ? errorMessage
-      : [errorMessage || "Failed to initiate BVN verification. Please check your BVN and try again."];
+    let errorMessage = error?.response?.data?.message;
+
+    if (!errorMessage) {
+      if (error?.message?.includes("Network")) {
+        errorMessage = "Please check your internet connection.";
+      } else {
+        errorMessage = "Failed to initiate BVN verification. Please check your BVN and try again.";
+      }
+    }
+
+    const descriptions = Array.isArray(errorMessage) ? errorMessage : [errorMessage];
 
     setVerificationError({
       title: "BVN Verification Failed",
@@ -239,10 +256,17 @@ const OpenAccountContent = () => {
   // BVN Validate
   const onBvnValidateError = (error: any) => {
     setIsSubmitting(false);
-    const errorMessage = error?.response?.data?.message;
-    const descriptions = Array.isArray(errorMessage)
-      ? errorMessage
-      : [errorMessage || "Failed to validate BVN verification. Please try again."];
+    let errorMessage = error?.response?.data?.message;
+
+    if (!errorMessage) {
+      if (error?.message?.includes("Network")) {
+        errorMessage = "Please check your internet connection.";
+      } else {
+        errorMessage = "Failed to validate BVN verification. Please try again.";
+      }
+    }
+
+    const descriptions = Array.isArray(errorMessage) ? errorMessage : [errorMessage];
 
     setVerificationError({
       title: "BVN Verification Failed",
@@ -252,13 +276,39 @@ const OpenAccountContent = () => {
     setShowVerificationErrorModal(true);
   };
 
-  const onBvnValidateSuccess = (data: any) => {
+  const onBvnValidateSuccess = async (data: any) => {
     setIsSubmitting(false);
-    SuccessToast({
-      title: "BVN Verified Successfully!",
-      description: "Your BVN has been verified successfully.",
-    });
-    navigate("/transaction-pin");
+
+    const updatedUser = data?.data?.user;
+
+    // Update local store if user data is returned
+    if (updatedUser) {
+      const { setUser } = useUserStore.getState();
+      setUser(updatedUser);
+    }
+
+    // Refresh query data
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      await queryClient.refetchQueries({ queryKey: ["user"] });
+    } catch (error) {
+      console.warn("Failed to refresh user data after BVN validation:", error);
+    }
+
+    // specific check for BVN flag
+    const currentUser = useUserStore.getState().user;
+    if (currentUser?.isBvnVerified || updatedUser?.isBvnVerified) {
+      SuccessToast({
+        title: "BVN Verified Successfully!",
+        description: "Your BVN has been verified successfully.",
+      });
+      navigate("/transaction-pin");
+    } else {
+      ErrorToast({
+        title: "Verification Incomplete",
+        descriptions: ["BVN verification was successful but account status hasn't updated. Please refresh."],
+      });
+    }
   };
 
   const {
@@ -269,10 +319,19 @@ const OpenAccountContent = () => {
   // BVN Face Verification
   const onBvnFaceError = (error: any) => {
     setIsSubmitting(false);
-    const errorMessage = error?.response?.data?.message;
-    const descriptions = Array.isArray(errorMessage)
-      ? errorMessage
-      : [errorMessage || "Face verification failed. Please ensure your face is clearly visible and try again."];
+    let errorMessage = error?.response?.data?.message;
+
+    if (!errorMessage) {
+      if (error?.message?.includes("Network")) {
+        errorMessage = "Please check your internet connection.";
+      } else if (error?.message?.includes("timeout")) {
+        errorMessage = "The operation timed out. Please try again.";
+      } else {
+        errorMessage = "Face verification failed. Please ensure your face is clearly visible and try again.";
+      }
+    }
+
+    const descriptions = Array.isArray(errorMessage) ? errorMessage : [errorMessage];
 
     setVerificationError({
       title: "Face Verification Failed",
@@ -280,27 +339,52 @@ const OpenAccountContent = () => {
       type: "BVN",
     });
     setShowVerificationErrorModal(true);
-    
+
     // Close face capture modal on error
     setShowFaceCaptureModal(false);
     setSelfieImage("");
   };
 
-  const onBvnFaceSuccess = (data: any) => {
+  const onBvnFaceSuccess = async (data: any) => {
     setIsSubmitting(false);
     // Close the face capture modal
     setShowFaceCaptureModal(false);
     setSelfieImage("");
-    
-    SuccessToast({
-      title: "BVN Verified Successfully!",
-      description: data?.data?.message || "Your BVN and face have been verified successfully.",
-    });
-    
-    // Navigate to transaction pin page after a short delay
-    setTimeout(() => {
-      navigate("/transaction-pin");
-    }, 1000);
+
+    const updatedUser = data?.data?.user;
+
+    // Update local store if user data is returned
+    if (updatedUser) {
+      const { setUser } = useUserStore.getState();
+      setUser(updatedUser);
+    }
+
+    // Refresh query data
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      await queryClient.refetchQueries({ queryKey: ["user"] });
+    } catch (error) {
+      console.warn("Failed to refresh user data after BVN face validation:", error);
+    }
+
+    // specific check for BVN flag
+    const currentUser = useUserStore.getState().user;
+    if (currentUser?.isBvnVerified || updatedUser?.isBvnVerified) {
+      SuccessToast({
+        title: "BVN Verified Successfully!",
+        description: data?.data?.message || "Your BVN and face have been verified successfully.",
+      });
+
+      // Navigate to transaction pin page after a short delay
+      setTimeout(() => {
+        navigate("/transaction-pin");
+      }, 1000);
+    } else {
+      ErrorToast({
+        title: "Verification Incomplete",
+        descriptions: ["BVN verification was successful but account status hasn't updated. Please refresh."],
+      });
+    }
   };
 
   const {
@@ -334,7 +418,7 @@ const OpenAccountContent = () => {
 
   const onSubmit = async (data: OpenAccountFormData) => {
     setIsSubmitting(true);
-    
+
     // First, try to refresh user data to get the latest token and user info
     // This is important during onboarding as the token might have just been set
     try {
@@ -343,11 +427,11 @@ const OpenAccountContent = () => {
     } catch (error) {
       console.warn("Failed to refresh user data:", error);
     }
-    
+
     // Check if user is authenticated - check both token and user store
     const token = Cookies.get("accessToken");
     const currentUser = useUserStore.getState().user;
-    
+
     // If no token, check if user exists in store (might be in onboarding flow)
     if (!token) {
       // If user exists in store, they've completed some verification steps
@@ -399,7 +483,7 @@ const OpenAccountContent = () => {
       try {
         await queryClient.invalidateQueries({ queryKey: ["user"] });
         await queryClient.refetchQueries({ queryKey: ["user"] });
-        
+
         // Check if we got a new token
         const newToken = Cookies.get("accessToken");
         if (newToken && !isTokenExpired(newToken)) {
@@ -429,7 +513,7 @@ const OpenAccountContent = () => {
 
       // Get updated user from store (already refreshed above)
       const updatedUser = useUserStore.getState().user;
-      
+
       // Check if user has completed email or phone verification
       // Backend requires this before NIN verification
       if (updatedUser && !updatedUser.isEmailVerified && !updatedUser.isPhoneVerified) {
@@ -503,12 +587,12 @@ const OpenAccountContent = () => {
         console.warn("Failed to refresh user data on mount:", error);
       }
     };
-    
+
     // Small delay to ensure cookies are set after navigation
     const timer = setTimeout(() => {
       refreshUserData();
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [queryClient]);
 

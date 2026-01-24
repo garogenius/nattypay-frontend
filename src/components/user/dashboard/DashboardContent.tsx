@@ -17,9 +17,17 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import SetPasscodeModal from "../../modals/settings/SetPasscodeModal";
 
 const DashboardContent = () => {
   const { user } = useUserStore();
+  const [showSetPasscodeModal, setShowSetPasscodeModal] = useState(false);
+
+  useEffect(() => {
+    if (user && user.isPasscodeSet === false) {
+      setShowSetPasscodeModal(true);
+    }
+  }, [user]);
   // Check if user has verified with either BVN or NIN
   const isBvnOrNinVerified =
     user?.tierLevel !== TIER_LEVEL.notSet && (user?.isBvnVerified || user?.isNinVerified);
@@ -35,7 +43,7 @@ const DashboardContent = () => {
 
   // Fetch currency accounts
   const { accounts: currencyAccounts } = useGetCurrencyAccounts();
-  
+
   // Fetch savings plans
   const { plans: savingsPlans } = useGetSavingsPlans();
 
@@ -115,7 +123,7 @@ const DashboardContent = () => {
           className="!pb-8 !overflow-x-hidden overflow-y-visible"
           style={{ overflowX: "hidden", overflowY: "visible" }}
         >
-        <SwiperSlide className="!overflow-x-hidden overflow-y-visible">
+          <SwiperSlide className="!overflow-x-hidden overflow-y-visible">
             <BalanceCard
               wallets={user?.wallet || []}
               currencyAccounts={currencyAccounts}
@@ -155,6 +163,12 @@ const DashboardContent = () => {
       ) : (
         <UnverifiedDashboard setVerified={setVerificationStatus} />
       )}
+
+      <SetPasscodeModal
+        isOpen={showSetPasscodeModal}
+        onClose={() => setShowSetPasscodeModal(false)}
+        canClose={false} // Force first-time setup
+      />
     </div>
   );
 };

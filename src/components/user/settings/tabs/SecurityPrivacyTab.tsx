@@ -9,6 +9,8 @@ type Props = {
   onOpenChangePin: () => void;
   onOpenChangePassword: () => void;
   onOpenChangePasscode?: () => void;
+  onOpenSetPasscode?: () => void;
+  isPasscodeSet?: boolean;
   onOpenSetSecurity: () => void;
   onOpenLinked: () => void;
   onOpenDelete: () => void;
@@ -20,6 +22,8 @@ const SecurityPrivacyTab: React.FC<Props> = ({
   onOpenChangePin,
   onOpenChangePassword,
   onOpenChangePasscode,
+  onOpenSetPasscode,
+  isPasscodeSet,
   onOpenSetSecurity,
   onOpenLinked,
   onOpenDelete,
@@ -33,7 +37,10 @@ const SecurityPrivacyTab: React.FC<Props> = ({
           {[
             { icon: <FiKey className="text-[#D4B139]" />, title: "Forget Transaction PIN", desc: "Reset your transaction PIN using an OTP sent to your registered phone number", onClick: onOpenChangePin },
             { icon: <FiLock className="text-[#D4B139]" />, title: "Change Password", desc: "Protect your account by setting a new, stronger password", onClick: onOpenChangePassword },
-            ...(onOpenChangePasscode ? [{ icon: <FiLock className="text-[#D4B139]" />, title: "Change Login Passcode", desc: "Update your 6-digit login passcode", onClick: onOpenChangePasscode }] : []),
+            ...(isPasscodeSet
+              ? (onOpenChangePasscode ? [{ icon: <FiLock className="text-[#D4B139]" />, title: "Change Login Passcode", desc: "Update your 6-digit login passcode", onClick: onOpenChangePasscode }] : [])
+              : (onOpenSetPasscode ? [{ icon: <FiLock className="text-[#D4B139]" />, title: "Set Login Passcode", desc: "Secure your account with a 6-digit passcode", onClick: onOpenSetPasscode }] : [])
+            ),
             { icon: <FiShield className="text-[#D4B139]" />, title: "Set Security Question", desc: "Add an extra layer of protection with a security question", onClick: onOpenSetSecurity },
           ].map((it, i) => (
             <button key={i} onClick={it.onClick} className="w-full flex items-center justify-between gap-3 py-3 text-left">
