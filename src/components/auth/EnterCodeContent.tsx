@@ -19,7 +19,7 @@ const EnterCodeContent = () => {
   const { authEmail, setAuthCode, setAuthEmail } = useAuthEmailStore();
   const [token, setToken] = useState("");
 
-  const isValid = token.length === 6;
+  const isValid = token.length === 4;
 
   const onVerificationSuccess = () => {
     setAuthCode(token);
@@ -126,7 +126,7 @@ const EnterCodeContent = () => {
   };
 
   const handlePaste: React.ClipboardEventHandler = (event) => {
-    const data = event.clipboardData.getData("text").slice(0, 6);
+    const data = event.clipboardData.getData("text").slice(0, 4);
     setToken(data);
   };
 
@@ -169,7 +169,7 @@ const EnterCodeContent = () => {
         <div className="w-full max-w-md">
           {/* Form Card */}
           <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter Code</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Passcode to Password</h2>
             <p className="text-sm text-gray-600 mb-6">
               Enter the code we sent to{" "}
               <span className="text-[#D4B139]">{authEmail || "0800000000"}</span>
@@ -182,7 +182,7 @@ const EnterCodeContent = () => {
                   value={token}
                   onChange={setToken}
                   onPaste={handlePaste}
-                  numInputs={6}
+                  numInputs={4}
                   renderSeparator={<span className="w-2"></span>}
                   containerStyle={{}}
                   skipDefaultStyles

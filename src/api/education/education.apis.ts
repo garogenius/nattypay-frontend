@@ -8,7 +8,7 @@ import {
 
 export const getEducationBillersRequest = async () => {
   return request({
-    url: `/bill/education/billers`,
+    url: `/bill/remita/education/billers`,
     method: "get",
   });
 };
@@ -17,7 +17,7 @@ export const getEducationBillerItemsRequest = async (
   formdata: IGetEducationBillerItems
 ) => {
   return request({
-    url: `/bill/education/biller-items?billerCode=${formdata.billerCode}`,
+    url: `/bill/remita/education/biller-items?billerCode=${formdata.billerCode}`,
     method: "get",
   });
 };
@@ -26,7 +26,7 @@ export const verifyEducationCustomerRequest = async (
   formdata: IVerifyEducationCustomer
 ) => {
   return request({
-    url: `/bill/education/verify-customer`,
+    url: `/bill/remita/education/verify-customer`,
     method: "post",
     data: formdata,
   });
@@ -35,6 +35,16 @@ export const verifyEducationCustomerRequest = async (
 export const payEducationRequest = async (formdata: IPayEducation) => {
   return request({
     url: `/bill/education/school-fee/pay`,
+    method: "post",
+    data: formdata,
+  });
+};
+
+export const verifyEducationCustomerRemitaRequest = async (
+  formdata: IVerifyEducationCustomer
+) => {
+  return request({
+    url: `/bill/remita/education/verify-customer`,
     method: "post",
     data: formdata,
   });

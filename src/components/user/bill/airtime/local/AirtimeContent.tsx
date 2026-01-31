@@ -90,7 +90,7 @@ const AirtimeContent = () => {
               // e.g., 7043742886 -> 07043742886 (add leading 0)
               const cleaned = phone.replace(/\D/g, "");
               let phoneForPayment = cleaned;
-              
+
               // If phone is 10 digits (without leading 0), add leading 0
               if (cleaned.length === 10) {
                 phoneForPayment = `0${cleaned}`;
@@ -101,12 +101,11 @@ const AirtimeContent = () => {
                 // Already in correct format (11 digits with leading 0)
                 phoneForPayment = cleaned;
               }
-              
+
               PayForAirtime({
                 phone: phoneForPayment,
                 currency,
                 walletPin,
-                operatorId: operatorId!,
                 amount: Number(amount),
                 addBeneficiary: isBeneficiaryChecked,
               });

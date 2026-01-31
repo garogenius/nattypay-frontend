@@ -36,7 +36,7 @@ export const NetworkProvider = [
   },
   {
     id: 4,
-    name: "ETISALAT",
+    name: "9MOBILE",
     logo: images.airtime.etisalatLogo,
   },
 ];

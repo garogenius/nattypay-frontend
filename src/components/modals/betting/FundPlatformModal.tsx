@@ -20,7 +20,7 @@ interface FundPlatformModalProps {
 const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState<"form" | "confirm" | "result">("form");
   const [platformOpen, setPlatformOpen] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<{code: string; name: string} | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<{ platformCode: string; platformName: string } | null>(null);
   const [platformUserId, setPlatformUserId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [walletPin, setWalletPin] = useState<string>("");
@@ -32,8 +32,8 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
 
   const { data: platformsData, isLoading: platformsLoading, isError: platformsError } = useGetBettingPlatforms();
   // Only show enabled platforms
-  const platforms = Array.isArray(platformsData?.data?.data) 
-    ? platformsData.data.data.filter((p: any) => p.enabled !== false)
+  const platforms = Array.isArray(platformsData?.data?.data)
+    ? platformsData.data.data
     : [];
 
   const onSuccessHandler = (data: any) => {
@@ -42,7 +42,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
     setStep("result");
     SuccessToast({
       title: "Platform Funded Successfully",
-      description: `₦${amount} has been sent to ${selectedPlatform?.name}`,
+      description: `₦${amount} has been sent to ${selectedPlatform?.platformName}`,
     });
     if (onSuccess) onSuccess();
   };
@@ -77,12 +77,12 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
   const handleConfirm = () => {
     if (walletPin.length !== 4 || !selectedPlatform || !platformUserId || !amount || Number(amount) < 100) return;
     fundPlatform({
-      platform: selectedPlatform.code,
+      platform: selectedPlatform.platformCode,
       platformUserId: platformUserId,
       amount: Number(amount),
       currency: "NGN",
       walletPin,
-      description: `Funding ${selectedPlatform.name} account`,
+      description: `Funding ${selectedPlatform.platformName} account`,
     });
   };
 
@@ -116,7 +116,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                   className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
                 >
                   <span className={selectedPlatform ? "text-white" : "text-white/50"}>
-                    {selectedPlatform?.name || "Select platform"}
+                    {selectedPlatform?.platformName || "Select platform"}
                   </span>
                   <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${platformOpen ? 'rotate-180' : ''}`} />
                 </div>
@@ -134,14 +134,14 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                       ) : (
                         platforms.map((platform: any) => (
                           <button
-                            key={platform.code}
+                            key={platform.platformCode}
                             onClick={() => {
-                              setSelectedPlatform({ code: platform.code, name: platform.name });
+                              setSelectedPlatform({ platformCode: platform.platformCode, platformName: platform.platformName });
                               setPlatformOpen(false);
                             }}
                             className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm"
                           >
-                            {platform.name}
+                            {platform.platformName}
                           </button>
                         ))
                       )}
@@ -154,7 +154,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                 <>
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                     <p className="text-blue-400 text-xs font-medium mb-1">Selected Platform</p>
-                    <p className="text-white text-sm font-semibold">{selectedPlatform.name}</p>
+                    <p className="text-white text-sm font-semibold">{selectedPlatform.platformName}</p>
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -165,7 +165,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                       value={platformUserId}
                       onChange={(e) => setPlatformUserId(e.target.value)}
                     />
-                    <p className="text-white/50 text-xs">Enter the user ID registered on {selectedPlatform.name}</p>
+                    <p className="text-white/50 text-xs">Enter the user ID registered on {selectedPlatform.platformName}</p>
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -223,7 +223,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-white/70">Platform</span>
-                    <span className="text-white font-medium">{selectedPlatform?.name}</span>
+                    <span className="text-white font-medium">{selectedPlatform?.platformName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/70">User ID</span>
@@ -272,9 +272,8 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
 
           {step === "result" && (
             <div className="flex flex-col items-center gap-6">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
-                resultSuccess ? "bg-green-500/20" : "bg-red-500/20"
-              }`}>
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center ${resultSuccess ? "bg-green-500/20" : "bg-red-500/20"
+                }`}>
                 {resultSuccess ? (
                   <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -286,9 +285,8 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                 )}
               </div>
               <div className="text-center">
-                <h3 className={`text-xl font-semibold mb-2 ${
-                  resultSuccess ? "text-green-400" : "text-red-400"
-                }`}>
+                <h3 className={`text-xl font-semibold mb-2 ${resultSuccess ? "text-green-400" : "text-red-400"
+                  }`}>
                   {resultSuccess ? "Transaction Successful" : "Transaction Failed"}
                 </h3>
                 {transactionData && resultSuccess && (

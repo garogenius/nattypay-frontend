@@ -13,7 +13,6 @@ import CustomSelect from "@/components/CustomSelect";
 import CustomButton from "@/components/shared/Button";
 import {
   useGetAirtimeNetWorkProvider,
-  useGetAirtimePlan,
 } from "@/api/airtime/airtime.queries";
 import classNames from "classnames";
 import { addBeneficiaryLabel, NetworkProvider } from "../../bill.data";
@@ -30,6 +29,13 @@ import {
   BILL_TYPE,
 } from "@/constants/types";
 import { useGetBeneficiaries } from "@/api/user/user.queries";
+
+const prefixMap: Record<string, string[]> = {
+  MTN: ["0803", "0806", "0703", "0706", "0813", "0816", "0810", "0814", "0903", "0906"],
+  AIRTEL: ["0802", "0808", "0708", "0812", "0902", "0907", "0901"],
+  GLO: ["0805", "0807", "0705", "0815", "0811", "0905"],
+  "9MOBILE": ["0809", "0817", "0818", "0909", "0908"],
+};
 
 type StageOneProps = {
   stage: "one" | "two" | "three";
@@ -49,15 +55,15 @@ const AirtimeStageOne: React.FC<StageOneProps> = ({
   network,
   currency,
   setStage,
-  setPhone = () => {},
+  setPhone = () => { },
   setAmount,
-  setNetwork = () => {},
+  setNetwork = () => { },
   setOperatorId,
   isBeneficiaryChecked = false,
-  setIsBeneficiaryChecked = () => {},
+  setIsBeneficiaryChecked = () => { },
 }) => {
-  const [minimumAmount, setMinimumAmount] = useState<number>(0);
-  const [maxAmount, setMaximumAmount] = useState<number>(0);
+  const [minimumAmount, setMinimumAmount] = useState<number>(50);
+  const [maxAmount, setMaximumAmount] = useState<number>(50000);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState("");
 
   const theme = useTheme();
@@ -106,43 +112,39 @@ const AirtimeStageOne: React.FC<StageOneProps> = ({
   } = form;
   const { errors, isValid } = formState;
 
-  // const watchedAmount = Number(watch("amount"));
-  // const watchedNetwork = watch("networkProvider");
   const watchedPhone = watch("phone");
-
   const [providerOptions, setProviderOptions] = useState<Option[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<Option | null>(null);
 
   const { data: networkProviders } = useGetAirtimeNetWorkProvider();
-  const { data: airtimePlan, isPending: isAirtimePlanLoading } =
-    useGetAirtimePlan({
-      phone: watchedPhone,
-      currency,
-    });
 
-  console.log("airtimePlan", airtimePlan);
   useEffect(() => {
-    const planData = airtimePlan?.data?.data;
+    if (watchedPhone && watchedPhone.length >= 4) {
+      const prefix = watchedPhone.substring(0, 4);
+      let detectedNetwork = "";
 
-    if (planData) {
-      const { plan, network } = planData;
-      setMinimumAmount(plan.minAmount);
-      setMaximumAmount(plan.maxAmount);
-      setNetwork(network.toLocaleUpperCase());
+      for (const [net, prefixes] of Object.entries(prefixMap)) {
+        if (prefixes.includes(prefix)) {
+          detectedNetwork = net;
+          break;
+        }
+      }
 
-      const provider = NetworkProvider.find(
-        (item) => item.name === network.toLocaleUpperCase()
-      );
-
-      setSelectedProvider({
-        value: plan.operatorId,
-        label: plan.name,
-        logo: provider?.logo,
-      });
+      if (detectedNetwork) {
+        setNetwork(detectedNetwork);
+        const providerOption = providerOptions.find(
+          (opt) => opt.label.toUpperCase().includes(detectedNetwork)
+        );
+        if (providerOption) {
+          setSelectedProvider(providerOption);
+        }
+      } else {
+        setSelectedProvider(null);
+      }
     } else {
       setSelectedProvider(null);
     }
-  }, [airtimePlan?.data?.data, setNetwork]);
+  }, [watchedPhone, providerOptions, setNetwork]);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -289,13 +291,7 @@ const AirtimeStageOne: React.FC<StageOneProps> = ({
                   logo: option.logo,
                 });
               }}
-              disabled={
-                isAirtimePlanLoading && !errors.phone && watchedPhone != ""
-              }
-              loading={
-                isAirtimePlanLoading && !errors.phone && watchedPhone != ""
-              }
-              // renderOption={RenderOptions}
+              disabled={!!selectedProvider}
               placeholder="Select Network Provider"
               isSearchable={false}
               className="w-full bg-bg-2400 dark:bg-bg-2100 border outline-none border-border-600 rounded-lg text-base text-text-200 dark:text-white"
@@ -325,8 +321,8 @@ const AirtimeStageOne: React.FC<StageOneProps> = ({
                 max={maxAmount}
                 type="number"
                 {...register("amount")}
-                // onKeyDown={handleNumericKeyDown}
-                // onPaste={handleNumericPaste}
+              // onKeyDown={handleNumericKeyDown}
+              // onPaste={handleNumericPaste}
               />
             </div>
 

@@ -15,3 +15,11 @@ export type IDataPayPayload = {
   addBeneficiary?: boolean;
   walletPin: string;
 };
+
+export interface IPalmPayDataPayPayload {
+  phoneNumber: string;
+  amount: number;
+  network: string;
+  currency: string;
+  walletPin: string;
+}

@@ -35,7 +35,7 @@ const TwoFactorAuthContent = () => {
 
   const onVerificationSuccess = async (data: any) => {
     const user: User = data?.data?.user;
-    
+
     // Set cookie with proper options to ensure it's accessible
     const accessToken = data?.data?.accessToken;
     if (accessToken) {
@@ -46,25 +46,25 @@ const TwoFactorAuthContent = () => {
         secure: process.env.NODE_ENV === "production",
       });
     }
-    
+
     setUser(user);
     setIsLoggedIn(true);
     SuccessToast({
       title: "Two-Factor Authentication Verified",
       description: "Your account has been successfully verified!",
     });
-    
+
     // Initialize FCM token registration
     initializeFCM().catch((err) => {
       console.error("FCM initialization failed:", err);
     });
-    
+
     // Wait a bit to ensure cookie is set, then refetch user profile
     setTimeout(async () => {
       await queryClient.invalidateQueries({ queryKey: ["user"] });
       await queryClient.refetchQueries({ queryKey: ["user"] });
     }, 100);
-    
+
     // After 2FA verification, check BVN/NIN verification status
     setTimeout(() => {
       // Step 1: Check if BVN or NIN is verified
@@ -75,18 +75,18 @@ const TwoFactorAuthContent = () => {
         navigate("/open-account", "replace");
         return;
       }
-      
+
       // Step 2: Check if wallet PIN is set
       if (!user?.isWalletPinSet) {
         // Wallet PIN is not set - navigate to transaction pin page
         navigate("/transaction-pin", "replace");
         return;
       }
-      
+
       // Step 3: All verifications complete - go to dashboard
       const returnTo = sessionStorage.getItem("returnTo");
       // Only use returnTo if it's a valid user route (not home page)
-      const redirectPath = 
+      const redirectPath =
         returnTo && returnTo !== "/" && returnTo.startsWith("/user")
           ? returnTo
           : "/user/dashboard";
@@ -94,7 +94,7 @@ const TwoFactorAuthContent = () => {
       sessionStorage.removeItem("returnTo");
       navigate(redirectPath, "replace");
     }, 200);
-    
+
     setToken("");
     hasAutoVerifiedRef.current = false; // Reset ref after successful verification
   };
@@ -110,10 +110,10 @@ const TwoFactorAuthContent = () => {
       title: "Verification Failed",
       descriptions,
     });
-    
+
     // Clear the token to stop auto-verification from retrying
     setToken("");
-    
+
     // Reset the ref on error so user can retry
     hasAutoVerifiedRef.current = false;
   };
@@ -158,7 +158,7 @@ const TwoFactorAuthContent = () => {
     if (token.length === 6) {
       // Reset any previous error state
       resetVerification();
-      
+
       // Get email from store - required for 2FA verification
       // Fallback: try to get email from user store if authEmail is not set
       let emailToUse = authEmail;
@@ -166,7 +166,7 @@ const TwoFactorAuthContent = () => {
         const user = useUserStore.getState().user;
         emailToUse = user?.email || "";
       }
-      
+
       if (!emailToUse) {
         ErrorToast({
           title: "Email Required",
@@ -175,10 +175,10 @@ const TwoFactorAuthContent = () => {
         hasAutoVerifiedRef.current = false; // Reset ref on error
         return;
       }
-      
+
       // Verify 2FA code - requires both email and OTP code
       verify2faCode({
-        email: emailToUse,
+        identifier: emailToUse,
         otpCode: token,
       });
     }
@@ -193,7 +193,7 @@ const TwoFactorAuthContent = () => {
         const user = useUserStore.getState().user;
         emailToUse = user?.email || "";
       }
-      
+
       if (!emailToUse) {
         ErrorToast({
           title: "Email Required",
@@ -201,9 +201,9 @@ const TwoFactorAuthContent = () => {
         });
         return;
       }
-      
-      // Resend 2FA email - requires email parameter
-      resend2faCode({ email: emailToUse });
+
+      // Resend 2FA email - requires identifier parameter
+      resend2faCode({ identifier: emailToUse });
     }
   };
 
@@ -263,7 +263,7 @@ const TwoFactorAuthContent = () => {
       const timeoutId = setTimeout(() => {
         handleVerify();
       }, 100);
-      
+
       return () => clearTimeout(timeoutId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

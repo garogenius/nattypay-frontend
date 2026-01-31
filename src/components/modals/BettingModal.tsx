@@ -31,27 +31,27 @@ type ActionType = "fund-wallet" | "fund-platform" | "withdraw" | "transactions";
 const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
   const [action, setAction] = useState<ActionType>("fund-wallet");
   const [step, setStep] = useState<"form" | "confirm" | "result">("form");
-  
+
   // Fund Wallet
   const [fundWalletAmount, setFundWalletAmount] = useState<string>("");
   const [fundWalletPin, setFundWalletPin] = useState<string>("");
-  
+
   // Fund Platform
   const [platformOpen, setPlatformOpen] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<{code: string; name: string} | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<{ platformCode: string; platformName: string } | null>(null);
   const [platformUserId, setPlatformUserId] = useState<string>("");
   const [fundPlatformAmount, setFundPlatformAmount] = useState<string>("");
   const [fundPlatformPin, setFundPlatformPin] = useState<string>("");
-  
+
   // Withdraw
   const [bankOpen, setBankOpen] = useState(false);
-  const [selectedBank, setSelectedBank] = useState<{name: string; bankCode: string} | null>(null);
+  const [selectedBank, setSelectedBank] = useState<{ name: string; bankCode: string } | null>(null);
   const [withdrawAccountNumber, setWithdrawAccountNumber] = useState<string>("");
   const [withdrawAccountName, setWithdrawAccountName] = useState<string>("");
   const [withdrawSessionId, setWithdrawSessionId] = useState<string>("");
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
   const [withdrawPin, setWithdrawPin] = useState<string>("");
-  
+
   const [resultSuccess, setResultSuccess] = useState<boolean | null>(null);
   const [transactionData, setTransactionData] = useState<any>(null);
   const { showProcessing, showSuccess, showError } = useTransactionProcessingStore();
@@ -175,7 +175,7 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
     setStep("result");
     SuccessToast({
       title: "Platform Funded Successfully",
-      description: `₦${fundPlatformAmount} has been sent to ${selectedPlatform?.name}`,
+      description: `₦${fundPlatformAmount} has been sent to ${selectedPlatform?.platformName}`,
     });
     showSuccess({ title: "Successful", message: "Betting platform funded successfully." });
   };
@@ -203,12 +203,12 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
     if (fundPlatformPin.length !== 4 || !selectedPlatform || !platformUserId || !fundPlatformAmount || Number(fundPlatformAmount) < 100) return;
     showProcessing({ title: "Processing", message: "Funding platform..." });
     fundPlatform({
-      platform: selectedPlatform.code,
+      platform: selectedPlatform.platformCode,
       platformUserId: platformUserId,
       amount: Number(fundPlatformAmount),
       currency: "NGN",
       walletPin: fundPlatformPin,
-      description: `Funding ${selectedPlatform.name} account`,
+      description: `Funding ${selectedPlatform.platformName} account`,
     });
   };
 
@@ -304,41 +304,37 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
             <div className="grid grid-cols-2 gap-2 mb-4 bg-white/5 p-1 rounded-xl">
               <button
                 onClick={() => setAction("fund-wallet")}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  action === "fund-wallet"
-                    ? "bg-[#D4B139] text-black"
-                    : "text-white/70 hover:text-white"
-                }`}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${action === "fund-wallet"
+                  ? "bg-[#D4B139] text-black"
+                  : "text-white/70 hover:text-white"
+                  }`}
               >
                 Fund Wallet
               </button>
               <button
                 onClick={() => setAction("fund-platform")}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  action === "fund-platform"
-                    ? "bg-[#D4B139] text-black"
-                    : "text-white/70 hover:text-white"
-                }`}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${action === "fund-platform"
+                  ? "bg-[#D4B139] text-black"
+                  : "text-white/70 hover:text-white"
+                  }`}
               >
                 Fund Platform
               </button>
               <button
                 onClick={() => setAction("withdraw")}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  action === "withdraw"
-                    ? "bg-[#D4B139] text-black"
-                    : "text-white/70 hover:text-white"
-                }`}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${action === "withdraw"
+                  ? "bg-[#D4B139] text-black"
+                  : "text-white/70 hover:text-white"
+                  }`}
               >
                 Withdraw
               </button>
               <button
                 onClick={() => setAction("transactions")}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  action === "transactions"
-                    ? "bg-[#D4B139] text-black"
-                    : "text-white/70 hover:text-white"
-                }`}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${action === "transactions"
+                  ? "bg-[#D4B139] text-black"
+                  : "text-white/70 hover:text-white"
+                  }`}
               >
                 Transactions
               </button>
@@ -396,7 +392,7 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                     className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
                   >
                     <span className={selectedPlatform ? "text-white" : "text-white/50"}>
-                      {selectedPlatform?.name || "Select platform"}
+                      {selectedPlatform?.platformName || "Select platform"}
                     </span>
                     <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${platformOpen ? 'rotate-180' : ''}`} />
                   </div>
@@ -415,14 +411,14 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                         ) : (
                           platforms.map((platform: any) => (
                             <button
-                              key={platform.code}
+                              key={platform.platformCode}
                               onClick={() => {
-                                setSelectedPlatform({ code: platform.code, name: platform.name });
+                                setSelectedPlatform({ platformCode: platform.platformCode, platformName: platform.platformName });
                                 setPlatformOpen(false);
                               }}
                               className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm"
                             >
-                              {platform.name}
+                              {platform.platformName}
                             </button>
                           ))
                         )}
@@ -594,11 +590,10 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                     <div key={txn.id} className="bg-white/5 border border-white/10 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-white font-medium text-sm">{txn.operationType}</p>
-                        <p className={`text-sm font-semibold ${
-                          txn.status === "SUCCESS" ? "text-green-400" : 
-                          txn.status === "FAILED" ? "text-red-400" : 
-                          "text-yellow-400"
-                        }`}>
+                        <p className={`text-sm font-semibold ${txn.status === "SUCCESS" ? "text-green-400" :
+                          txn.status === "FAILED" ? "text-red-400" :
+                            "text-yellow-400"
+                          }`}>
                           {txn.status}
                         </p>
                       </div>
@@ -642,7 +637,7 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-white/70">Platform</span>
-                      <span className="text-white font-medium">{selectedPlatform?.name}</span>
+                      <span className="text-white font-medium">{selectedPlatform?.platformName}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-white/70">User ID</span>
@@ -685,8 +680,8 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                   maxLength={4}
                   value={
                     action === "fund-wallet" ? fundWalletPin :
-                    action === "fund-platform" ? fundPlatformPin :
-                    withdrawPin
+                      action === "fund-platform" ? fundPlatformPin :
+                        withdrawPin
                   }
                   onChange={(e) => {
                     const pin = e.target.value.replace(/\D/g, "");
@@ -715,13 +710,13 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                   }}
                   disabled={
                     action === "fund-wallet" ? fundWalletPin.length !== 4 || fundingWallet :
-                    action === "fund-platform" ? fundPlatformPin.length !== 4 || fundingPlatform :
-                    withdrawPin.length !== 4 || withdrawing
+                      action === "fund-platform" ? fundPlatformPin.length !== 4 || fundingPlatform :
+                        withdrawPin.length !== 4 || withdrawing
                   }
                   isLoading={
                     action === "fund-wallet" ? fundingWallet :
-                    action === "fund-platform" ? fundingPlatform :
-                    withdrawing
+                      action === "fund-platform" ? fundingPlatform :
+                        withdrawing
                   }
                   className="flex-1 bg-[#D4B139] hover:bg-[#c7a42f] text-black rounded-lg py-3"
                 >
@@ -736,9 +731,8 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
         {step === "result" && (
           <div className="px-4 pb-6 md:pb-4 overflow-y-auto flex-1 min-h-0">
             <div className="flex flex-col items-center gap-4">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                resultSuccess ? "bg-green-500/20" : "bg-red-500/20"
-              }`}>
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${resultSuccess ? "bg-green-500/20" : "bg-red-500/20"
+                }`}>
                 {resultSuccess ? (
                   <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -750,9 +744,8 @@ const BettingModal: React.FC<BettingModalProps> = ({ isOpen, onClose }) => {
                 )}
               </div>
               <div className="text-center">
-                <h3 className={`text-lg font-semibold mb-1 ${
-                  resultSuccess ? "text-green-400" : "text-red-400"
-                }`}>
+                <h3 className={`text-lg font-semibold mb-1 ${resultSuccess ? "text-green-400" : "text-red-400"
+                  }`}>
                   {resultSuccess ? "Transaction Successful" : "Transaction Failed"}
                 </h3>
                 {transactionData && resultSuccess && (

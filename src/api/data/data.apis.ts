@@ -7,7 +7,7 @@ import {
 
 export const dataPlanRequest = async (formdata: IDataPlan) => {
   return request({
-    url: `/bill/data/get-plan?phone=${formdata.phone}&currency=${formdata.currency}`,
+    url: `/bill/data/palmpay/get-plan`,
     method: "get",
   });
 };
@@ -27,9 +27,17 @@ export const dataPaymentRequest = async (formdata: IDataPayPayload) => {
   });
 };
 
+export const palmPayDataPaymentRequest = async (formdata: any) => {
+  return request({
+    url: `/bill/data/palmpay/pay`,
+    method: "post",
+    data: formdata,
+  });
+};
+
 export const dataPlanNetworkRequest = async (network: string) => {
   return request({
-    url: `/bill/data/get-plan/${network}`,
+    url: `/bill/data/palmpay/get-plan`,
     method: "get",
   });
 };

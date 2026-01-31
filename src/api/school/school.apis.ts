@@ -8,14 +8,14 @@ import {
 
 export const getSchoolPlansRequest = async (formdata: IGetSchoolPlans) => {
   return request({
-    url: `/bill/school/get-plan?currency=${formdata.currency}`,
+    url: `/bill/flutterwave/school/get-plan?currency=${formdata.currency}`,
     method: "get",
   });
 };
 
 export const getSchoolBillInfoRequest = async (formdata: IGetSchoolBillInfo) => {
   return request({
-    url: `/bill/school/get-bill-info?billerCode=${formdata.billerCode}`,
+    url: `/bill/flutterwave/school/get-bill-info?billerCode=${formdata.billerCode}`,
     method: "get",
   });
 };

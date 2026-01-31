@@ -629,11 +629,6 @@ const LoginWithBiometricContent = () => {
                   Welcome Back {userName}!
                 </h2>
               )}
-              {storedIdentifier && (
-                <p className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-6 text-center`}>
-                  {storedIdentifier.masked}
-                </p>
-              )}
 
               {/* Biometric Login Option - Show when biometric is available and passcode form is hidden */}
               {isBiometricAvailable && !showPasscodeForm && (
@@ -833,9 +828,6 @@ const LoginWithBiometricContent = () => {
                   >
                     Switch account
                   </button>
-                  <Link href="/login" className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"}`}>
-                    Login with Finger Print or Face ID
-                  </Link>
                 </div>
               </div>
 

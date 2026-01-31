@@ -6,6 +6,7 @@ import {
   dataPlanNetworkRequest,
   dataPlanRequest,
   dataVariationRequest,
+  palmPayDataPaymentRequest,
 } from "./data.apis";
 import { IDataPlan, IDataVariationPayload } from "./data.types";
 import { NetworkPlan } from "@/constants/types";
@@ -68,6 +69,22 @@ export const usePayForData = (
 
   return useMutation({
     mutationFn: dataPaymentRequest,
+    onError,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["get-beneficiaries"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      onSuccess(data);
+    },
+  });
+};
+
+export const usePayForPalmPayData = (
+  onError: (error: any) => void,
+  onSuccess: (data: any) => void
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: palmPayDataPaymentRequest,
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["get-beneficiaries"] });

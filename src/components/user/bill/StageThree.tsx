@@ -44,7 +44,7 @@ const BillStageThree: React.FC<StageThreeProps> = ({
   type,
   checkoutMessage,
   electricityResCode,
-  setNetwork = () => {},
+  setNetwork = () => { },
 }) => {
   const getPurchaseMessage = () => {
     switch (type) {
@@ -70,7 +70,7 @@ const BillStageThree: React.FC<StageThreeProps> = ({
   const getSubText = () => {
     switch (type) {
       case "airtime":
-        return `Glo Airtime for ${phone}`;
+        return `${network} Airtime for ${phone}`;
       case "data":
         return checkoutMessage;
       case "cable":

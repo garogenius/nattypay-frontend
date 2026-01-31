@@ -21,7 +21,7 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => setIsVisible(true), 50);
-      
+
       // Auto close after 25 seconds
       const timer = setTimeout(() => {
         handleClose();
@@ -63,24 +63,22 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
 
   // Popular platforms to show if API is loading or empty
   const defaultPlatforms = [
-    { code: "BET9JA", name: "Bet9ja", enabled: true },
-    { code: "SPORTYBET", name: "SportyBet", enabled: true },
+    { platformCode: "BET9JA", platformName: "Bet9ja" },
+    { platformCode: "SPORTYBET", platformName: "SportyBet" },
   ];
 
   const displayPlatforms = platforms.length > 0 ? platforms : defaultPlatforms;
 
   return (
     <div
-      className={`fixed inset-0 z-[999999] flex items-center justify-center p-4 transition-opacity duration-300 ${
-        isVisible ? "opacity-100" : "opacity-0"
-      }`}
+      className={`fixed inset-0 z-[999999] flex items-center justify-center p-4 transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
+        }`}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleClose} />
-      
+
       <div
-        className={`relative w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-2xl overflow-hidden transform transition-all duration-300 ${
-          isVisible ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
-        }`}
+        className={`relative w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-2xl overflow-hidden transform transition-all duration-300 ${isVisible ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Animated background gradient */}
@@ -129,11 +127,10 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 md:gap-3">
                 {displayPlatforms
-                  .filter((p: any) => p.enabled)
                   .slice(0, 4)
                   .map((platform: any, index: number) => (
                     <div
-                      key={platform.code}
+                      key={platform.platformCode}
                       className="flex items-center gap-2 sm:gap-2.5 md:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300"
                       style={{
                         animationDelay: `${index * 100}ms`,
@@ -145,7 +142,7 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
                       </div>
                       <div className="flex-1">
                         <h4 className="text-white font-semibold text-[11px] sm:text-xs md:text-sm lg:text-base">
-                          {platform.name}
+                          {platform.platformName}
                         </h4>
                         <p className="text-white/60 text-[9px] sm:text-[10px] md:text-xs">Ready to fund</p>
                       </div>

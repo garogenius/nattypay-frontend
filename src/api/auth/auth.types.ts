@@ -129,12 +129,12 @@ export interface IPasscodeLogin {
 }
 
 export interface IVerify2FA {
-  email: string; // User's email address
+  identifier: string; // User's email address or phone
   otpCode: string; // 6-digit OTP code
 }
 
 export interface IResend2faEmail {
-  email: string; // User's email address
+  identifier: string; // User's email address or phone
 }
 
 export interface IVerifyContact {

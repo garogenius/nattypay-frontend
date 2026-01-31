@@ -1,8 +1,3 @@
-export type IAirtimePlan = {
-  phone: string;
-  currency: string;
-};
-
 export type IInternationalAirtimePlan = {
   phone: string;
 };
@@ -12,17 +7,12 @@ export type IInternationalAirtimeFxRate = {
   amount: number;
 };
 
-export type IAirtimeVariation = {
-  operatorId: number;
-};
-
 export type IAirtimePayPayload = {
   phone: string;
-  currency: string;
-  operatorId: number;
   amount: number;
-  addBeneficiary?: boolean;
+  currency: string;
   walletPin: string;
+  addBeneficiary?: boolean;
 };
 
 export type IInternationalAirtimePayPayload = {

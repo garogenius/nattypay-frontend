@@ -12,7 +12,7 @@ export const getBettingPlatformsRequest = async (): Promise<{
   data: { data: IBettingPlatform[] };
 }> => {
   return request({
-    url: `/betting/platforms`,
+    url: `/bill/betting/palmpay/platforms`,
     method: "get",
   });
 };
@@ -30,7 +30,7 @@ export const fundBettingPlatformRequest = async (
   formdata: IFundBettingPlatform
 ): Promise<{ data: any }> => {
   return request({
-    url: `/betting/platforms/fund`,
+    url: `/bill/betting/palmpay/pay`,
     method: "post",
     data: formdata,
   });

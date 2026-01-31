@@ -9,7 +9,7 @@ export const getTransportPlansRequest = async (
   formdata: IGetTransportPlans
 ) => {
   return request({
-    url: `/bill/transport/get-plan?currency=${formdata.currency}`,
+    url: `/bill/flutterwave/transport/get-plan?currency=${formdata.currency}`,
     method: "get",
   });
 };
@@ -18,7 +18,7 @@ export const getTransportBillInfoRequest = async (
   formdata: IGetTransportBillInfo
 ) => {
   return request({
-    url: `/bill/transport/get-bill-info?billerCode=${formdata.billerCode}`,
+    url: `/bill/flutterwave/transport/get-bill-info?billerCode=${formdata.billerCode}`,
     method: "get",
   });
 };

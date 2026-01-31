@@ -1,7 +1,8 @@
 export interface IBettingPlatform {
-  code: string;
-  name: string;
-  enabled: boolean;
+  platformId: string;
+  platformName: string;
+  platformCode: string;
+  status: string;
 }
 
 export interface IFundBettingPlatform {

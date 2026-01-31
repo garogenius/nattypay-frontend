@@ -6,6 +6,7 @@ import {
   getEducationBillerItemsRequest,
   verifyEducationCustomerRequest,
   payEducationRequest,
+  verifyEducationCustomerRemitaRequest,
 } from "./education.apis";
 import {
   IGetEducationBillerItems,
@@ -21,7 +22,7 @@ export const useGetEducationBillers = () => {
   // Handle nested data structure: data.data.data
   const responseData = data?.data?.data?.data || data?.data?.data || [];
   const rawBillers: any[] = Array.isArray(responseData) ? responseData : [];
-  
+
   // Map API response fields to component-expected fields
   // API returns: billerId, billerName, billerShortName
   // Component expects: billerCode, name, shortName
@@ -77,9 +78,5 @@ export const usePayForEducation = (
     },
   });
 };
-
-
-
-
 
 
