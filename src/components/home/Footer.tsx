@@ -77,6 +77,12 @@ const Footer = () => {
                 >
                   Contact Us
                 </Link>
+                <Link
+                  href="/delete-account"
+                  className="transition-all duration-300 cursor-pointer hover:pl-2"
+                >
+                  Delete my Account
+                </Link>
               </div>
             </div>
 

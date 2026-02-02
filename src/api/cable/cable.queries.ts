@@ -31,13 +31,23 @@ export const useGetCablePlans = (payload: IGetCablePlans) => {
 };
 
 export const useGetCableVariations = (payload: IGetCableVariationsPayload) => {
-  const { isLoading, isError, data } = useQuery({
+  const { isLoading, isError, data, error } = useQuery({
     queryKey: ["cable-variation", payload],
     queryFn: () => getCableVariationsRequest(payload),
     enabled: !!payload.billerCode,
   });
 
-  const variations: CableVariationProps[] = data?.data?.data;
+  if (data) {
+    console.log("📺 [API] Cable Variations Response:", data);
+  }
+  if (isError) {
+    console.error("📺 [API] Cable Variations Error:", error);
+  }
+
+  // Handle different possible response structures
+  const responseData = data?.data?.data || data?.data || data;
+  const variations: CableVariationProps[] = Array.isArray(responseData) ? responseData : [];
+
   return { isLoading, isError, variations };
 };
 

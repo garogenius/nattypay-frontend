@@ -7,6 +7,11 @@ import { jwtDecode } from "jwt-decode";
  * @return {boolean} - Returns `true` if the token is expired or invalid, otherwise `false`.
  */
 export function isTokenExpired(token: string): boolean {
+  if (!token || typeof token !== "string") return true;
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return true;
+
   try {
     const decoded = jwtDecode(token);
     if (decoded && typeof decoded.exp === "number") {

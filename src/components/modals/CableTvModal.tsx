@@ -23,9 +23,9 @@ interface CableTvModalProps {
 const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<"form" | "verify" | "confirm" | "result">("form");
   const [providerOpen, setProviderOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<{name: string; billerCode: string} | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<{ name: string; billerCode: string } | null>(null);
   const [smartcard, setSmartcard] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<{name: string; amount: number; payAmount: number; itemCode: string} | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; amount: number; payAmount: number; itemCode: string } | null>(null);
   const [walletPin, setWalletPin] = useState<string>("");
   const [resultSuccess, setResultSuccess] = useState<boolean | null>(null);
   const [transactionData, setTransactionData] = useState<any>(null);
@@ -50,6 +50,13 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
   });
 
   const cableVariationsLoading = cableVariationsPending && !cableVariationsError;
+
+  useEffect(() => {
+    console.log("📺 [CABLE] Selected Provider:", selectedProvider);
+    console.log("📺 [CABLE] Variations:", variations);
+    console.log("📺 [CABLE] Variations Loading:", cableVariationsLoading, "Error:", cableVariationsError);
+  }, [selectedProvider, variations, cableVariationsLoading, cableVariationsError]);
+
 
   const handleClose = () => {
     setStep("form");
@@ -104,11 +111,11 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
       variations &&
       variations.length > 0
     ) {
-    verifySmartcard({
+      verifySmartcard({
         itemCode: variations[0].item_code,
-      billerCode: selectedProvider.billerCode,
-      billerNumber: smartcard,
-    });
+        billerCode: selectedProvider.billerCode,
+        billerNumber: smartcard,
+      });
     }
   }, [
     smartcard,
@@ -179,13 +186,13 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
               <div className="flex flex-col gap-2">
                 <label className="text-white/70 text-sm">Smartcard / IUC Number</label>
                 <div className="relative w-full">
-                  <input 
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none" 
-                    placeholder="Enter smartcard number" 
-                    value={smartcard} 
-                    minLength={10} 
-                    maxLength={15} 
-                    onChange={(e)=> setSmartcard(e.target.value.replace(/\D/g, ""))} 
+                  <input
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none"
+                    placeholder="Enter smartcard number"
+                    value={smartcard}
+                    minLength={10}
+                    maxLength={15}
+                    onChange={(e) => setSmartcard(e.target.value.replace(/\D/g, ""))}
                   />
                   {(verifying || cableVariationsLoading) && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -198,17 +205,16 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
               {/* Provider - Only enabled when smartcard is valid (matching bills/cable page) */}
               <div className="flex flex-col gap-2 relative" ref={providerRef}>
                 <label className="text-white/70 text-sm">Provider</label>
-                <div 
+                <div
                   onClick={() => {
                     if (smartcard && smartcard.length >= 10 && smartcard.length < 15) {
                       setProviderOpen(!providerOpen);
                     }
-                  }} 
-                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${
-                    smartcard && smartcard.length >= 10 && smartcard.length < 15 
-                      ? "cursor-pointer" 
+                  }}
+                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${smartcard && smartcard.length >= 10 && smartcard.length < 15
+                      ? "cursor-pointer"
                       : "cursor-not-allowed opacity-50"
-                  }`}
+                    }`}
                 >
                   {!smartcard || smartcard.length < 10 || smartcard.length >= 15 ? (
                     <span className="text-white/50">Enter valid smartcard number</span>
@@ -232,17 +238,17 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
                         </div>
                       ) : (
                         cablePlans.map((p: any) => (
-                        <button
+                          <button
                             key={p.billerCode || p.id}
-                          onClick={() => {
+                            onClick={() => {
                               setSelectedProvider({ name: p.shortName || p.planName || p.name, billerCode: p.billerCode });
-                            setSelectedPlan(null);
-                            setProviderOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
-                        >
+                              setSelectedPlan(null);
+                              setProviderOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
+                          >
                             {p.shortName || p.planName || p.name}
-                        </button>
+                          </button>
                         ))
                       )}
                     </div>
@@ -259,17 +265,17 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
               ) : (
                 <>
                   {cablePlans &&
-                  verificationMessage &&
-                  !verificationError &&
-                  selectedProvider &&
-                  selectedProvider.name &&
-                  selectedProvider.billerCode &&
-                  smartcard &&
-                  smartcard.length >= 10 &&
-                  smartcard.length < 15 ? (
+                    verificationMessage &&
+                    !verificationError &&
+                    selectedProvider &&
+                    selectedProvider.name &&
+                    selectedProvider.billerCode &&
+                    smartcard &&
+                    smartcard.length >= 10 &&
+                    smartcard.length < 15 ? (
                     <div className="flex flex-col">
                       <p className="text-[#D4B139] text-sm">{verificationMessage}</p>
-              </div>
+                    </div>
                   ) : verificationError ? (
                     <p className="flex self-start text-red-500 font-semibold text-sm">
                       {verificationError}
@@ -280,67 +286,66 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
 
               {/* Plans Grid - Only show when verification is successful (matching bills/cable page exactly) */}
               {cablePlans &&
-              verificationMessage &&
-              !verificationError &&
-              selectedProvider &&
-              selectedProvider.name &&
-              selectedProvider.billerCode &&
-              smartcard &&
-              smartcard.length >= 10 &&
-              smartcard.length < 15 && (
-                <div className="flex flex-col gap-4">
-                  <h2 className="text-white/70 text-sm font-medium">Select Plan</h2>
-                  {verifying || cableVariationsLoading ? (
-                          <div className="flex items-center justify-center py-4">
-                            <SpinnerLoader width={20} height={20} color="#D4B139" />
-                          </div>
-                  ) : variations && variations.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-                      {variations.map((item: any, index: number) => (
+                verificationMessage &&
+                !verificationError &&
+                selectedProvider &&
+                selectedProvider.name &&
+                selectedProvider.billerCode &&
+                smartcard &&
+                smartcard.length >= 10 &&
+                smartcard.length < 15 && (
+                  <div className="flex flex-col gap-4">
+                    <h2 className="text-white/70 text-sm font-medium">Select Plan</h2>
+                    {verifying || cableVariationsLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <SpinnerLoader width={20} height={20} color="#D4B139" />
+                      </div>
+                    ) : variations && variations.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                        {variations.map((item: any, index: number) => (
                           <button
-                          key={item.item_code || index}
+                            key={item.item_code || index}
                             onClick={() => {
-                            setSelectedPlan({
-                              name: String(item.biller_name || item.short_name || item.name || item.item_name),
-                              amount: Number(item.amount) || 0,
-                              payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
-                              itemCode: item.item_code || item.itemCode,
-                            });
+                              setSelectedPlan({
+                                name: String(item.biller_name || item.short_name || item.name || item.item_name),
+                                amount: Number(item.amount) || 0,
+                                payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
+                                itemCode: item.item_code || item.itemCode,
+                              });
                             }}
-                          className={`flex flex-col items-center justify-center gap-1 p-3 text-center border rounded-lg transition-colors ${
-                            selectedPlan?.itemCode === (item.item_code || item.itemCode)
-                              ? "bg-[#D4B139] text-black border-[#D4B139]"
-                              : "border-border-600 text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <p className="text-xs">{String(item.biller_name || item.short_name || item.name || item.item_name)}</p>
-                          {item.validity_period && (
-                            <p className="text-xs">{String(item.validity_period)} Days</p>
-                          )}
-                          <p className="font-semibold text-sm">
-                            ₦{new Intl.NumberFormat("en-NG", {
-                              maximumFractionDigits: 2,
-                            }).format(Number(item.amount))}
-                          </p>
-                          {item.payAmount && item.payAmount - item.amount > 0 && (
-                            <p className="font-medium text-xs">
-                              Fee: ₦{item.payAmount - item.amount}
+                            className={`flex flex-col items-center justify-center gap-1 p-3 text-center border rounded-lg transition-colors ${selectedPlan?.itemCode === (item.item_code || item.itemCode)
+                                ? "bg-[#D4B139] text-black border-[#D4B139]"
+                                : "border-border-600 text-white hover:bg-white/5"
+                              }`}
+                          >
+                            <p className="text-xs">{String(item.biller_name || item.short_name || item.name || item.item_name)}</p>
+                            {item.validity_period && (
+                              <p className="text-xs">{String(item.validity_period)} Days</p>
+                            )}
+                            <p className="font-semibold text-sm">
+                              ₦{new Intl.NumberFormat("en-NG", {
+                                maximumFractionDigits: 2,
+                              }).format(Number(item.amount))}
                             </p>
-                          )}
+                            {item.payAmount && item.payAmount - item.amount > 0 && (
+                              <p className="font-medium text-xs">
+                                Fee: ₦{item.payAmount - item.amount}
+                              </p>
+                            )}
                           </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="px-4 py-3 text-white/50 text-sm">No plans available</div>
-                  )}
-                </div>
-              )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-3 text-white/50 text-sm">No plans available</div>
+                    )}
+                  </div>
+                )}
 
               {/* Amount Summary */}
               {selectedPlan && (
                 <div className="flex items-center justify-center py-2">
                   <div className="flex items-center gap-2 text-green-500">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                     <span className="font-bold text-lg">₦{Number(selectedPlan.payAmount || 0).toLocaleString()}.00</span>
                   </div>
                 </div>
@@ -348,13 +353,13 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
 
               {/* Next Button - Only show when plan is selected */}
               {selectedPlan && (
-              <CustomButton
-                type="button"
-                className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
+                <CustomButton
+                  type="button"
+                  className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
                   onClick={() => setStep("confirm")}
-              >
+                >
                   Next
-              </CustomButton>
+                </CustomButton>
               )}
             </div>
           )}
@@ -374,11 +379,11 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-white/60 text-sm">Enter Transaction PIN</label>
-                <input type="password" maxLength={4} value={walletPin} onChange={(e)=> setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
+                <input type="password" maxLength={4} value={walletPin} onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
               </div>
               <div className="flex gap-4 mt-2">
-                <CustomButton onClick={()=> setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
-                <CustomButton onClick={handleConfirm} disabled={walletPin.length!==4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
+                <CustomButton onClick={() => setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
+                <CustomButton onClick={handleConfirm} disabled={walletPin.length !== 4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
               </div>
             </div>
           )}
@@ -396,7 +401,7 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
               </div>
               <span className={`${resultSuccess ? 'text-emerald-400' : 'text-red-400'} text-sm font-medium`}>{resultSuccess ? 'Payment Successful' : 'Payment Failed'}</span>
               <span className="text-white text-2xl font-bold">₦{Number(selectedPlan?.payAmount || 0).toLocaleString()}.00</span>
-              
+
               {resultSuccess && transactionData && (
                 <div className="w-full bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -421,7 +426,7 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       )}
@@ -444,7 +449,7 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       </div>
@@ -458,7 +463,7 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
               )}
-              
+
               <div className="flex gap-3 mt-4 w-full">
                 <CustomButton onClick={handleClose} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Contact Support</CustomButton>
                 <CustomButton onClick={handleClose} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Download Receipt</CustomButton>

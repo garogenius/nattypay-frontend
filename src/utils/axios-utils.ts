@@ -31,23 +31,27 @@ const isValidJWT = (token: string | undefined): boolean => {
 client.interceptors.request.use(
   (config) => {
     const token = Cookies.get("accessToken");
-    
+
     // Always set API key
     if (apiKey) {
       config.headers["x-api-key"] = apiKey;
     }
 
-    // Add Authorization header if token exists and is valid
-    if (token && isValidJWT(token)) {
+    // Add Authorization header if token exists
+    if (token) {
       const trimmedToken = token.trim();
-      config.headers.Authorization = `Bearer ${trimmedToken}`;
-    } else if (token) {
-      // Token exists but is malformed - remove malformed token silently
-      // SECURITY: Don't log token details to prevent information disclosure
-      Cookies.remove("accessToken");
-      // Don't include Authorization header if token is malformed
+      // Only add if it looks like a JWT (has 3 parts)
+      // but don't remove it from cookies if it's not - let the API handle the error
+      if (trimmedToken.split(".").length === 3) {
+        config.headers.Authorization = `Bearer ${trimmedToken}`;
+      }
     }
     // SECURITY: Don't log missing tokens to prevent information disclosure
+
+    // Log request in development
+    if (process.env.NODE_ENV === "development") {
+      console.log(`🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data || config.params || "");
+    }
 
     return config;
   },
@@ -56,20 +60,35 @@ client.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle 401 errors (missing/invalid token)
+// Add response interceptor to log responses and handle 401 errors
 client.interceptors.response.use(
   (response) => {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`✅ [API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+    }
     return response;
   },
   (error) => {
+    if (process.env.NODE_ENV === "development") {
+      const status = error.response?.status;
+      const url = error.config?.url;
+      const method = error.config?.method?.toUpperCase();
+      const errorData = error.response?.data;
+
+      console.error(`❌ [API Error] ${method} ${url} | Status: ${status}`, {
+        message: error.message,
+        data: errorData,
+        hasToken: !!error.config?.headers?.Authorization
+      });
+    }
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {
       const token = Cookies.get("accessToken");
-      
+
       // Only redirect if we're not already on an auth page
       if (typeof window !== "undefined") {
         const pathname = window.location.pathname;
-        const isAuthPage = 
+        const isAuthPage =
           pathname.startsWith("/login") ||
           pathname.startsWith("/add-phone-number") ||
           pathname.startsWith("/validate-phoneNumber") ||
@@ -88,13 +107,13 @@ client.interceptors.response.use(
         // This prevents clearing the token during BVN/NIN verification failures
         // which would cause unwanted redirects to login
         if (!isAuthPage) {
-        // Clear token and user state
-        Cookies.remove("accessToken");
-        
-        // Clear user store if available (will be handled by UserProtectionProvider)
-        // We just clear the token here, the provider will handle the rest
+          // Clear token and user state
+          Cookies.remove("accessToken");
 
-        // Redirect to login if not already on an auth page
+          // Clear user store if available (will be handled by UserProtectionProvider)
+          // We just clear the token here, the provider will handle the rest
+
+          // Redirect to login if not already on an auth page
           const isRedirecting = sessionStorage.getItem("isRedirecting");
           if (!isRedirecting) {
             sessionStorage.setItem("isRedirecting", "true");

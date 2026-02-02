@@ -14,13 +14,22 @@ import {
 import { InternetPlan, InternetVariationProps } from "@/constants/types";
 
 export const useGetInternetPlans = (payload: IGetInternetPlans) => {
-  const { isPending, isError, data } = useQuery({
+  const { isPending, isError, data, error } = useQuery({
     queryKey: ["internet-plan", payload],
     queryFn: () => getInternetPlansRequest(payload),
     enabled: payload.isEnabled,
   });
 
-  const internetPlans: InternetPlan[] = data?.data?.data;
+  if (data) {
+    console.log("🌐 [API] Internet Plans Response:", data);
+  }
+  if (isError) {
+    console.error("🌐 [API] Internet Plans Error:", error);
+  }
+
+  // Handle different possible response structures
+  const responseData = data?.data?.data || data?.data || data;
+  const internetPlans: InternetPlan[] = Array.isArray(responseData) ? responseData : [];
 
   return { isPending, isError, internetPlans };
 };
@@ -28,13 +37,23 @@ export const useGetInternetPlans = (payload: IGetInternetPlans) => {
 export const useGetInternetVariations = (
   payload: IGetInternetVariationsPayload
 ) => {
-  const { isLoading, isError, data } = useQuery({
+  const { isLoading, isError, data, error } = useQuery({
     queryKey: ["internet-variation", payload],
     queryFn: () => getInternetVariationsRequest(payload),
     enabled: !!payload.billerCode,
   });
 
-  const variations: InternetVariationProps[] = data?.data?.data;
+  if (data) {
+    console.log("🌐 [API] Internet Variations Response:", data);
+  }
+  if (isError) {
+    console.error("🌐 [API] Internet Variations Error:", error);
+  }
+
+  // Handle different possible response structures
+  const responseData = data?.data?.data || data?.data || data;
+  const variations: InternetVariationProps[] = Array.isArray(responseData) ? responseData : [];
+
   return { isLoading, isError, variations };
 };
 

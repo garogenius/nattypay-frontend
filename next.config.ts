@@ -14,6 +14,12 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "transsnet-android-upload-image-prod.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
   // Security Headers

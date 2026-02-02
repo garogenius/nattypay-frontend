@@ -19,7 +19,7 @@ export const getElectricityVariationsRequest = async (
   formdata: IGetElectricityVariationsPayload
 ) => {
   return request({
-    url: `/bill/flutterwave/electricity/get-bill-info?billerCode=${formdata.billerCode}`,
+    url: `/bill/flutterwave/billers/${formdata.billerCode}/items`,
     method: "get",
   });
 };

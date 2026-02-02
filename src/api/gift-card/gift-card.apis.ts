@@ -3,7 +3,7 @@ import { IGCPayload, IGetGCFxRate } from "./gift-card.types";
 
 export const getGCCategoriesRequest = async () => {
   return request({
-    url: `/bill/giftcard/get-categories`,
+    url: `/bill/reloadly/giftcard/get-categories`,
     method: "get",
   });
 };
@@ -14,7 +14,7 @@ export const getGCProductsByCurrencyRequest = async ({
   currency: string;
 }) => {
   return request({
-    url: `/bill/giftcard/get-product?currency=${currency}`,
+    url: `/bill/reloadly/giftcard/get-product?currency=${currency}`,
     method: "get",
   });
 };
@@ -40,7 +40,7 @@ export const gcPaymentRequest = async (formdata: IGCPayload) => {
 
 export const getGCFxRateRequest = async (formdata: IGetGCFxRate) => {
   return request({
-    url: `/bill/giftcard/get-fx-rate?amount=${formdata.amount}&currency=${formdata.currency}`,
+    url: `/bill/reloadly/giftcard/get-fx-rate?amount=${formdata.amount}&currency=${formdata.currency}`,
     method: "get",
   });
 };

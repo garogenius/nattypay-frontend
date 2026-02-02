@@ -57,25 +57,52 @@ export const getTransactionDetails = (
         }
 
         if (field.label === "Transaction Date" && field.value === "{category}") {
-           // This is the second 'Transaction Date' row in the screenshot which shows the type/category
-           if (transaction.category === TRANSACTION_CATEGORY.TRANSFER) {
-             const isInterBank = transaction.transferDetails?.beneficiaryBankName && 
-               transaction.transferDetails.beneficiaryBankName.toLowerCase() !== 'nattypay';
-             return isInterBank ? "Inter-bank Transfer" : "Intra-bank Transfer";
-           }
-           if (transaction.category === TRANSACTION_CATEGORY.DEPOSIT) return "Merchant Deposit";
-           if (transaction.category === TRANSACTION_CATEGORY.BILL_PAYMENT) return transaction.billDetails?.type || "Bill Payment";
-           return transaction.category;
+          if (transaction.category === TRANSACTION_CATEGORY.TRANSFER) {
+            const isInterBank = transaction.transferDetails?.beneficiaryBankName &&
+              transaction.transferDetails.beneficiaryBankName.toLowerCase() !== 'nattypay';
+            return isInterBank ? "Inter-bank Transfer" : "Intra-bank Transfer";
+          }
+          if (transaction.category === TRANSACTION_CATEGORY.DEPOSIT) return "Merchant Deposit";
+          if (transaction.category === TRANSACTION_CATEGORY.BILL_PAYMENT) return transaction.billDetails?.type || "Bill Payment";
+          return transaction.category;
         }
 
-        // Handle nested properties
+        // Handle nested properties with robust fallback
         const props = key.split(".");
-        let value: unknown = transaction;
+        let value: any = transaction;
+
         for (const prop of props) {
           if (value && typeof value === "object") {
-            value = (value as Record<string, unknown>)[prop];
+            let val = value[prop];
+
+            // If value is missing or "0", check common aliases
+            if (val === undefined || val === null || val === "" || val === "0" || val === 0) {
+              const aliases: Record<string, string[]> = {
+                billerName: ["network", "operator", "operatorName", "provider", "name"],
+                recipientPhone: ["phone", "phoneNumber", "accountNumber", "customerID", "meterNumber", "smartCardNumber", "beneficiaryAccountNumber"],
+                packageName: ["plan", "planName", "variationName", "bundleName", "description"],
+                dataSize: ["size", "planSize", "description"],
+                validity: ["duration", "period", "validityPeriod"],
+                customerName: ["name", "fullName", "beneficiaryName"],
+                token: ["pin", "rechargeCode"],
+                beneficiaryBankName: ["beneficiaryBank", "bankName", "bank", "recipientBank"],
+                country: ["countryName", "operatorCountry", "countryCode"],
+              };
+
+              if (aliases[prop]) {
+                for (const alias of aliases[prop]) {
+                  const aliasVal = value[alias];
+                  if (aliasVal !== undefined && aliasVal !== null && aliasVal !== "" && aliasVal !== "0" && aliasVal !== 0) {
+                    val = aliasVal;
+                    break;
+                  }
+                }
+              }
+            }
+            value = val;
           } else {
             value = undefined;
+            break;
           }
         }
 
@@ -83,32 +110,189 @@ export const getTransactionDetails = (
           return formatSenderName(String(value ?? ""));
         }
 
-        if (field.label === "Amount" || 
-          field.label === "Balance Before" || 
-          field.label === "Balance After") {
-        return `₦${formatNumberWithCommas(String(value ?? "0"))}`;
-      }
+        const currencyLabels = [
+          "Amount", "Amount Paid", "Airtime Amount", "Card Value",
+          "Amount Sent", "Amount Deposited",
+          "Balance Before", "Balance After", "Fee", "Commission"
+        ];
 
-        return String(value ?? "0");
+        if (currencyLabels.includes(field.label)) {
+          return `₦${formatNumberWithCommas(String(value ?? "0"))}`;
+        }
+
+        // Use "-" instead of "0" for missing text fields
+        return String(value ?? "-");
       }),
-      isStatus: field.label === "Status",
+      isStatus: field.label === "Status" || field.label === "Transaction Status",
       isReference:
-        field.label === "Transaction Ref" || field.label === "Reference",
+        field.label === "Transaction Ref" || field.label === "Reference" || field.label === "Transaction ID",
     }));
 };
 
 // Unified fields array to match the screenshot's exact order
-export const receiptFieldsSequence = [
+export const defaultReceiptFields = [
+  { label: "Amount", value: "{amount}" },
   { label: "Transaction Date", value: "{createdAt}" },
-  { label: "Transaction ID", value: "{transactionRef}" },
-  { label: "Amount", value: "{amount}" }, // Handled in mapping
   { label: "Currency", value: "{currency}" },
-  { label: "Transaction Date", value: "{category}" }, // Screenshot shows 'Transaction Date' again for the type
+  { label: "Narration", value: "{narration}" },
   { label: "Sender Name", value: "{senderName}" },
   { label: "Beneficiary Details", value: "{beneficiaryName}" },
   { label: "Beneficiary Bank", value: "{beneficiaryBank}" },
-  { label: "Narration", value: "{narration}" },
+  { label: "Transaction ID", value: "{transactionRef}" },
   { label: "Status", value: "{status}" },
+];
+
+export const cableReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Customer Name", value: "{billDetails.customerName}" },
+  { label: "Smart Card / Decoder Number", value: "{billDetails.recipientPhone}" },
+  { label: "Cable Provider", value: "{billDetails.billerName}" },
+  { label: "Package Name", value: "{billDetails.packageName}" },
+  { label: "Package Duration", value: "{billDetails.validity}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const electricityReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Customer Name", value: "{billDetails.customerName}" },
+  { label: "Meter Number", value: "{billDetails.recipientPhone}" },
+  { label: "Meter Type", value: "{billDetails.meterType}" },
+  { label: "Disco Name", value: "{billDetails.billerName}" },
+  { label: "Token", value: "{billDetails.token}" },
+  { label: "Units", value: "{billDetails.units}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const airtimeReceiptFields = [
+  { label: "Airtime Amount", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Network Provider", value: "{billDetails.billerName}" },
+  { label: "Phone Number", value: "{billDetails.recipientPhone}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const dataReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Network Provider", value: "{billDetails.billerName}" },
+  { label: "Phone Number", value: "{billDetails.recipientPhone}" },
+  // { label: "Data Plan Name", value: "{billDetails.packageName}" },
+  // { label: "Data Size", value: "{billDetails.dataSize}" },
+  // { label: "Validity Period", value: "{billDetails.validity}" },
+  // { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const giftCardReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Gift Card Brand", value: "{billDetails.billerName}" },
+  { label: "Card Type", value: "{billDetails.cardType}" },
+  { label: "Card Value", value: "{billDetails.cardValue}" },
+  { label: "Currency", value: "{billDetails.currency}" },
+  { label: "Quantity", value: "{billDetails.quantity}" },
+  { label: "Redemption Code", value: "{billDetails.token}" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const bettingReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Betting Platform", value: "{billDetails.billerName}" },
+  { label: "Customer ID / Bet ID", value: "{billDetails.recipientPhone}" },
+  { label: "Phone Number or Username", value: "{billDetails.customerName}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const educationReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Institution Name", value: "{billDetails.billerName}" },
+  { label: "Student Name", value: "{billDetails.customerName}" },
+  { label: "Student ID / Registration Number", value: "{billDetails.recipientPhone}" },
+  { label: "Payment Purpose", value: "{billDetails.packageName}" },
+  { label: "Academic Session", value: "{billDetails.session}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const examReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Exam Type", value: "{billDetails.type}" },
+  { label: "Candidate Name", value: "{billDetails.customerName}" },
+  { label: "Profile Code / Registration Number", value: "{billDetails.recipientPhone}" },
+  { label: "Exam Year", value: "{billDetails.year}" },
+  { label: "PIN / Token", value: "{billDetails.token}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const schoolFeesReceiptFields = [
+  { label: "Amount Paid", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "School Name", value: "{billDetails.billerName}" },
+  { label: "Student Name", value: "{billDetails.customerName}" },
+  { label: "Student ID / Matric Number", value: "{billDetails.recipientPhone}" },
+  { label: "Level / Class", value: "{billDetails.level}" },
+  { label: "Academic Session", value: "{billDetails.session}" },
+  { label: "Term / Semester", value: "{billDetails.term}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const transferReceiptFields = [
+  { label: "Amount Sent", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Transfer Type", value: "{transferType}" },
+  { label: "Sender Name", value: "{transferDetails.senderName}" },
+  { label: "Sender Account Number / Wallet ID", value: "{transferDetails.senderAccountNumber}" },
+  { label: "Sender Bank Name", value: "{transferDetails.senderBankName}" },
+  { label: "Receiver Name", value: "{transferDetails.beneficiaryName}" },
+  { label: "Receiver Account Number / Wallet ID", value: "{transferDetails.beneficiaryAccountNumber}" },
+  { label: "Receiver Bank Name", value: "{transferDetails.beneficiaryBankName}" },
+  { label: "Currency", value: "{currency}" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const internationalAirtimeReceiptFields = [
+  { label: "Airtime Amount", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Country", value: "{billDetails.country}" },
+  { label: "Network Provider", value: "{billDetails.billerName}" },
+  { label: "Phone Number", value: "{billDetails.recipientPhone}" },
+  { label: "Payment Method", value: "Wallet" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
+];
+
+export const depositReceiptFields = [
+  { label: "Amount Deposited", value: "{amount}" },
+  { label: "Date & Time", value: "{createdAt}" },
+  { label: "Deposit Type", value: "{depositType}" },
+  { label: "Depositor Name", value: "{depositDetails.senderName}" },
+  { label: "Currency", value: "{currency}" },
+  { label: "Wallet / Account Credited", value: "{wallet.accountNumber}" },
+  // { label: "Payment Channel", value: "{depositType}" },
+  // { label: "Reference Number", value: "{transactionRef}" },
+  { label: "Transaction ID", value: "{transactionRef}" },
+  { label: "Transaction Status", value: "{status}" },
 ];
 
 const ReceiptContainer = () => {
@@ -152,6 +336,37 @@ const ReceiptContainer = () => {
 
   const narration = transaction.description || transaction.billDetails?.type || "-";
 
+  // Determine which field sequence to use
+  let fields = defaultReceiptFields;
+  let transferType = "-";
+  let depositType = "Bank Transfer";
+
+  if (category === TRANSACTION_CATEGORY.TRANSFER) {
+    fields = transferReceiptFields;
+    const isInterBank = transaction.transferDetails?.beneficiaryBankName &&
+      transaction.transferDetails.beneficiaryBankName.toLowerCase() !== 'nattypay';
+    transferType = isInterBank ? "Inter-bank Transfer" : "Intra-bank Transfer";
+  } else if (category === TRANSACTION_CATEGORY.DEPOSIT) {
+    fields = depositReceiptFields;
+    depositType = transaction.depositDetails?.channel || "Bank Transfer";
+    // Capitalize channel if it exists
+    depositType = depositType.charAt(0).toUpperCase() + depositType.slice(1);
+  } else if (category === TRANSACTION_CATEGORY.BILL_PAYMENT) {
+    const billType = transaction.billDetails?.type?.toLowerCase();
+    const billerName = transaction.billDetails?.billerName?.toLowerCase() || "";
+
+    if (billType === "cable") fields = cableReceiptFields;
+    else if (billType === "electricity") fields = electricityReceiptFields;
+    else if (billType === "airtime") fields = airtimeReceiptFields;
+    else if (billType === "international_airtime" || billType === "internationalairtime") fields = internationalAirtimeReceiptFields;
+    else if (billType === "data") fields = dataReceiptFields;
+    else if (billType === "giftcard") fields = giftCardReceiptFields;
+    else if (billType === "betting" || billerName.includes("bet")) fields = bettingReceiptFields;
+    else if (billType === "waec" || billType === "jamb" || billType === "neco") fields = examReceiptFields;
+    else if (billType === "school_fees" || billType === "schoolfee") fields = schoolFeesReceiptFields;
+    else if (billType === "education") fields = educationReceiptFields;
+  }
+
   // Override transaction object temporarily for display mapping
   const displayTx = {
     ...transaction,
@@ -160,10 +375,12 @@ const ReceiptContainer = () => {
     beneficiaryName,
     beneficiaryBank,
     narration,
+    transferType,
+    depositType,
     transactionRef: transaction.transactionRef || transaction.transferDetails?.sessionId || transaction.depositDetails?.reference || "-"
   };
 
-  const details = getTransactionDetails(displayTx as any, receiptFieldsSequence);
+  const details = getTransactionDetails(displayTx as any, fields);
 
   return (
     <div
@@ -197,7 +414,7 @@ const ReceiptContainer = () => {
       <div className="flex flex-col gap-0 w-full mb-8">
         {details.map((detail, index) => {
           let displayValue = detail.value;
-          
+
           // Format beneficiary details to include account number in brackets if it exists
           if (detail.label === "Beneficiary Details" && beneficiaryAccount) {
             displayValue = `${detail.value} (${beneficiaryAccount})`;
@@ -206,7 +423,7 @@ const ReceiptContainer = () => {
           return (
             <div key={index} className="w-full">
               <div className="w-full border-t border-dotted border-[#D4B139] border-[1.5px] opacity-100 my-0"></div>
-              
+
               <div className={`flex items-center ${detail.label === "Transaction ID" ? "flex-nowrap" : ""} justify-between py-4 px-1 gap-2`}>
                 <p className={`text-gray-500 dark:text-gray-400 text-sm font-normal ${detail.label === "Transaction ID" ? "flex-shrink-0" : ""}`}>
                   {detail.label}
@@ -216,7 +433,7 @@ const ReceiptContainer = () => {
                     {detail.value.toLowerCase() === "success" ? "Successful" : detail.value}
                   </span>
                 ) : (
-                  <p className={`text-black dark:text-white text-sm font-semibold text-right ${detail.label === "Transaction ID" ? "truncate min-w-0 flex-1" : ""}`}>
+                  <p className={`text-black dark:text-white text-sm font-semibold text-right ${detail.label === "Transaction ID" || detail.label === "Transaction Ref" || detail.label === "Reference" ? "truncate min-w-0 flex-1 ml-4" : ""}`}>
                     {displayValue}
                   </p>
                 )}

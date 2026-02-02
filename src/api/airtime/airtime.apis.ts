@@ -25,7 +25,7 @@ export const internationalAirtimePlanRequest = async (
   formdata: IInternationalAirtimePlan
 ) => {
   return request({
-    url: `/bill/airtime/international/get-plan?phone=${formdata.phone}`,
+    url: `/bill/reloadly/airtime/international/get-plan?phone=${formdata.phone}`,
     method: "get",
   });
 };
@@ -34,7 +34,7 @@ export const internationalAirtimeFxRateRequest = async (
   formdata: IInternationalAirtimeFxRate
 ) => {
   return request({
-    url: `/bill/airtime/international/get-fx-rate?amount=${formdata.amount}&operatorId=${formdata.operatorId}`,
+    url: `/bill/reloadly/airtime/international/get-fx-rate?amount=${formdata.amount}&operatorId=${formdata.operatorId}`,
     method: "get",
   });
 };
@@ -48,3 +48,5 @@ export const internationalAirtimePaymentRequest = async (
     data: formdata,
   });
 };
+
+

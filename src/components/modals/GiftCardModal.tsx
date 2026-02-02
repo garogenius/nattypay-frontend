@@ -11,6 +11,7 @@ import {
   usePayForGiftCard,
   useGetGCRedeemCode,
 } from "@/api/gift-card/gift-card.queries";
+import { useGetCurrencyRates } from "@/api/currency/currency.queries";
 import SpinnerLoader from "@/components/Loader/SpinnerLoader";
 import ErrorToast from "@/components/toast/ErrorToast";
 import SuccessToast from "@/components/toast/SuccessToast";
@@ -74,10 +75,11 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
   const [prices, setPrices] = useState<GiftCardPriceDetail[]>([]);
   const [selectedPrice, setSelectedPrice] = useState<GiftCardPriceDetail | null>(null);
   const [quantity, setQuantity] = useState<string>("1");
+  const [customAmount, setCustomAmount] = useState<string>("");
   const [walletPin, setWalletPin] = useState<string>("");
   const [resultSuccess, setResultSuccess] = useState<boolean | null>(null);
   const [transactionId, setTransactionId] = useState<number | null>(null);
-  const [redeemCodes, setRedeemCodes] = useState<{cardNumber: string; pinCode: string}[]>([]);
+  const [redeemCodes, setRedeemCodes] = useState<{ cardNumber: string; pinCode: string }[]>([]);
 
   const currencyRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
@@ -102,16 +104,31 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
   ) || [];
 
   // Calculate amount: price.amount * quantity (matching bills/gift-card page)
-  const totalAmount = selectedPrice && Number(quantity) > 0 
-    ? selectedPrice.amount * Number(quantity) 
-    : 0;
+  // Fetch FX Rate for RANGE products
+  const { rateData, isPending: rateLoading } = useGetCurrencyRates({
+    from: product?.recipientCurrencyCode || selectedCurrency,
+    to: "NGN"
+  });
+
+  // Calculate amount: 
+  // FIXED: price.amount * quantity
+  // RANGE: customAmount * rate * quantity
+  let totalAmount = 0;
+  if (product?.denominationType === "FIXED" && selectedPrice && Number(quantity) > 0) {
+    totalAmount = Number(selectedPrice.amount) * Number(quantity);
+  } else if (product?.denominationType === "RANGE" && Number(customAmount) > 0 && rateData?.rate && Number(quantity) > 0) {
+    totalAmount = Number(customAmount) * rateData.rate * Number(quantity);
+  }
 
   // Fetch redeem codes
   const { response: redeemCodeResponse, refetch: fetchRedeemCodes, isLoading: redeemLoading } = useGetGCRedeemCode({
     transactionId: transactionId || 0,
   });
 
-  const canProceed = !!selectedCurrency && !!selectedCategory && !!product && !!selectedPrice && Number(quantity) > 0;
+  const canProceed = !!selectedCurrency && !!selectedCategory && !!product && Number(quantity) > 0 && (
+    (product.denominationType === "FIXED" && !!selectedPrice) ||
+    (product.denominationType === "RANGE" && Number(customAmount) > 0 && !!rateData?.rate)
+  );
 
   const handleClose = () => {
     setStep("form");
@@ -155,14 +172,27 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
   );
 
   const handleConfirm = () => {
-    if (walletPin.length !== 4 || !product || !selectedPrice) return;
+    if (walletPin.length !== 4 || !product) return;
+
+    let amount = totalAmount;
+    let unitPrice = 0;
+
+    if (product.denominationType === "FIXED") {
+      if (!selectedPrice) return;
+      unitPrice = selectedPrice.price;
+    } else if (product.denominationType === "RANGE") {
+      unitPrice = Number(customAmount);
+    } else {
+      return;
+    }
+
     // Use exact payment structure from bills/gift-card page
     payGiftCard({
       productId: Number(product.productId),
       currency: "NGN",
       walletPin,
-      amount: totalAmount,
-      unitPrice: selectedPrice.price,
+      amount,
+      unitPrice,
       quantity: Number(quantity),
     });
   };
@@ -202,10 +232,10 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
               {step === "form" ? "Gift Card" : step === "confirm" ? "Gift Card" : step === "redeem" ? "Redeem Codes" : "Transaction History"}
             </h2>
             <p className="text-white/60 text-sm">
-              {step === "form" ? "Select gift card to purchase" : 
-               step === "confirm" ? "Confirm purchase" : 
-               step === "redeem" ? "Your gift card codes" :
-               "View transaction details"}
+              {step === "form" ? "Select gift card to purchase" :
+                step === "confirm" ? "Confirm purchase" :
+                  step === "redeem" ? "Your gift card codes" :
+                    "View transaction details"}
             </p>
           </div>
           <button onClick={handleClose} className="p-1 hover:bg-white/10 rounded transition-colors">
@@ -235,6 +265,7 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                             setProduct(null);
                             setPrices([]);
                             setSelectedPrice(null);
+                            setCustomAmount("");
                             setCurrencyOpen(false);
                           }}
                           className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
@@ -270,6 +301,7 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                               setProduct(null);
                               setPrices([]);
                               setSelectedPrice(null);
+                              setCustomAmount("");
                               setCategoryOpen(false);
                             }}
                             className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
@@ -322,6 +354,7 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                                 setProduct(p);
                                 setPrices(processGiftCardPrices(p));
                                 setSelectedPrice(null);
+                                setCustomAmount("");
                                 setProductOpen(false);
                               }}
                               className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm flex items-center gap-2"
@@ -348,7 +381,7 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* Quantity - Only enabled when product is selected */}
+              {/* Quantity - Show for both types, default 1 */}
               {product && (
                 <div className="flex flex-col gap-2">
                   <label className="text-white/70 text-sm">Quantity</label>
@@ -361,17 +394,51 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       setQuantity(val);
-                      // Reset price when quantity changes
-                      if (val !== quantity) {
-                        setSelectedPrice(null);
-                      }
+                      // Reset price when quantity changes if it affects calculation (mainly for range, but good practice)
                     }}
                   />
                 </div>
               )}
 
-              {/* Price - Only enabled when product and quantity are selected (matching bills/gift-card page) */}
-              {product && Number(quantity) > 0 && prices.length > 0 && (
+              {/* RANGE Type: Custom Amount Input */}
+              {product && product.denominationType === "RANGE" && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-white/70 text-sm">
+                      Amount ({product.recipientCurrencyCode || selectedCurrency})
+                    </label>
+                    {(product.minRecipientDenomination || product.maxRecipientDenomination) && (
+                      <span className="text-[#D4B139] text-[10px] font-medium">
+                        {product.minRecipientDenomination ? `Min: ${product.minRecipientDenomination} ` : ""}
+                        {product.maxRecipientDenomination ? `Max: ${product.maxRecipientDenomination}` : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative w-full">
+                    <input
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none"
+                      placeholder={`Enter amount in ${product.recipientCurrencyCode || selectedCurrency}`}
+                      type="number"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                    />
+                    {rateLoading && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <SpinnerLoader width={16} height={16} color="#D4B139" />
+                      </div>
+                    )}
+                  </div>
+                  {rateData?.rate && (
+                    <div className="flex justify-between items-center text-xs px-1">
+                      <span className="text-white/50">Exchange Rate:</span>
+                      <span className="text-white/80">1 {product.recipientCurrencyCode} = ₦{rateData.rate.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* FIXED Type: Price Dropdown */}
+              {product && product.denominationType === "FIXED" && Number(quantity) > 0 && prices.length > 0 && (
                 <div className="flex flex-col gap-2" ref={priceRef}>
                   <label className="text-white/70 text-sm">
                     Price {product.recipientCurrencyCode ? `in ${product.recipientCurrencyCode}` : ""}
@@ -407,21 +474,24 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* Amount Display - Matching bills/gift-card page */}
-              {selectedPrice && Number(quantity) > 0 && (
-                <div className="flex flex-col gap-2 p-4 bg-bg-2400/50 dark:bg-bg-2100/50 rounded-lg">
-                  {selectedPrice.fee > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/70 text-sm">Fee</span>
-                      <span className="text-white text-sm font-medium">₦{selectedPrice.fee.toLocaleString()}</span>
+              {/* Amount Display - For both types */}
+              {(
+                (product?.denominationType === "FIXED" && selectedPrice) ||
+                (product?.denominationType === "RANGE" && Number(customAmount) > 0 && !rateLoading)
+              ) && Number(quantity) > 0 && (
+                  <div className="flex flex-col gap-2 p-4 bg-bg-2400/50 dark:bg-bg-2100/50 rounded-lg">
+                    {selectedPrice && selectedPrice.fee > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/70 text-sm">Fee</span>
+                        <span className="text-white text-sm font-medium">₦{selectedPrice.fee.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between pt-2 border-t border-border-600">
+                      <span className="text-white font-medium">Paying</span>
+                      <span className="text-[#D4B139] text-lg font-bold">₦{Number(totalAmount).toLocaleString()}</span>
                     </div>
-                  )}
-                  <div className="flex items-center justify-between pt-2 border-t border-border-600">
-                    <span className="text-white font-medium">Paying</span>
-                    <span className="text-[#D4B139] text-lg font-bold">₦{Number(totalAmount).toLocaleString()}</span>
                   </div>
-                </div>
-              )}
+                )}
 
               <CustomButton
                 type="button"
@@ -441,23 +511,28 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
                   <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Product</span><span className="text-white text-sm font-medium">{product.productName}</span></div>
                 )}
                 <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Quantity</span><span className="text-white text-sm font-medium">{quantity}</span></div>
-                {selectedPrice && (
-                  <>
-                    <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Unit Price</span><span className="text-white text-sm font-medium">{selectedPrice.price} {product?.recipientCurrencyCode || ""}</span></div>
-                    {selectedPrice.fee > 0 && (
-                      <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Fee</span><span className="text-white text-sm font-medium">₦{selectedPrice.fee.toLocaleString()}</span></div>
-                    )}
-                  </>
+
+                {product && product.denominationType === "FIXED" && selectedPrice && (
+                  <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Unit Price</span><span className="text-white text-sm font-medium">{selectedPrice.price} {product?.recipientCurrencyCode || ""}</span></div>
                 )}
+
+                {product && product.denominationType === "RANGE" && (
+                  <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Unit Price</span><span className="text-white text-sm font-medium">{customAmount} {product?.recipientCurrencyCode || ""}</span></div>
+                )}
+
+                {selectedPrice && selectedPrice.fee > 0 && (
+                  <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Fee</span><span className="text-white text-sm font-medium">₦{selectedPrice.fee.toLocaleString()}</span></div>
+                )}
+
                 <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Total Amount</span><span className="text-white text-sm font-medium">₦{Number(totalAmount).toLocaleString()}</span></div>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-white/60 text-sm">Enter Transaction PIN</label>
-                <input type="password" maxLength={4} value={walletPin} onChange={(e)=> setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
+                <input type="password" maxLength={4} value={walletPin} onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
               </div>
               <div className="flex gap-4 mt-2">
-                <CustomButton onClick={()=> setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
-                <CustomButton onClick={handleConfirm} disabled={walletPin.length!==4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Purchase</CustomButton>
+                <CustomButton onClick={() => setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
+                <CustomButton onClick={handleConfirm} disabled={walletPin.length !== 4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Purchase</CustomButton>
               </div>
             </div>
           )}

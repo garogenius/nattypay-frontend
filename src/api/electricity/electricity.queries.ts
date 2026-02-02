@@ -37,13 +37,24 @@ export const useGetElectricityPlans = (payload: IGetElectricityPlans) => {
 export const useGetElectricityVariations = (
   payload: IGetElectricityVariationsPayload
 ) => {
-  const { isLoading, isError, data } = useQuery({
+  const { isLoading, isError, data, error } = useQuery({
     queryKey: ["electricity-variation", payload],
     queryFn: () => getElectricityVariationsRequest(payload),
     enabled: !!payload.billerCode,
   });
 
-  const variations: ElectricityVariationProps[] = data?.data?.data;
+  if (data) {
+    console.log("⚡ [API] Electricity Variations Response:", data);
+  }
+  if (isError) {
+    console.error("⚡ [API] Electricity Variations Error:", error);
+  }
+
+  // Handle different possible response structures
+  // Flutterwave biller items usually come in data.data or just data
+  const responseData = data?.data?.data || data?.data || data;
+  const variations: ElectricityVariationProps[] = Array.isArray(responseData) ? responseData : [];
+
   return { isLoading, isError, variations };
 };
 

@@ -40,10 +40,10 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
   useOnClickOutside(discoRef, () => setDiscoOpen(false));
   useOnClickOutside(planRef, () => setPlanOpen(false));
 
-  // Fetch electricity plans - enabled when meter number is entered (matching bills/electricity page exactly)
+  // Fetch electricity plans - Fetch immediately on open
   const { electricityPlans, isPending: isElectricityPlanPending, isError: isElectricityPlanError } = useGetElectricityPlans({
     currency: "NGN",
-    isEnabled: isOpen && !!meterNumber && meterNumber.length >= 10,
+    isEnabled: isOpen,
   });
 
   const isElectricityPlanLoading = isElectricityPlanPending && !isElectricityPlanError;
@@ -54,6 +54,12 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
   });
 
   const electricityVariationsLoading = electricityVariationsPending && !electricityVariationsError;
+
+  useEffect(() => {
+    console.log("⚡ [ELECTRICITY] Selected Disco:", selectedDisco);
+    console.log("⚡ [ELECTRICITY] Variations:", variations);
+    console.log("⚡ [ELECTRICITY] Variations Loading:", electricityVariationsLoading, "Error:", electricityVariationsError);
+  }, [selectedDisco, variations, electricityVariationsLoading, electricityVariationsError]);
 
   const handleClose = () => {
     setStep("form");
@@ -183,51 +189,19 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
         <div className="px-4 pb-4">
           {step === "form" && (
             <div className="flex flex-col gap-4">
-              {/* Meter Number - First Input */}
-              <div className="flex flex-col gap-2">
-                <label className="text-white/70 text-sm">Meter Number</label>
-                <div className="relative w-full">
-                  <input
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none"
-                    placeholder="Enter meter number"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={meterNumber}
-                    onChange={(e) => setMeterNumber(e.target.value.replace(/\D/g, ""))}
-                  />
-                  {(verifying || electricityVariationsLoading) && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <SpinnerLoader width={20} height={20} color="#D4B139" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Disco - Only enabled when meter number is valid (matching bills/electricity page) */}
+              {/* 1. Disco Selection */}
               <div className="flex flex-col gap-2 relative" ref={discoRef}>
                 <label className="text-white/70 text-sm">Select Disco</label>
                 <div
-                  onClick={() => {
-                    if (meterNumber && meterNumber.length >= 10) {
-                      setDiscoOpen(!discoOpen);
-                    }
-                  }}
-                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${meterNumber && meterNumber.length >= 10
-                    ? "cursor-pointer"
-                    : "cursor-not-allowed opacity-50"
-                    }`}
+                  onClick={() => setDiscoOpen(!discoOpen)}
+                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
                 >
-                  {!meterNumber || meterNumber.length < 10 ? (
-                    <span className="text-white/50">Enter valid meter number</span>
-                  ) : !selectedDisco ? (
-                    <span className="text-white/50">Select provider</span>
-                  ) : (
-                    <span className="text-white">{selectedDisco.name}</span>
-                  )}
+                  <span className={selectedDisco ? "text-white" : "text-white/50"}>
+                    {selectedDisco?.name || "Select provider"}
+                  </span>
                   <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${discoOpen ? 'rotate-180' : ''}`} />
                 </div>
-                {discoOpen && meterNumber && meterNumber.length >= 10 && (
+                {discoOpen && (
                   <div className="absolute top-full left-0 right-0 mt-1 z-[100]">
                     <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
                       {isElectricityPlanLoading ? (
@@ -244,8 +218,11 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                             key={d.billerCode || d.id}
                             onClick={() => {
                               setSelectedDisco({ name: d.shortName || d.planName || d.name, billerCode: d.billerCode });
-                              setSelectedPlan(null);
-                              setAmount("");
+                              setSelectedPlan(null); // Reset plan when disco changes
+                              setMeterNumber(""); // Reset meter number
+                              setVerifiedCustomer(null); // Reset verification
+                              setVerificationMessage("");
+                              setVerificationError("");
                               setDiscoOpen(false);
                             }}
                             className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
@@ -259,156 +236,148 @@ const ElectricityModal: React.FC<ElectricityModalProps> = ({ isOpen, onClose }) 
                 )}
               </div>
 
-              {/* Verification Status - Matching bills/electricity page exactly */}
-              {verifying || electricityVariationsLoading ? (
-                <div className="flex items-center gap-2 p-2 text-white/70 text-sm">
-                  <SpinnerLoader width={20} height={20} color="#D4B139" />
-                  <p>Fetching customer and plans...</p>
+              {/* 2. Meter Type (Plan) Selection - Depends on Disco */}
+              <div className="flex flex-col gap-2 relative" ref={planRef}>
+                <label className="text-white/70 text-sm">Meter Type</label>
+                <div
+                  onClick={() => {
+                    if (selectedDisco) {
+                      setPlanOpen(!planOpen);
+                    }
+                  }}
+                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${selectedDisco ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                >
+                  {electricityVariationsLoading ? (
+                    <span className="text-white/50 flex items-center gap-2">
+                      Loading types... <SpinnerLoader width={16} height={16} color="#D4B139" />
+                    </span>
+                  ) : (
+                    <span className={selectedPlan ? "text-white" : "text-white/50"}>
+                      {selectedPlan?.name || "Select meter type"}
+                    </span>
+                  )}
+                  <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${planOpen ? 'rotate-180' : ''}`} />
                 </div>
-              ) : (
-                <>
-                  {electricityPlans &&
-                    verificationMessage &&
-                    !verificationError &&
-                    selectedDisco &&
-                    selectedDisco.name &&
-                    selectedDisco.billerCode &&
-                    meterNumber &&
-                    meterNumber.length >= 10 ? (
-                    <div className="flex flex-col">
-                      <p className="text-[#D4B139] text-sm">{verificationMessage}</p>
-                    </div>
-                  ) : verificationError ? (
-                    <p className="flex self-start text-red-500 font-semibold text-sm">
-                      {verificationError}
-                    </p>
-                  ) : null}
-                </>
-              )}
-
-              {/* Plan - Only show when verification is successful (matching bills/electricity page exactly) */}
-              {electricityPlans &&
-                verificationMessage &&
-                !verificationError &&
-                selectedDisco &&
-                selectedDisco.name &&
-                selectedDisco.billerCode &&
-                meterNumber &&
-                meterNumber.length >= 10 && (
-                  <div className="flex flex-col gap-2 relative" ref={planRef}>
-                    <label className="text-white/70 text-sm">Select Plan</label>
-                    <div
-                      onClick={() => {
-                        if (meterNumber && selectedDisco && verificationMessage && !verificationError) {
-                          setPlanOpen(!planOpen);
-                        }
-                      }}
-                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
-                    >
-                      <span className={selectedPlan ? "text-white" : "text-white/50"}>
-                        {selectedPlan?.name || 'Select plan'}
-                      </span>
-                      <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${planOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                    {planOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 z-[100]">
-                        <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
-                          {electricityVariationsLoading ? (
-                            <div className="flex items-center justify-center py-4">
-                              <SpinnerLoader width={20} height={20} color="#D4B139" />
-                            </div>
-                          ) : variations && variations.length > 0 ? (
-                            variations.map((item: any, index: number) => (
-                              <button
-                                key={item.item_code || index}
-                                onClick={() => {
-                                  setSelectedPlan({
-                                    name: item.short_name || item.name || item.item_name,
-                                    amount: Number(item.amount) || 0,
-                                    fee: Number(item.fee) || 0,
-                                    payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
-                                    itemCode: item.item_code || item.itemCode,
-                                  });
-                                  setAmount(String(item.payAmount || item.amount));
-                                  setPlanOpen(false);
-                                }}
-                                className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm flex items-center justify-between"
-                              >
-                                <span>{item.short_name || item.name || item.item_name}</span>
-                                <div className="flex flex-col items-end">
-                                  <span className="text-[#D4B139] font-medium text-xs">₦{Number(item.fee || 0).toLocaleString()}</span>
-                                </div>
-                              </button>
-                            ))
-                          ) : (
-                            <div className="px-4 py-3 text-white/50 text-sm">No plans available</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-              {/* Amount Input - Always show when verification is successful (matching bills/electricity page exactly) */}
-              {electricityPlans &&
-                verificationMessage &&
-                !verificationError &&
-                selectedDisco &&
-                meterNumber &&
-                meterNumber.length >= 10 && (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-white/70 text-sm">Amount</label>
-                      {verifiedCustomer?.minimum && (
-                        <span className="text-[#D4B139] text-[10px] font-medium">
-                          Min: ₦{Number(verifiedCustomer.minimum).toLocaleString()}
-                        </span>
+                {planOpen && selectedDisco && (
+                  <div className="absolute top-full left-0 right-0 mt-1 z-[100]">
+                    <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+                      {variations && variations.length > 0 ? (
+                        variations.map((item: any, index: number) => (
+                          <button
+                            key={item.item_code || index}
+                            onClick={() => {
+                              setSelectedPlan({
+                                name: item.short_name || item.name || item.item_name,
+                                amount: Number(item.amount) || 0,
+                                fee: Number(item.fee) || 0,
+                                payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
+                                itemCode: item.item_code || item.itemCode,
+                              });
+                              setVerifiedCustomer(null); // Reset verification on type change
+                              setVerificationMessage("");
+                              setVerificationError("");
+                              setPlanOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm flex items-center justify-between"
+                          >
+                            <span>{item.short_name || item.name || item.item_name}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-white/50 text-sm">No meter types available</div>
                       )}
                     </div>
-                    <input
-                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none"
-                      placeholder="Enter amount"
-                      type="text"
-                      inputMode="numeric"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-                    />
-                    {selectedPlan && (
-                      <div className="flex flex-col gap-1 mt-1 px-1">
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-white/50 italic">Service Charge:</span>
-                          <span className="text-white/80">₦{Number(selectedPlan.fee).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs font-semibold py-1 border-t border-white/5 mt-1">
-                          <span className="text-white/70">Total Amount:</span>
-                          <span className="text-[#D4B139]">₦{Number(Number(amount || 0) + selectedPlan.fee).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
+              </div>
 
-              {/* Next Button - Only show when verification is successful and (plan is selected or amount is entered) */}
-              {electricityPlans &&
-                verificationMessage &&
-                !verificationError &&
-                selectedDisco &&
-                meterNumber &&
-                meterNumber.length >= 10 &&
-                (selectedPlan || (amount && Number(amount) >= 500)) && (
-                  <CustomButton
-                    type="button"
-                    disabled={!selectedPlan && (!amount || Number(amount) < 500)}
-                    className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
-                    onClick={() => {
-                      if (selectedPlan || (amount && Number(amount) >= 500)) {
-                        setStep("confirm");
+              {/* 3. Meter Number Input - Depends on Plan */}
+              <div className="flex flex-col gap-2">
+                <label className="text-white/70 text-sm">Meter Number</label>
+                <div className="relative w-full">
+                  <input
+                    className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none ${!selectedPlan ? "cursor-not-allowed opacity-50" : ""}`}
+                    placeholder="Enter meter number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    disabled={!selectedPlan}
+                    value={meterNumber}
+                    onChange={(e) => {
+                      setMeterNumber(e.target.value.replace(/\D/g, ""));
+                      setVerifiedCustomer(null); // Clear previous verification
+                      setVerificationMessage("");
+                      setVerificationError("");
+                    }}
+                    onBlur={() => {
+                      // Trigger verification on blur if we have enough digits
+                      if (selectedDisco && selectedPlan && meterNumber.length >= 10) {
+                        verifyMeter({
+                          itemCode: selectedPlan.itemCode,
+                          billerCode: selectedDisco.billerCode,
+                          billerNumber: meterNumber,
+                        });
                       }
                     }}
-                  >
-                    Next
-                  </CustomButton>
-                )}
+                  />
+                  {verifying && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <SpinnerLoader width={20} height={20} color="#D4B139" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Verification Result Display */}
+              {verificationMessage && !verificationError && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                  <p className="text-green-400 text-sm font-medium">Customer Verified</p>
+                  <p className="text-white text-sm mt-1">{verificationMessage}</p>
+                </div>
+              )}
+              {verificationError && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                  <p className="text-red-400 text-sm">{verificationError}</p>
+                </div>
+              )}
+
+
+              {/* 4. Amount Input - Only if verified */}
+              {verifiedCustomer && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-white/70 text-sm">Amount</label>
+                    {verifiedCustomer?.minimum && (
+                      <span className="text-[#D4B139] text-[10px] font-medium">
+                        Min: ₦{Number(verifiedCustomer.minimum).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none"
+                    placeholder="Enter amount"
+                    type="text"
+                    inputMode="numeric"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
+                  />
+                  {selectedPlan && (
+                    <div className="flex flex-col gap-1 mt-1 px-1">
+                      {/* Optional: Show fee if available */}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Next Button */}
+              <CustomButton
+                type="button"
+                disabled={!verifiedCustomer || !amount || Number(amount) < (verifiedCustomer?.minimum || 100)}
+                className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
+                onClick={() => setStep("confirm")}
+              >
+                Next
+              </CustomButton>
             </div>
           )}
 

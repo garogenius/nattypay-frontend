@@ -11,6 +11,7 @@ export type IAirtimePayPayload = {
   phone: string;
   amount: number;
   currency: string;
+  operatorId: number;
   walletPin: string;
   addBeneficiary?: boolean;
 };
@@ -22,4 +23,12 @@ export type IInternationalAirtimePayPayload = {
   amount: number;
   addBeneficiary?: boolean;
   walletPin: string;
+};
+
+export type IInternationalAirtimeFxRateResponse = {
+  amount: number;
+  operatorId: number;
+  exchangeRate: number;
+  convertedAmount: number;
+  currency: string;
 };

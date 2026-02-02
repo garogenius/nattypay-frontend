@@ -335,7 +335,7 @@ const AirtimeStageOne: React.FC<StageOneProps> = ({
 
           <CustomButton
             type="submit"
-            disabled={!isValid}
+            disabled={!isValid || !selectedProvider}
             className="w-full border-2 dark:text-black dark:font-bold border-primary text-white text-base 2xs:text-lg max-2xs:px-6 py-3.5"
           >
             Next{" "}

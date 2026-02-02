@@ -5,7 +5,7 @@ import { CgClose } from "react-icons/cg";
 import { IoChevronDown } from "react-icons/io5";
 import Image from "next/image";
 import CustomButton from "@/components/shared/Button";
-import { useGetInternationalAirtimePlan, usePayForInternationalAirtime } from "@/api/airtime/airtime.queries";
+import { useGetInternationalAirtimePlan, useGetInternationalAirtimeFxRate, usePayForInternationalAirtime } from "@/api/airtime/airtime.queries";
 import { formatNumberWithoutExponential, handleInput } from "@/utils/utilityFunctions";
 import SpinnerLoader from "@/components/Loader/SpinnerLoader";
 
@@ -20,9 +20,20 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [plan, setPlan] = useState<any>(null);
   const [resultSuccess, setResultSuccess] = useState<boolean | null>(null);
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [paymentError, setPaymentError] = useState<string>("");
+  const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
+  const planDropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: internationalAirtimePlan, isLoading, isError } = useGetInternationalAirtimePlan({ phone });
   const iaLoading = isLoading && !isError;
+
+  const { data: fxRateData, isLoading: fxLoading } = useGetInternationalAirtimeFxRate({
+    operatorId: operatorId || 0,
+    amount: Number(amount) || 0
+  });
+
+  const convertedAmount = fxRateData?.data?.convertedAmount || 0;
+  const exchangeRate = fxRateData?.data?.exchangeRate || 0;
 
   useEffect(() => {
     const planData = internationalAirtimePlan?.data?.data;
@@ -51,15 +62,22 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
     setOperatorId(undefined);
     setPlan(null);
     setTransactionData(null);
+    setPaymentError("");
+    setResultSuccess(null);
     onClose();
   };
 
-  const onPayAirtimeSuccess = (data: any) => { 
+  const onPayAirtimeSuccess = (data: any) => {
     setTransactionData(data?.data);
-    setResultSuccess(true); 
-    setStep("result"); 
+    setResultSuccess(true);
+    setStep("result");
   };
-  const onPayAirtimeError = () => { setResultSuccess(false); setStep("result"); };
+  const onPayAirtimeError = (error: any) => {
+    const errorMessage = error?.response?.data?.message || "Failed to process international airtime purchase.";
+    setPaymentError(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
+    setResultSuccess(false);
+    setStep("result");
+  };
   const { mutate: PayForInternationalAirtime, isPending: paying, isError: payError } = usePayForInternationalAirtime(onPayAirtimeError, onPayAirtimeSuccess);
   const isPaying = paying && !payError;
 
@@ -73,8 +91,12 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <div className="relative mx-4 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 w-full max-w-md rounded-2xl overflow-visible">
         <div className="flex items-center justify-between p-4 pb-2">
           <div>
-            <h2 className="text-white text-lg font-semibold">{step === "form" ? "International Airtime" : step === "confirm" ? "International Airtime" : "Transaction History"}</h2>
-            <p className="text-white/60 text-sm">{step === "form" ? "Enter payment details to continue" : step === "confirm" ? "Confirm Transactions" : "View complete information about this transaction"}</p>
+            <h2 className="text-white text-lg font-semibold">
+              {step === "form" ? "International Airtime" : step === "confirm" ? "International Airtime" : resultSuccess ? "Transaction History" : "Payment Failed"}
+            </h2>
+            <p className="text-white/60 text-sm">
+              {step === "form" ? "Enter payment details to continue" : step === "confirm" ? "Confirm Transactions" : resultSuccess ? "View complete information about this transaction" : ""}
+            </p>
           </div>
           <button onClick={handleClose} className="p-1 hover:bg-white/10 rounded transition-colors"><CgClose className="text-xl text-white/70" /></button>
         </div>
@@ -84,7 +106,7 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-white/70 text-sm">Phone Number</label>
-                <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder="Enter phone number" value={phone} onChange={(e)=> setPhone(e.target.value)} onInput={handleInput} />
+                <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder="Enter phone number" value={phone} onChange={(e) => setPhone(e.target.value)} onInput={handleInput} />
               </div>
 
               <div className="flex flex-col gap-2">
@@ -109,24 +131,59 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
               {plan?.denominationType === "RANGE" && (
                 <div className="flex flex-col gap-2">
                   <label className="text-white/70 text-sm">Amount ({plan?.destinationCurrencyCode})</label>
-                  <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder={`Min ${minAmt} / Max ${maxAmt}`} type="number" value={amount} onChange={(e)=> setAmount(e.target.value)} />
-                  <div className="text-[#D4B139] text-xs">{plan?.payAmount ? `Fee: ₦${plan?.payAmount}` : null} {amount && plan?.fx?.rate ? `• Paying: ₦${Number(formatNumberWithoutExponential(Number(amount)/(plan.fx.rate||1) + (plan?.payAmount||0), 2)).toLocaleString()}` : null}</div>
+                  <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder={`Min ${minAmt} / Max ${maxAmt}`} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                  <div className="text-[#D4B139] text-xs">
+                    {fxLoading ? (
+                      <span className="flex items-center gap-1"><SpinnerLoader width={10} height={10} color="#D4B139" /> Calculating...</span>
+                    ) : convertedAmount ? (
+                      `• Paying: ₦${Number(convertedAmount + (plan?.payAmount || 0)).toLocaleString()}`
+                    ) : plan?.payAmount ? (
+                      `Fee: ₦${plan?.payAmount}`
+                    ) : null}
+                  </div>
                 </div>
               )}
 
               {plan?.denominationType === "FIXED" && (
                 <div className="flex flex-col gap-2">
                   <label className="text-white/70 text-sm">Select Amount ({plan?.destinationCurrencyCode})</label>
-                  <select className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" value={amount} onChange={(e)=> setAmount(e.target.value)}>
-                    {plan?.localFixedAmounts?.map((v:number, i:number)=> (
-                      <option key={i} value={String(v)}>{v} {plan?.destinationCurrencyCode}</option>
-                    ))}
-                  </select>
-                  <div className="text-[#D4B139] text-xs">{plan?.payAmount ? `Fee: ₦${plan?.payAmount}` : null}</div>
+                  <div className="relative" ref={planDropdownRef}>
+                    <div
+                      onClick={() => setPlanDropdownOpen(!planDropdownOpen)}
+                      className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm flex items-center justify-between cursor-pointer"
+                    >
+                      <span className={amount ? "text-white" : "text-white/50"}>
+                        {amount ? `${amount} ${plan?.destinationCurrencyCode}` : "Select a plan"}
+                      </span>
+                      <IoChevronDown className={`transition-transform duration-200 ${planDropdownOpen ? "rotate-180" : ""}`} />
+                    </div>
+                    {planDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                        {plan?.localFixedAmounts?.map((v: number, i: number) => (
+                          <div
+                            key={i}
+                            onClick={() => { setAmount(String(v)); setPlanDropdownOpen(false); }}
+                            className="px-4 py-3 text-white text-sm hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-0"
+                          >
+                            {v} {plan?.destinationCurrencyCode}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[#D4B139] text-xs">
+                    {fxLoading ? (
+                      <span className="flex items-center gap-1"><SpinnerLoader width={10} height={10} color="#D4B139" /> Calculating...</span>
+                    ) : convertedAmount ? (
+                      `• Paying: ₦${Number(convertedAmount + (plan?.payAmount || 0)).toLocaleString()}`
+                    ) : plan?.payAmount ? (
+                      `Fee: ₦${plan?.payAmount}`
+                    ) : null}
+                  </div>
                 </div>
               )}
 
-              <CustomButton type="button" disabled={!canProceed || iaLoading} className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg mt-2" onClick={()=> setStep("confirm")}>Next</CustomButton>
+              <CustomButton type="button" disabled={!canProceed || iaLoading} className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg mt-2" onClick={() => setStep("confirm")}>Next</CustomButton>
             </div>
           )}
 
@@ -136,18 +193,20 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Network</span><span className="text-white text-sm font-medium">{plan?.name}</span></div>
                 <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Phone</span><span className="text-white text-sm font-medium">+{phone}</span></div>
                 <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Amount</span><span className="text-white text-sm font-medium">{amount} {plan?.destinationCurrencyCode}</span></div>
-                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Amount Debited</span><span className="text-white text-sm font-medium">₦{Number(formatNumberWithoutExponential(Number(amount)/(plan?.fx?.rate||1) + (plan?.payAmount||0), 2)).toLocaleString()}</span></div>
+                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Amount Debited</span><span className="text-white text-sm font-medium">₦{Number(convertedAmount + (plan?.payAmount || 0)).toLocaleString()}</span></div>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-white/60 text-sm">Enter Transaction PIN</label>
-                <input type="password" maxLength={4} value={walletPin} onChange={(e)=> setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
+                <input type="password" maxLength={4} value={walletPin} onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
               </div>
               <div className="flex gap-4 mt-2">
-                <CustomButton onClick={()=> setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
-                <CustomButton onClick={()=> {
-                  if (!operatorId) return; 
-                  PayForInternationalAirtime({ phone, currency: "NGN", walletPin, operatorId, amount: Number(amount), addBeneficiary: false });
-                }} disabled={walletPin.length!==4 || isPaying} isLoading={isPaying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
+                <CustomButton onClick={() => setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
+                <CustomButton onClick={() => {
+                  if (!operatorId) return;
+                  // Ensure phone number has + prefix for Reloadly
+                  const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+                  PayForInternationalAirtime({ phone: formattedPhone, currency: "NGN", walletPin, operatorId, amount: Number(amount), addBeneficiary: false });
+                }} disabled={walletPin.length !== 4 || isPaying} isLoading={isPaying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
               </div>
             </div>
           )}
@@ -157,9 +216,11 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: resultSuccess ? '#22c55e' : '#ef4444' }}>
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">{resultSuccess ? (<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />) : (<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />)}</svg>
               </div>
-              <span className={`${resultSuccess ? 'text-emerald-400' : 'text-red-400'} text-sm font-medium`}>{resultSuccess ? 'Payment Successful' : 'Payment Failed'}</span>
-              <span className="text-white text-2xl font-bold">₦{Number(formatNumberWithoutExponential(Number(amount)/(plan?.fx?.rate||1) + (plan?.payAmount||0), 2)).toLocaleString()}</span>
-              
+              <span className={`${resultSuccess ? 'text-emerald-400' : 'text-red-400'} text-sm font-medium`}>{resultSuccess ? 'Payment Successful' : (paymentError || 'Payment Failed')}</span>
+              {resultSuccess && (
+                <span className="text-white text-2xl font-bold">₦{Number(convertedAmount + (plan?.payAmount || 0)).toLocaleString()}</span>
+              )}
+
               {resultSuccess && transactionData && (
                 <div className="w-full bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -178,7 +239,7 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       )}
@@ -195,7 +256,7 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       </div>
@@ -209,10 +270,14 @@ const InternationalAirtimeModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   )}
                 </div>
               )}
-              
+
               <div className="flex gap-3 mt-4 w-full">
                 <CustomButton onClick={handleClose} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Contact Support</CustomButton>
-                <CustomButton onClick={handleClose} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Download Receipt</CustomButton>
+                {resultSuccess ? (
+                  <CustomButton onClick={handleClose} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Download Receipt</CustomButton>
+                ) : (
+                  <CustomButton onClick={() => { setStep("confirm"); setResultSuccess(null); setPaymentError(""); }} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Try Again</CustomButton>
+                )}
               </div>
             </div>
           )}

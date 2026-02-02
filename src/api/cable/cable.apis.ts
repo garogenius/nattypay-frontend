@@ -17,7 +17,7 @@ export const getCableVariationsRequest = async (
   formdata: IGetCableVariationsPayload
 ) => {
   return request({
-    url: `/bill/flutterwave/cable/get-bill-info?billerCode=${formdata.billerCode}`,
+    url: `/bill/flutterwave/billers/${formdata.billerCode}/items`,
     method: "get",
   });
 };

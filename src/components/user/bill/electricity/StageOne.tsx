@@ -51,13 +51,13 @@ type StageOneProps = {
 const ElectricityStageOne: React.FC<StageOneProps> = ({
   currency,
   setStage,
-  setBillerNumber = () => {},
+  setBillerNumber = () => { },
   setAmount,
-  setBillerCode = () => {},
+  setBillerCode = () => { },
   setItemCode,
   isBeneficiaryChecked = false,
-  setIsBeneficiaryChecked = () => {},
-  setCheckoutMessage = () => {},
+  setIsBeneficiaryChecked = () => { },
+  setCheckoutMessage = () => { },
 }) => {
   const theme = useTheme();
 
@@ -128,7 +128,7 @@ const ElectricityStageOne: React.FC<StageOneProps> = ({
     isError: isElectricityPlanError,
   } = useGetElectricityPlans({
     currency,
-    isEnabled: !!watchedBillerNumber,
+    isEnabled: true,
   });
 
   const isElectricityPlanLoading =
@@ -321,11 +321,11 @@ const ElectricityStageOne: React.FC<StageOneProps> = ({
             ) : (
               <>
                 {electricityPlans &&
-                verificationMessage &&
-                !verificationError &&
-                watchedProvider &&
-                watchedBillerCode &&
-                watchedBillerNumber ? (
+                  verificationMessage &&
+                  !verificationError &&
+                  watchedProvider &&
+                  watchedBillerCode &&
+                  watchedBillerNumber ? (
                   <div className="flex flex-col  ">
                     <p className="text-primary text-sm">
                       {verificationMessage}
@@ -364,9 +364,7 @@ const ElectricityStageOne: React.FC<StageOneProps> = ({
             </label>
             <div
               onClick={() => {
-                if (watchedBillerNumber) {
-                  setProviderState(!providerState);
-                }
+                setProviderState(!providerState);
               }}
               className="w-full flex gap-2 justify-center items-center bg-bg-2000 border border-border-600 rounded-lg py-4 px-3"
             >
@@ -374,7 +372,7 @@ const ElectricityStageOne: React.FC<StageOneProps> = ({
                 {" "}
                 {!watchedBillerNumber ? (
                   <p className="text-sm 2xs:text-base">
-                    Enter valid meter number{" "}
+                    Select a provider{" "}
                   </p>
                 ) : !watchedProvider || !watchedBillerCode ? (
                   <p className="text-sm 2xs:text-base">Select provider </p>
@@ -560,8 +558,8 @@ const ElectricityStageOne: React.FC<StageOneProps> = ({
                 placeholder="&#8358;5,000"
                 type="number"
                 {...register("amount")}
-                // onKeyDown={handleNumericKeyDown}
-                // onPaste={handleNumericPaste}
+              // onKeyDown={handleNumericKeyDown}
+              // onPaste={handleNumericPaste}
               />
             </div>
 

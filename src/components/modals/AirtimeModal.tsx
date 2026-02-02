@@ -8,7 +8,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Image from "next/image";
 import CustomButton from "@/components/shared/Button";
-import { useGetAirtimeNetWorkProvider, usePayForAirtime } from "@/api/airtime/airtime.queries";
+import { useGetAirtimeNetWorkProvider, usePayForAirtime, useGetAirtimePlanByPhone } from "@/api/airtime/airtime.queries";
 import { NetworkProvider } from "@/components/user/bill/bill.data";
 import { handleNumericKeyDown, handleNumericPaste } from "@/utils/utilityFunctions";
 import ErrorToast from "@/components/toast/ErrorToast";
@@ -24,9 +24,8 @@ interface AirtimeModalProps {
 const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<"form" | "confirm" | "result">("form");
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
-  const [minimumAmount, setMinimumAmount] = useState<number>(0);
   const [maxAmount, setMaximumAmount] = useState<number>(0);
-  const [operatorId, setOperatorId] = useState<number | undefined>();
+  const [operatorId, setOperatorId] = useState<string | number | undefined>();
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
   const [formData, setFormData] = useState<any>(null);
   const [walletPin, setWalletPin] = useState("");
@@ -46,37 +45,83 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
     setNetworkDropdownOpen(false);
   });
 
-  const { data: networkProviders } = useGetAirtimeNetWorkProvider();
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  const { data: networkProviders, isPending: airtimeProvidersLoading } = useGetAirtimeNetWorkProvider();
+
+
+
 
   useEffect(() => {
-    // Robust extraction of providers array from Palmpay API response
-    const responseBody = networkProviders?.data;
-    const providersArray = Array.isArray(responseBody?.data)
-      ? responseBody.data
-      : Array.isArray(responseBody)
-        ? responseBody
-        : [];
+    // Debug: Log the entire response to understand structure
+    console.log("🔍 Network Providers Response:", networkProviders);
+
+    // Highly resilient extraction of providers array from API response
+    // Handles scenarios where data is nested in data.data or directly in data
+    const extractProviders = () => {
+      if (!networkProviders) {
+        console.log("❌ No networkProviders data");
+        return [];
+      }
+
+      const responseBody = networkProviders.data;
+      console.log("📦 Response Body:", responseBody);
+
+      // Check for PalmPay structure: data.billers
+      if (Array.isArray(responseBody?.data?.billers)) {
+        console.log("✅ Found data in responseBody.data.billers (PalmPay)");
+        return responseBody.data.billers;
+      }
+
+      if (Array.isArray(responseBody?.data)) {
+        console.log("✅ Found data in responseBody.data");
+        return responseBody.data;
+      }
+      if (Array.isArray(responseBody)) {
+        console.log("✅ Found data in responseBody");
+        return responseBody;
+      }
+      if (Array.isArray(networkProviders)) {
+        console.log("✅ Found data in networkProviders");
+        return networkProviders;
+      }
+
+      console.log("❌ No array found in response");
+      return [];
+    };
+
+    const providersArray = extractProviders();
+    console.log("📋 Providers Array:", providersArray);
+    if (providersArray.length > 0) {
+      console.log("📋 First Provider (raw):", providersArray[0]);
+    }
 
     if (providersArray.length > 0) {
-      setProviderOptions(
-        providersArray.map((item: any) => {
-          const networkName = (item?.network || item?.planName || "").toUpperCase();
-          const provider = NetworkProvider.find(
-            (p) =>
-              networkName.includes(p.name.toUpperCase()) ||
-              p.name.toUpperCase().includes(networkName)
-          );
-          return {
-            value: item?.operatorId || item?.id,
-            label: item?.planName || item?.network,
-            name: networkName.includes("MTN") ? "MTN" :
-              networkName.includes("AIRTEL") ? "AIRTEL" :
-                networkName.includes("GLO") ? "GLO" :
-                  networkName.includes("9MOBILE") ? "9MOBILE" : networkName,
-            logo: provider?.logo,
-          };
-        })
-      );
+      const options = providersArray.map((item: any) => {
+        // Support both old (network/planName) and new (billerName/billerId) structures
+        const networkName = (item?.billerName || item?.network || item?.planName || item?.billerId || "").toUpperCase();
+        const provider = NetworkProvider.find(
+          (p) =>
+            networkName.includes(p.name.toUpperCase()) ||
+            p.name.toUpperCase().includes(networkName)
+        );
+
+        const extractedValue = item?.billerId || item?.operatorId || item?.id || "";
+        console.log("🔍 Item:", item.billerName || item.network, "| billerId:", item?.billerId, "| operatorId:", item?.operatorId, "| id:", item?.id, "| Final value:", extractedValue);
+
+        return {
+          value: extractedValue,
+          label: item?.billerName || item?.planName || item?.network || item?.billerId || "Unknown Provider",
+          name: networkName.includes("MTN") ? "MTN" :
+            networkName.includes("AIRTEL") ? "AIRTEL" :
+              networkName.includes("GLO") ? "GLO" :
+                networkName.includes("9MOBILE") || networkName.includes("9 MOBILE") ? "9MOBILE" : networkName,
+          logo: provider?.logo || item?.billerIcon,
+          minAmount: item?.minAmount || 50,
+          maxAmount: item?.maxAmount || 50000,
+        };
+      });
+      console.log("✨ Provider Options:", options);
+      setProviderOptions(options);
     }
   }, [networkProviders]);
 
@@ -92,16 +137,13 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
           .number()
           .required("Amount is required")
           .typeError("Amount is required")
-          .min(
-            minimumAmount || 50,
-            `Minimum amount is ₦${(minimumAmount || 50).toLocaleString()}`
-          )
+          .min(50, "Minimum amount is ₦50")
           .max(
             maxAmount || 50000,
             `Maximum amount is ₦${(maxAmount || 50000).toLocaleString()}`
           ),
       }),
-    [minimumAmount, maxAmount]
+    [maxAmount]
   );
 
   const form = useForm({
@@ -144,9 +186,77 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
 
   const airtimeLoading = airtimePending && !airtimeError;
 
+  // Fetch plan/operator info from API when phone number is valid (11 digits)
+  const { data: airtimePlanData, isPending: isPlanLoading } = useGetAirtimePlanByPhone(cleanedPhone);
+
   useEffect(() => {
-    if (cleanedPhone && cleanedPhone.length >= 4) {
-      const prefix = cleanedPhone.substring(0, 4);
+    if (airtimePlanData) {
+      console.log("📡 [AIRTIME] Plan Info Fetched:", airtimePlanData);
+
+      // Robust extraction for PalmPay / legacy structures
+      const responseData = airtimePlanData?.data?.data || airtimePlanData?.data || airtimePlanData;
+
+      const apiNetwork = responseData?.network || responseData?.billerName || responseData?.operatorName || responseData?.providerName;
+      // PalmPay often returns 'billerId' or 'operatorId'
+      const apiOperatorId = responseData?.operatorId || responseData?.billerId || responseData?.plan?.operatorId || responseData?.data?.operatorId;
+
+      if (apiNetwork || apiOperatorId) { // Allow if at least one is found, we might be able to map the other
+        console.log(`🔧 [AIRTIME] API detected network: ${apiNetwork}, operatorId: ${apiOperatorId}`);
+
+        // Normalize network name for matching
+        const normalizedNetwork = (apiNetwork || "").toUpperCase();
+
+        // Find matching provider option
+        const providerOption = providerOptions.find(
+          (opt) =>
+            (normalizedNetwork && opt.name.toUpperCase().includes(normalizedNetwork)) ||
+            (normalizedNetwork && normalizedNetwork.includes(opt.name.toUpperCase())) ||
+            // usage of operatorId/billerId to match if network name is fuzzy
+            (apiOperatorId && String(opt.value) === String(apiOperatorId))
+        );
+
+        // Determine final Operator ID
+        const finalOperatorId = apiOperatorId || providerOption?.value;
+
+        if (finalOperatorId) {
+          // Set operatorId from API - this is the source of truth for the transaction
+          setOperatorId(finalOperatorId);
+          console.log("✅ [AIRTIME] Set operatorId to:", finalOperatorId);
+        }
+
+        if (providerOption) {
+          // If we found a matching provider in our list, verify names match or update selection
+          if (selectedProvider?.name !== providerOption.name) {
+            setSelectedProvider(providerOption);
+            setMaximumAmount(providerOption.maxAmount || 50000);
+          }
+        } else if (apiNetwork) {
+          // Fallback if provider not found in list but returned by plan API
+          // Only set if not already set to something valid
+          if (selectedProvider?.name !== apiNetwork) {
+            // Try to map known names manually if providerOptions failed
+            let mappedName = apiNetwork;
+            if (normalizedNetwork.includes("MTN")) mappedName = "MTN";
+            else if (normalizedNetwork.includes("AIRTEL")) mappedName = "AIRTEL";
+            else if (normalizedNetwork.includes("GLO")) mappedName = "GLO";
+            else if (normalizedNetwork.includes("9MOBILE") || normalizedNetwork.includes("ETISALAT")) mappedName = "9MOBILE";
+
+            setSelectedProvider({ name: mappedName, label: mappedName });
+          }
+        }
+      }
+    }
+  }, [airtimePlanData, providerOptions, selectedProvider]);
+
+
+  useEffect(() => {
+    // Detect network based on phone number prefix
+    // Support both 0803 (4 digits) and 803 (3 digits) formats
+    if (cleanedPhone && cleanedPhone.length >= 3) {
+      const prefix = cleanedPhone.startsWith('0')
+        ? cleanedPhone.substring(0, 4)
+        : '0' + cleanedPhone.substring(0, 3);
+
       let detectedNetwork = "";
 
       for (const [net, prefixes] of Object.entries(prefixMap)) {
@@ -157,7 +267,6 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
       }
 
       if (detectedNetwork) {
-        // Find provider option that either matches the name or whose label contains the name
         const providerOption = providerOptions.find(
           (opt) =>
             opt.name === detectedNetwork ||
@@ -165,27 +274,28 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
         );
 
         if (providerOption) {
-          setSelectedProvider(providerOption);
-          setOperatorId(Number(providerOption.value));
-          setMinimumAmount(50);
-          setMaximumAmount(50000);
+          // Check if we need to update to avoid infinite loops
+          if (selectedProvider?.name !== providerOption.name) {
+            console.log("🔧 [AIRTIME] Auto-detected network:", providerOption.name);
+            // Only update UI provider selection - let API or manual select handle operatorId
+            setSelectedProvider(providerOption);
+            // Use max from provider if available, otherwise use default
+            setMaximumAmount(providerOption.maxAmount || 50000);
+          }
         }
-      } else if (cleanedPhone.length >= 11) {
-        // Only clear if we have a full number that doesn't match any prefix
+      }
+      // Removed the aggressively clearing block here to allow manual selection
+    } else if (cleanedPhone.length === 0) {
+      if (selectedProvider !== null || operatorId !== undefined) {
         setSelectedProvider(null);
         setOperatorId(undefined);
       }
-    } else if (cleanedPhone.length === 0) {
-      // Clear when input is empty
-      setSelectedProvider(null);
-      setOperatorId(undefined);
     }
-  }, [cleanedPhone, providerOptions]);
+  }, [cleanedPhone, providerOptions, selectedProvider, operatorId]);
 
   const handleClose = () => {
     setStep("form");
     setSelectedProvider(null);
-    setMinimumAmount(0);
     setMaximumAmount(0);
     setOperatorId(undefined);
     setNetworkDropdownOpen(false);
@@ -197,13 +307,40 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
   };
 
   const onSubmit = (data: any) => {
-    if (!operatorId) return;
+    if (operatorId === undefined || operatorId === null) return;
     setFormData(data);
     setStep("confirm");
   };
 
   const handleConfirmPayment = () => {
-    if (!formData || !operatorId || walletPin.length !== 4) return;
+    console.log("🔍 [AIRTIME PAY] Button clicked - Starting validation...");
+    console.log("📋 [AIRTIME PAY] Form Data:", formData);
+    console.log("📋 [AIRTIME PAY] Operator ID:", operatorId, "Type:", typeof operatorId);
+    console.log("📋 [AIRTIME PAY] Wallet PIN:", walletPin, "Length:", walletPin.length);
+    console.log("📋 [AIRTIME PAY] Is Number Check:", isNaN(Number(operatorId)));
+
+    // Individual validation checks with detailed logging
+    if (!formData) {
+      console.error("❌ [AIRTIME PAY] Validation Failed: formData is missing");
+      return;
+    }
+
+    if (operatorId === undefined || operatorId === null) {
+      console.error("❌ [AIRTIME PAY] Validation Failed: operatorId is undefined or null");
+      return;
+    }
+
+    if (isNaN(Number(operatorId))) {
+      console.error("❌ [AIRTIME PAY] Validation Failed: operatorId is not a number:", operatorId);
+      return;
+    }
+
+    if (walletPin.length !== 4) {
+      console.error("❌ [AIRTIME PAY] Validation Failed: walletPin length is not 4, got:", walletPin.length);
+      return;
+    }
+
+    console.log("✅ [AIRTIME PAY] All validations passed!");
 
     // Format phone number to local format: ensure 11 digits with leading 0
     // e.g., 07043742886 -> 07043742886 (keep as is)
@@ -240,14 +377,18 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
       phoneForPayment = `0${last10}`;
     }
 
-    showProcessing({ title: "Processing Payment", message: "Please wait..." });
-    PayForAirtime({
+    const payload = {
       phone: phoneForPayment,
       currency: "NGN",
       walletPin: walletPin,
+      operatorId: Number(operatorId),
       amount: Number(formData.amount),
       addBeneficiary: isBeneficiaryChecked,
-    });
+    };
+
+    console.log("📤 [AIRTIME PAY] Calling API with payload:", payload);
+    showProcessing({ title: "Processing Payment", message: "Please wait..." });
+    PayForAirtime(payload);
   };
 
   if (!isOpen) return null;
@@ -265,12 +406,13 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between p-4 pb-2">
           <div>
             <h2 className="text-white text-lg font-semibold">
-              {step === "form" ? "Airtime" : step === "confirm" ? "Airtime" : "Transaction History"}
+              {step === "form" ? "Airtime" : step === "confirm" ? "Airtime" : transactionResult?.success ? "Transaction History" : "Payment Failed"}
             </h2>
             <p className="text-white/60 text-sm">
               {step === "form" ? "Enter payment details to continue" :
                 step === "confirm" ? "Confirm Transactions" :
-                  "View complete information about this transaction"}
+                  transactionResult?.success ? "View complete information about this transaction" :
+                    "Your transaction could not be completed"}
             </p>
           </div>
           <button
@@ -299,22 +441,6 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
                 />
                 {errors?.phone?.message && (
                   <p className="text-red-400 text-xs">{errors.phone.message}</p>
-                )}
-              </div>
-
-              {/* Amount */}
-              <div className="flex flex-col gap-2">
-                <label className="text-white/70 text-sm">Amount</label>
-                <input
-                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none focus:ring-1 focus:ring-[#D4B139] focus:border-[#D4B139]"
-                  placeholder="Enter amount"
-                  type="number"
-                  min={minimumAmount || 50}
-                  max={maxAmount || 50000}
-                  {...register("amount")}
-                />
-                {errors?.amount?.message && (
-                  <p className="text-red-400 text-xs">{errors.amount.message}</p>
                 )}
               </div>
 
@@ -347,36 +473,68 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
 
                   {/* Dropdown Options */}
                   {networkDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg z-50 overflow-hidden">
-                      {providerOptions.map((network) => (
-                        <div
-                          key={network.name}
-                          onClick={() => {
-                            setSelectedProvider(network);
-                            setOperatorId(Number(network.value));
-                            setNetworkDropdownOpen(false);
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 text-white text-sm hover:bg-white/5 cursor-pointer transition-colors"
-                        >
-                          <Image
-                            src={network.logo}
-                            alt={network.name}
-                            width={20}
-                            height={20}
-                            className="w-5 h-5 rounded-full"
-                          />
-                          <span>{network.name}</span>
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg z-50 overflow-hidden max-h-[250px] overflow-y-auto">
+                      {airtimeProvidersLoading ? (
+                        <div className="flex items-center gap-2 px-4 py-3 text-white/70 text-sm">
+                          <SpinnerLoader width={16} height={16} color="#D4B139" />
+                          <span>Loading networks...</span>
                         </div>
-                      ))}
+                      ) : providerOptions.length > 0 ? (
+                        providerOptions.map((network, index) => (
+                          <div
+                            key={`${network.name}-${index}`}
+                            onClick={() => {
+                              console.log("🔧 [AIRTIME] Manual network selection:", network);
+                              console.log("🔧 [AIRTIME] Setting operatorId to:", network.value);
+                              setSelectedProvider(network);
+                              setOperatorId(network.value); // Use network.value which is the billerId
+                              setMaximumAmount(network.maxAmount || 50000);
+                              setNetworkDropdownOpen(false);
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 text-white text-sm hover:bg-white/5 cursor-pointer transition-colors"
+                          >
+                            {network.logo && (
+                              <Image
+                                src={network.logo}
+                                alt={network.name}
+                                width={20}
+                                height={20}
+                                className="w-5 h-5 rounded-full"
+                              />
+                            )}
+                            <span>{network.label}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-white/50 text-sm">
+                          No networks found
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
 
+              {/* Amount */}
+              <div className="flex flex-col gap-2">
+                <label className="text-white/70 text-sm">Amount</label>
+                <input
+                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none focus:ring-1 focus:ring-[#D4B139] focus:border-[#D4B139]"
+                  placeholder="Enter amount"
+                  type="number"
+                  min={50}
+                  max={maxAmount || 50000}
+                  {...register("amount")}
+                />
+                {errors?.amount?.message && (
+                  <p className="text-red-400 text-xs">{errors.amount.message}</p>
+                )}
+              </div>
+
               {/* Next Button */}
               <CustomButton
                 type="submit"
-                disabled={!isValid || !selectedProvider || airtimeLoading}
+                disabled={!isValid || !selectedProvider || (operatorId === undefined || operatorId === null || operatorId === "") || airtimeLoading}
                 isLoading={airtimeLoading}
                 className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
               >
@@ -473,13 +631,16 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
                       </svg>
                     </div>
                     <span className="text-red-500 text-sm font-medium">Failed</span>
+                    <span className="text-red-400 text-xs mt-1 text-center font-medium max-w-[200px]">
+                      {transactionResult.error || "An unknown error occurred"}
+                    </span>
                     <span className="text-white text-2xl font-bold">₦{Number(formData?.amount || 0).toLocaleString()}.00</span>
                   </>
                 )}
               </div>
 
               {/* Transaction Details */}
-              {transactionResult.success && (
+              {transactionResult.success ? (
                 <div className="w-full space-y-3 mt-4">
                   <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
                     <div className="flex items-center justify-between">
@@ -504,73 +665,56 @@ const AirtimeModal: React.FC<AirtimeModalProps> = ({ isOpen, onClose }) => {
                         )}
                       </div>
                     </div>
-                    {transactionResult?.data?.data?.pin && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-white/70 text-sm">PIN</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-white text-sm font-mono">{transactionResult.data.data.pin}</span>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(transactionResult.data.data.pin)}
-                            className="p-1 rounded hover:bg-white/10"
-                            title="Copy"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                              <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {transactionResult?.data?.data?.transactionId && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-white/70 text-sm">Transaction ID</span>
-                        <span className="text-white text-sm font-mono">{transactionResult.data.data.transactionId}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white/70 text-sm">Transaction ID</span>
-                    <span className="text-white text-sm font-medium">
-                      {transactionResult?.data?.data?.transactionRef || transactionResult?.data?.data?.transaction?.transactionRef || transactionResult?.data?.data?.transactionId || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white/70 text-sm">Date & Time</span>
-                    <span className="text-white text-sm font-medium">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white/70 text-sm">Payment Method</span>
-                    <span className="text-white text-sm font-medium">Available Balance</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white/70 text-sm">Transaction Type</span>
-                    <span className="text-white text-sm font-medium">Airtime</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white/70 text-sm">To</span>
-                    <span className="text-white text-sm font-medium">{selectedProvider?.name} Nigeria</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-white/70 text-sm">Number</span>
-                    <span className="text-white text-sm font-medium">+{formData?.phone}</span>
+                    <div className="flex justify-between items-center py-2 border-t border-white/5 mt-2">
+                      <span className="text-white/70 text-sm">Date & Time</span>
+                      <span className="text-white text-sm font-medium">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-white/70 text-sm">Payment Method</span>
+                      <span className="text-white text-sm font-medium">Available Balance</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-white/70 text-sm">Transaction Type</span>
+                      <span className="text-white text-sm font-medium">Airtime</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-white/70 text-sm">To</span>
+                      <span className="text-white text-sm font-medium">{selectedProvider?.name} Nigeria</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-white/70 text-sm">Number</span>
+                      <span className="text-white text-sm font-medium">+{formData?.phone}</span>
+                    </div>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Action Buttons */}
               <div className="flex gap-3 mt-6 w-full">
                 <CustomButton
                   onClick={handleClose}
-                  className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg transition-colors"
+                  className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg transition-colors font-medium"
                 >
                   Contact Support
                 </CustomButton>
-                <CustomButton
-                  onClick={handleClose}
-                  className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors"
-                >
-                  Download Receipt
-                </CustomButton>
+                {transactionResult.success ? (
+                  <CustomButton
+                    onClick={handleClose}
+                    className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors"
+                  >
+                    Download Receipt
+                  </CustomButton>
+                ) : (
+                  <CustomButton
+                    onClick={() => {
+                      setStep("form");
+                      setTransactionResult(null);
+                    }}
+                    className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors"
+                  >
+                    Try Again
+                  </CustomButton>
+                )}
               </div>
             </div>
           )}

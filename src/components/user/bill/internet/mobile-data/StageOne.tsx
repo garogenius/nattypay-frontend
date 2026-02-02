@@ -46,13 +46,13 @@ type DataStageOneProps = {
 const DataStageOne: React.FC<DataStageOneProps> = ({
   currency,
   setStage,
-  setPhone = () => {},
+  setPhone = () => { },
   setAmount,
-  setNetwork = () => {},
+  setNetwork = () => { },
   setOperatorId,
   isBeneficiaryChecked = false,
-  setIsBeneficiaryChecked = () => {},
-  setCheckoutMessage = () => {},
+  setIsBeneficiaryChecked = () => { },
+  setCheckoutMessage = () => { },
 }) => {
   const theme = useTheme();
   const schema = yup.object().shape({
@@ -105,6 +105,7 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
     isError: isDataPlanError,
   } = useGetDataPlan({
     phone: watchedPhone,
+    network: watchedNetwork,
     currency,
   });
 
@@ -225,7 +226,7 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
               </label>
               <div
                 onClick={() => {
-                  // setNetworkState(!networkState);
+                  setNetworkState(!networkState);
                 }}
                 className="w-full flex gap-2 justify-center items-center bg-bg-2000 border border-border-600 rounded-lg py-4 px-3"
               >
@@ -239,8 +240,8 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
                     <>
                       {" "}
                       {!watchedNetwork ||
-                      !watchedPhone ||
-                      watchedPhone.length !== 11 ? (
+                        !watchedPhone ||
+                        watchedPhone.length !== 11 ? (
                         <p className="text-sm 2xs:text-base">
                           Enter phone number{" "}
                         </p>

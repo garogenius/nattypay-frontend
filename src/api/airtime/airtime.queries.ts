@@ -72,3 +72,14 @@ export const usePayForInternationalAirtime = (
     },
   });
 };
+
+
+import { queryPalmPayRechargeAccountRequest } from "../bill/bill.apis";
+
+export const useGetAirtimePlanByPhone = (phone: string, currency: string = "NGN") => {
+  return useQuery({
+    queryKey: ["airtime-plan-by-phone", phone],
+    queryFn: () => queryPalmPayRechargeAccountRequest({ mobileNumber: phone }),
+    enabled: phone.length === 11,
+  });
+};

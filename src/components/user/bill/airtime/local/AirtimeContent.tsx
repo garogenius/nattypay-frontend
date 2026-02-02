@@ -102,13 +102,17 @@ const AirtimeContent = () => {
                 phoneForPayment = cleaned;
               }
 
-              PayForAirtime({
+              const payload = {
                 phone: phoneForPayment,
                 currency,
                 walletPin,
+                operatorId: Number(operatorId),
                 amount: Number(amount),
                 addBeneficiary: isBeneficiaryChecked,
-              });
+              };
+              console.log("PAYING FOR AIRTIME PAYLOAD:", payload);
+
+              PayForAirtime(payload);
             }}
             isLoading={airtimeLoading}
             isBeneficiaryChecked={isBeneficiaryChecked}

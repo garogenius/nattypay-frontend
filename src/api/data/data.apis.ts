@@ -14,7 +14,7 @@ export const dataPlanRequest = async (formdata: IDataPlan) => {
 
 export const dataVariationRequest = async (formdata: IDataVariationPayload) => {
   return request({
-    url: `/bill/data/get-variation?operatorId=${formdata.operatorId}`,
+    url: `/bill/data/variation?operatorId=${formdata.operatorId}`,
     method: "get",
   });
 };
@@ -41,3 +41,5 @@ export const dataPlanNetworkRequest = async (network: string) => {
     method: "get",
   });
 };
+
+
