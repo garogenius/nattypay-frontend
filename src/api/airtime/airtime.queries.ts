@@ -19,7 +19,7 @@ export const useGetInternationalAirtimePlan = (
   return useQuery({
     queryKey: ["international-airtime-plan", payload],
     queryFn: () => internationalAirtimePlanRequest(payload),
-    enabled: !!payload.phone,
+    enabled: !!payload.phone && payload.phone.length > 6,
   });
 };
 

@@ -292,6 +292,9 @@ export interface InternetPlan {
   planName: string;
   countryISOCode: string;
   billerCode: string;
+  biller_code?: string;
+  item_code?: string;
+  billerId?: string;
   description: string;
   shortName: string;
   createdAt: string; // ISO date string

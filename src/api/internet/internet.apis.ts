@@ -16,7 +16,7 @@ export const getInternetVariationsRequest = async (
   formdata: IGetInternetVariationsPayload
 ) => {
   return request({
-    url: `/bill/flutterwave/internet/get-bill-info?billerCode=${formdata.billerCode}`,
+    url: `/bill/flutterwave/billers/${formdata.billerCode}/items`,
     method: "get",
   });
 };

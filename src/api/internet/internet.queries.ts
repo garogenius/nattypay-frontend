@@ -41,13 +41,19 @@ export const useGetInternetVariations = (
     queryKey: ["internet-variation", payload],
     queryFn: () => getInternetVariationsRequest(payload),
     enabled: !!payload.billerCode,
+    retry: false, // Don't retry 404s - ISP simply has no bundles
   });
 
   if (data) {
     console.log("🌐 [API] Internet Variations Response:", data);
   }
-  if (isError) {
-    console.error("🌐 [API] Internet Variations Error:", error);
+
+  // Only log non-404 errors (404 is expected for ISPs with no bundles)
+  if (isError && error) {
+    const status = (error as any)?.response?.status;
+    if (status !== 404) {
+      console.error("🌐 [API] Internet Variations Error:", error);
+    }
   }
 
   // Handle different possible response structures

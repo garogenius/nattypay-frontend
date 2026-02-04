@@ -20,7 +20,6 @@ const MobileDataContent = () => {
   const [network, setNetwork] = useState<string>("");
   const [currency, _] = useState<string>("NGN");
   const [operatorId, setOperatorId] = useState<number>();
-  const [isBeneficiaryChecked, setIsBeneficiaryChecked] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState<string>("");
 
   /* eslint-enable @typescript-eslint/no-unused-vars */
@@ -74,8 +73,6 @@ const MobileDataContent = () => {
             setNetwork={setNetwork}
             currency={currency}
             setOperatorId={setOperatorId}
-            isBeneficiaryChecked={isBeneficiaryChecked}
-            setIsBeneficiaryChecked={setIsBeneficiaryChecked}
             setCheckoutMessage={setCheckoutMessage}
           />
         )}
@@ -89,16 +86,14 @@ const MobileDataContent = () => {
             currency={currency}
             payFunction={(walletPin: string) => {
               PayForData({
-                phone,
+                phoneNumber: phone,
                 currency,
                 walletPin,
-                operatorId: operatorId!,
+                network,
                 amount: Number(amount),
-                addBeneficiary: isBeneficiaryChecked,
               });
             }}
             isLoading={dataLoading}
-            isBeneficiaryChecked={isBeneficiaryChecked}
             checkoutMessage={checkoutMessage}
           />
         )}

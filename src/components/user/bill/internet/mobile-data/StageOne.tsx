@@ -38,8 +38,6 @@ type DataStageOneProps = {
   setAmount: (amount: string) => void;
   setNetwork?: (network: string) => void;
   setOperatorId: (operatorId: number | undefined) => void;
-  isBeneficiaryChecked?: boolean;
-  setIsBeneficiaryChecked?: (isBeneficiaryChecked: boolean) => void;
   setCheckoutMessage: (checkoutMessage: string) => void;
 };
 
@@ -50,8 +48,6 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
   setAmount,
   setNetwork = () => { },
   setOperatorId,
-  isBeneficiaryChecked = false,
-  setIsBeneficiaryChecked = () => { },
   setCheckoutMessage = () => { },
 }) => {
   const theme = useTheme();
@@ -118,7 +114,7 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
   // );
 
   const {
-    variations,
+    data: variations,
     isPending: dataVariationsPending,
     isError: dataVariationsError,
   } = useGetDataVariation({
@@ -317,17 +313,6 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
             </div>
           </div>
 
-          {/* Add beneficiary section */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <p className="text-sm md:text-base dark:text-white dark:text-opacity-70">
-              Add as beneficiary
-            </p>
-            <Switch
-              checked={isBeneficiaryChecked}
-              onChange={(e) => setIsBeneficiaryChecked(e.target.checked)}
-              {...addBeneficiaryLabel(theme === "dark")}
-            />
-          </div>
 
           {/* data plans */}
 
@@ -340,7 +325,7 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
 
               {/* tabs section */}
               <div className="flex items-start gap-6 overflow-x-auto">
-                {networkPlans.map((plan) => (
+                {networkPlans.map((plan: any) => (
                   <div
                     onClick={() => {
                       if (selectedNetworkPlan !== plan.operatorId) {
@@ -377,14 +362,14 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
                   </div>
                 ) : variations ? (
                   <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {Object.entries(variations).map(
-                      ([amount, description], index: number) => {
+                    {variations.map(
+                      (plan: any, index: number) => {
                         return (
                           <div
                             onClick={() => {
-                              setAmount(amount);
+                              setAmount(plan.amount);
                               setOperatorId(selectedNetworkPlan ?? undefined);
-                              setCheckoutMessage(String(description));
+                              setCheckoutMessage(String(plan.name));
                               setPhone(watchedPhone);
                               setStage("two");
                             }}
@@ -392,13 +377,13 @@ const DataStageOne: React.FC<DataStageOneProps> = ({
                             className=" flex flex-col items-center justify-center gap-2 p-4 text-center border border-border-200 dark:border-border-700 cursor-pointer hover:bg-primary hover:text-text-1500 hover:dark:text-text-200 text-text-200 dark:text-text-800 hover:border-none rounded"
                           >
                             <p className="text-xs lg:text-sm">
-                              {String(description)}
+                              {String(plan.name)}
                             </p>
                             <p className="font-semibold text-sm lg:text-base">
                               &#8358;{" "}
                               {new Intl.NumberFormat("en-NG", {
                                 maximumFractionDigits: 2,
-                              }).format(Number(amount))}{" "}
+                              }).format(Number(plan.amount))}{" "}
                             </p>
                           </div>
                         );

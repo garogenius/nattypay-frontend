@@ -136,7 +136,7 @@ const CreateAccountBusinessContent = () => {
       const initialValues = getInitialValues();
       reset(initialValues);
       setActiveTab(initialValues.tab);
-      
+
       // Restore date picker if dateOfBirth exists
       if (registrationData.dateOfBirth) {
         try {
@@ -182,7 +182,7 @@ const CreateAccountBusinessContent = () => {
         accountType: "BUSINESS",
         companyRegistrationNumber: data.companyRegistrationNumber,
       };
-      
+
       // Only include fullname and dateOfBirth if they have values
       if (data.fullname && data.fullname.trim()) {
         registrationData.fullname = data.fullname.trim();
@@ -251,11 +251,16 @@ const CreateAccountBusinessContent = () => {
       </div>
 
       {/* Right Panel - Theme-aware Background with Form */}
-      <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12`}>
+      <div className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"} flex flex-col items-center justify-center px-6 sm:px-8 py-12 relative`}>
+        {/* Mobile Logo */}
+        <div className="absolute top-6 right-6 lg:hidden">
+          <Image src={images.logo} alt="NattyPay Logo" width={80} height={30} className="w-20" />
+        </div>
+
         <div className="w-full max-w-md">
           {/* Form Card */}
           <div className={`${theme === "dark" ? "bg-[#141414]" : "bg-white"} rounded-2xl p-6 sm:p-8 shadow-lg`}>
-            <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2`}>Create an Account</h2>
+            <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} mb-2`}>Open your Business Account</h2>
             <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-6`}>You Can Use Your Email or Mobile Number</p>
 
             {/* Tabs */}
@@ -266,11 +271,10 @@ const CreateAccountBusinessContent = () => {
                   setActiveTab("mobile");
                   setValue("tab", "mobile");
                 }}
-                className={`pb-2 text-sm font-medium ${
-                  activeTab === "mobile"
-                    ? "text-[#D4B139] border-b-2 border-[#D4B139]"
-                    : theme === "dark" ? "text-white/80" : "text-gray-600"
-                }`}
+                className={`pb-2 text-sm font-medium ${activeTab === "mobile"
+                  ? "text-[#D4B139] border-b-2 border-[#D4B139]"
+                  : theme === "dark" ? "text-white/80" : "text-gray-600"
+                  }`}
               >
                 Mobile Number
               </button>
@@ -280,11 +284,10 @@ const CreateAccountBusinessContent = () => {
                   setActiveTab("email");
                   setValue("tab", "email");
                 }}
-                className={`pb-2 text-sm font-medium ${
-                  activeTab === "email"
-                    ? "text-[#D4B139] border-b-2 border-[#D4B139]"
-                    : theme === "dark" ? "text-white/80" : "text-gray-600"
-                }`}
+                className={`pb-2 text-sm font-medium ${activeTab === "email"
+                  ? "text-[#D4B139] border-b-2 border-[#D4B139]"
+                  : theme === "dark" ? "text-white/80" : "text-gray-600"
+                  }`}
               >
                 Email
               </button>

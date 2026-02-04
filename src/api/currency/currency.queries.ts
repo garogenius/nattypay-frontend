@@ -21,6 +21,7 @@ import {
   getCardTransactionsRequest,
   convertCurrencyRequest,
   getCurrencyRatesRequest,
+  getConvertCurrencyRequest,
   getSupportedCurrenciesRequest,
   getBanksByCurrencyRequest,
   getTransferFeeRequest,
@@ -148,14 +149,14 @@ export const useGetCurrencyAccountByCurrency = (currency: string) => {
   // Also check if response data contains 404 status code (some APIs return 200 with 404 in data)
   const axiosError = isError && error && isAxiosError(error) ? error : null;
   const errorMessage = axiosError?.response?.data?.message;
-  const errorMessageStr = Array.isArray(errorMessage) 
+  const errorMessageStr = Array.isArray(errorMessage)
     ? errorMessage.join(" ").toLowerCase()
-    : typeof errorMessage === "string" 
-      ? errorMessage.toLowerCase() 
+    : typeof errorMessage === "string"
+      ? errorMessage.toLowerCase()
       : "";
-  
+
   const isNotFoundFromError = isError && axiosError && (
-    axiosError.response?.status === 404 || 
+    axiosError.response?.status === 404 ||
     axiosError.response?.data?.statusCode === 404 ||
     (errorMessageStr && errorMessageStr.includes("not found")) ||
     (errorMessageStr && errorMessageStr.includes("no") && errorMessageStr.includes("account"))
@@ -190,17 +191,17 @@ export const useGetCurrencyAccountByCurrency = (currency: string) => {
   if (data?.data) {
     // Safely convert message to string for comparison
     const dataMessage = data.data.message;
-    const dataMessageStr = Array.isArray(dataMessage) 
+    const dataMessageStr = Array.isArray(dataMessage)
       ? dataMessage.join(" ").toLowerCase()
-      : typeof dataMessage === "string" 
-        ? dataMessage.toLowerCase() 
+      : typeof dataMessage === "string"
+        ? dataMessage.toLowerCase()
         : "";
-    
+
     // Check if response indicates account not found (even if status is 200)
-    if (data.data.statusCode === 404 || 
-        (dataMessageStr && dataMessageStr.includes("not found")) || 
-        (data.data.data?.account === null && dataMessageStr && dataMessageStr.includes("no")) ||
-        (dataMessageStr && dataMessageStr.includes("no") && dataMessageStr.includes("account") && data.data.data?.account === null)) {
+    if (data.data.statusCode === 404 ||
+      (dataMessageStr && dataMessageStr.includes("not found")) ||
+      (data.data.data?.account === null && dataMessageStr && dataMessageStr.includes("no")) ||
+      (dataMessageStr && dataMessageStr.includes("no") && dataMessageStr.includes("account") && data.data.data?.account === null)) {
       // Account not found - return null
       account = null;
       isNotFoundFromData = true;
@@ -261,7 +262,7 @@ export const useGetCurrencyAccountByCurrency = (currency: string) => {
         });
       }
     }
-    
+
     // Debug: Log if no account was extracted
     if (process.env.NODE_ENV === 'development' && !account && !isNotFoundFromData) {
       console.warn('No account extracted from response:', {
@@ -279,7 +280,7 @@ export const useGetCurrencyAccountByCurrency = (currency: string) => {
   if (account) {
     // Start with the original account object to preserve all existing values
     const normalizedAccount = { ...account };
-    
+
     // Only add fallback values if the primary field is missing (null/undefined)
     // This preserves the exact API response values
     if (normalizedAccount.accountNumber == null && normalizedAccount.account_number == null) {
@@ -287,24 +288,24 @@ export const useGetCurrencyAccountByCurrency = (currency: string) => {
     } else if (normalizedAccount.accountNumber == null) {
       normalizedAccount.accountNumber = normalizedAccount.account_number;
     }
-    
+
     if (normalizedAccount.bankName == null && normalizedAccount.bank_name == null) {
       normalizedAccount.bankName = "NattyPay";
     } else if (normalizedAccount.bankName == null) {
       normalizedAccount.bankName = normalizedAccount.bank_name;
     }
-    
+
     if (normalizedAccount.accountName == null && normalizedAccount.account_name == null && normalizedAccount.label == null) {
       normalizedAccount.accountName = "";
     } else if (normalizedAccount.accountName == null) {
       normalizedAccount.accountName = normalizedAccount.account_name ?? normalizedAccount.label ?? "";
     }
-    
+
     // Ensure balance is a number (preserve 0 if that's what API returns)
     if (typeof normalizedAccount.balance !== "number") {
       normalizedAccount.balance = parseFloat(normalizedAccount.balance) || 0;
     }
-    
+
     // Debug log in development to verify normalization
     if (process.env.NODE_ENV === 'development') {
       console.log('Account Normalization:', {
@@ -335,7 +336,7 @@ export const useGetCurrencyAccountByCurrency = (currency: string) => {
         },
       });
     }
-    
+
     account = normalizedAccount;
   }
 
@@ -658,6 +659,14 @@ export const useGetCurrencyRates = (params?: { from?: string; to?: string }) => 
   return { rateData, isPending, isError };
 };
 
+export const useGetConvertCurrency = (params: { amount: number; from: string; to: string; enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ["currency-convert", params.amount, params.from, params.to],
+    queryFn: () => getConvertCurrencyRequest(params),
+    enabled: params.enabled !== false && !!params.amount && !!params.from && !!params.to && params.from !== params.to,
+  });
+};
+
 export const useGetSupportedCurrencies = () => {
   const { data, isPending, isError } = useQuery({
     queryKey: ["supported-currencies"],
@@ -715,7 +724,7 @@ export const useGetTransferFee = (params: IGetTransferFee & { enabled?: boolean 
     enabled: params.enabled !== false && !!params.currency && params.amount > 0 && !!params.accountNumber,
   });
 
-  const feeData: { fee: number; totalAmount: number; currency: string; amount: number } | null = 
+  const feeData: { fee: number; totalAmount: number; currency: string; amount: number } | null =
     data?.data?.data || data?.data || null;
 
   return { feeData, isPending, isError };

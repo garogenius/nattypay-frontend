@@ -2,42 +2,31 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  dataPaymentRequest,
-  dataPlanNetworkRequest,
   dataPlanRequest,
   dataVariationRequest,
   palmPayDataPaymentRequest,
 } from "./data.apis";
-import { IDataPlan, IDataVariationPayload } from "./data.types";
-import { NetworkPlan } from "@/constants/types";
+import { IDataVariationPayload, IDataPayPayload } from "./data.types";
 
-const validatePhone = (phone: string, currency: string) => {
-  if (currency === "NGN") {
-    // Accept 10 digits (without leading 0) or 11 digits (with leading 0)
-    const cleaned = phone.replace(/\D/g, "");
-    return cleaned.length === 11 || cleaned.length === 10;
-  }
-  return false;
-};
-
-// Format phone number for API: convert to +234 format
-// e.g., 07043742886 -> +2347043742886 or 7043742886 -> +2347043742886
-// Format phone number for API: use local 0... format for PalmPay detection
-const formatPhoneForAPI = (phone: string): string => {
-  let cleaned = phone.replace(/\D/g, "");
-  if (cleaned.length === 10) {
-    cleaned = `0${cleaned}`;
-  }
-  return cleaned;
-};
-
+// Reuse prefix map from Airtime logic
 const prefixMap: Record<string, string[]> = {
-  MTN: ["0803", "0806", "0703", "0706", "0813", "0816", "0810", "0814", "0903", "0906"],
-  AIRTEL: ["0802", "0808", "0708", "0812", "0902", "0907", "0901"],
-  GLO: ["0805", "0807", "0705", "0815", "0811", "0905"],
+  MTN: ["0803", "0806", "0703", "0706", "0813", "0816", "0810", "0814", "0903", "0906", "0913", "0916", "07025", "07026", "0704"],
+  AIRTEL: ["0802", "0808", "0708", "0812", "0902", "0907", "0901", "0904", "0701", "0912"],
+  GLO: ["0805", "0807", "0705", "0815", "0811", "0905", "0915", "08070", "08050"],
   "9MOBILE": ["0809", "0817", "0818", "0909", "0908"],
 };
 
+export const useGetNetworkProviders = () => {
+  return useQuery({
+    queryKey: ["data-network-providers"],
+    queryFn: dataPlanRequest,
+  });
+};
+
+/**
+ * Compatible hook for existing StageOne components.
+ * Performs network detection from phone prefix.
+ */
 export const useGetDataPlan = ({
   phone,
   network: selectedNetwork,
@@ -46,20 +35,22 @@ export const useGetDataPlan = ({
   currency?: string;
   network?: string;
 }) => {
-  const { isLoading, isError, data } = useQuery({
-    queryKey: ["data-plan"],
-    queryFn: () => dataPlanRequest({ phone: "", currency: "NGN" }),
-  });
+  const { isLoading, isError, data } = useGetNetworkProviders();
 
-  const res = data?.data?.data;
-  let allPlans: any[] = res?.billers || res || [];
+  const rawData = data?.data?.data || data?.data || [];
+  const allBillers = Array.isArray(rawData?.billers) ? rawData.billers : Array.isArray(rawData) ? rawData : [];
 
   let detectedNetwork = "";
+  const cleaned = phone?.replace(/\D/g, "") || "";
 
-  // 1. Detect network from phone if phone is valid (11 digits, starts with 0)
-  // Or just use the first 4 chars if length >= 4
-  if (phone && phone.length >= 4) {
-    const prefix = phone.substring(0, 4);
+  if (cleaned.length >= 4) {
+    let phoneForPrefix = cleaned;
+    if (phoneForPrefix.startsWith('234')) phoneForPrefix = '0' + phoneForPrefix.slice(3);
+
+    const prefix = phoneForPrefix.startsWith('0')
+      ? phoneForPrefix.substring(0, 4)
+      : '0' + phoneForPrefix.substring(0, 3);
+
     for (const [net, prefixes] of Object.entries(prefixMap)) {
       if (prefixes.includes(prefix)) {
         detectedNetwork = net;
@@ -68,79 +59,51 @@ export const useGetDataPlan = ({
     }
   }
 
-  // 2. Determine effective network (Manual selection takes precedence if provided? 
-  // actually usually manual selection is for when phone detection fails or user wants to browse)
-  // BUT if user enters a phone, we usually override manual selection with the detected one to avoid mismatch.
-  // Let's stick to: if detected, use detected. If not, use selected.
   const effectiveNetwork = detectedNetwork || selectedNetwork || "";
 
-  // 3. Filter plans if we have a network
-  let networkPlans = allPlans;
-  if (effectiveNetwork) {
-    // case insensitive match
-    // The API returns planName like "MTN", "GLO" etc.
-    networkPlans = allPlans.filter(
-      (plan) =>
-        plan.network?.toUpperCase() === effectiveNetwork.toUpperCase() ||
-        plan.planName?.toUpperCase().includes(effectiveNetwork.toUpperCase())
-    );
-  }
+  // Map billers to legacy "networkPlans" structure
+  const networkPlans = allBillers
+    .filter((b: any) => {
+      const name = (b.billerName || b.network || "").toUpperCase();
+      return name.includes(effectiveNetwork.toUpperCase());
+    })
+    .map((b: any) => ({
+      operatorId: Number(b.billerId || b.operatorId || b.id),
+      planName: b.billerName || b.network,
+      network: effectiveNetwork
+    }));
 
   return { isLoading, isError, networkPlans, network: effectiveNetwork };
 };
 
 export const useGetDataVariation = (payload: IDataVariationPayload) => {
-  console.log("🔍 [DATA VARIATION] Hook called with payload:", payload);
-  console.log("🔍 [DATA VARIATION] Query enabled:", !!payload.operatorId);
-
-  const { isPending, isError, data, error } = useQuery({
-    queryKey: ["data-variation", payload],
-    queryFn: () => {
-      console.log("📡 [DATA VARIATION] Fetching variations for operatorId:", payload.operatorId);
-      return dataVariationRequest(payload);
-    },
+  return useQuery({
+    queryKey: ["data-variations", payload.operatorId],
+    queryFn: () => dataVariationRequest(payload),
     enabled: !!payload.operatorId,
-  });
+    select: (data) => {
+      const res = data?.data?.data;
+      let variations: { amount: string; name: string }[] = [];
+      const rawData = res?.fixedAmountsDescriptions || res?.variations || res?.data || res;
 
-  console.log("📊 [DATA VARIATION] Query state:", { isPending, isError, hasData: !!data });
-  if (isError) {
-    console.error("❌ [DATA VARIATION] Query error:", error);
-  }
-
-  const res = data?.data?.data;
-  console.log("📦 [DATA VARIATION] Response data:", res);
-
-  let variations: { amount: string; name: string }[] = [];
-
-  // Support multiple possible response fields
-  // Check if res is an array directly, or look for common keys
-  const rawData = Array.isArray(res) ? res : (res?.fixedAmountsDescriptions || res?.variations || res?.data);
-  console.log("🔍 [DATA VARIATION] Raw data extracted:", rawData);
-
-  if (rawData && typeof rawData === "object") {
-    if (Array.isArray(rawData)) {
-      // If it's an array of objects, map to standard structure
-      rawData.forEach((item: any) => {
-        const amount = item?.amount || item?.price || item?.value || item?.payAmount || item?.amount_ngn;
-        const desc = item?.description || item?.name || item?.planName || item?.label || item?.name_en || item?.variation_name;
-        if (amount !== undefined && desc) {
-          variations.push({ amount: String(amount), name: String(desc) });
-        }
-      });
-    } else {
-      // If it's already an object map (legacy format?), convert to array
-      Object.entries(rawData).forEach(([key, value]) => {
-        variations.push({ amount: String(key), name: String(value) });
-      });
+      if (Array.isArray(rawData)) {
+        rawData.forEach((item: any) => {
+          const amount = item?.amount || item?.price || item?.value || item?.payAmount;
+          const name = item?.description || item?.name || item?.planName || item?.label;
+          if (amount !== undefined && name) {
+            variations.push({ amount: String(amount), name: String(name) });
+          }
+        });
+      } else if (rawData && typeof rawData === "object") {
+        Object.entries(rawData).forEach(([key, value]) => {
+          if (value && typeof value === "string") {
+            variations.push({ amount: key, name: value });
+          }
+        });
+      }
+      return variations;
     }
-  }
-
-  console.log("✅ [DATA VARIATION] Processed variations count:", variations.length);
-  if (variations.length > 0) {
-    console.log("📋 [DATA VARIATION] Sample variation:", variations[0]);
-  }
-
-  return { isPending, isError, variations };
+  });
 };
 
 export const usePayForData = (
@@ -148,49 +111,13 @@ export const usePayForData = (
   onSuccess: (data: any) => void
 ) => {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: dataPaymentRequest,
+    mutationFn: (payload: IDataPayPayload) => palmPayDataPaymentRequest(payload),
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["get-beneficiaries"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
       onSuccess(data);
     },
-  });
-};
-
-export const usePayForPalmPayData = (
-  onError: (error: any) => void,
-  onSuccess: (data: any) => void
-) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: palmPayDataPaymentRequest,
-    onError,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["get-beneficiaries"] });
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      onSuccess(data);
-    },
-  });
-};
-
-export const useGetDataPlanByNetwork = (network: string) => {
-  return useQuery({
-    queryKey: ["data-plan-by-network", network],
-    queryFn: () => dataPlanNetworkRequest(network),
-    enabled: !!network,
-  });
-};
-
-
-import { queryPalmPayRechargeAccountRequest } from "../bill/bill.apis";
-
-export const useGetDataPlanByPhone = (phone: string) => {
-  return useQuery({
-    queryKey: ["data-plan-by-phone", phone],
-    queryFn: () => queryPalmPayRechargeAccountRequest({ mobileNumber: phone }),
-    enabled: !!phone && phone.length === 11,
   });
 };

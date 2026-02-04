@@ -1,11 +1,10 @@
 import { request } from "@/utils/axios-utils";
 import {
   IDataPayPayload,
-  IDataPlan,
   IDataVariationPayload,
 } from "./data.types";
 
-export const dataPlanRequest = async (formdata: IDataPlan) => {
+export const dataPlanRequest = async () => {
   return request({
     url: `/bill/data/palmpay/get-plan`,
     method: "get",
@@ -14,32 +13,15 @@ export const dataPlanRequest = async (formdata: IDataPlan) => {
 
 export const dataVariationRequest = async (formdata: IDataVariationPayload) => {
   return request({
-    url: `/bill/data/variation?operatorId=${formdata.operatorId}`,
+    url: `/bill/data/get-variation?operatorId=${formdata.operatorId}`,
     method: "get",
   });
 };
 
-export const dataPaymentRequest = async (formdata: IDataPayPayload) => {
-  return request({
-    url: `/bill/data/pay`,
-    method: "post",
-    data: formdata,
-  });
-};
-
-export const palmPayDataPaymentRequest = async (formdata: any) => {
+export const palmPayDataPaymentRequest = async (formdata: IDataPayPayload) => {
   return request({
     url: `/bill/data/palmpay/pay`,
     method: "post",
     data: formdata,
   });
 };
-
-export const dataPlanNetworkRequest = async (network: string) => {
-  return request({
-    url: `/bill/data/palmpay/get-plan`,
-    method: "get",
-  });
-};
-
-

@@ -8,7 +8,7 @@ import {
 
 export const getEducationBillersRequest = async () => {
   return request({
-    url: `/bill/remita/education/billers`,
+    url: `/bill/remita/school/billers`,
     method: "get",
   });
 };
@@ -17,7 +17,7 @@ export const getEducationBillerItemsRequest = async (
   formdata: IGetEducationBillerItems
 ) => {
   return request({
-    url: `/bill/remita/education/biller-items?billerCode=${formdata.billerCode}`,
+    url: `/bill/remita/school/biller-items?billerCode=${formdata.billerCode}`,
     method: "get",
   });
 };
@@ -37,6 +37,20 @@ export const payEducationRequest = async (formdata: IPayEducation) => {
     url: `/bill/education/school-fee/pay`,
     method: "post",
     data: formdata,
+  });
+};
+
+export const getRemitaProvidersRequest = async () => {
+  return request({
+    url: `/bill/remita/vending/providers`,
+    method: "get",
+  });
+};
+
+export const getRemitaProductsRequest = async (provider: string) => {
+  return request({
+    url: `/bill/remita/vending/products?provider=${provider}`,
+    method: "get",
   });
 };
 

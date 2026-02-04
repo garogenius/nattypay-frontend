@@ -75,11 +75,16 @@ client.interceptors.response.use(
       const method = error.config?.method?.toUpperCase();
       const errorData = error.response?.data;
 
-      console.error(`❌ [API Error] ${method} ${url} | Status: ${status}`, {
-        message: error.message,
-        data: errorData,
-        hasToken: !!error.config?.headers?.Authorization
-      });
+      // Don't log expected 404s for bill info (used for checking availability)
+      if (status === 404 && url?.includes("get-bill-info")) {
+        console.warn(`⚠️ [API Info] ${method} ${url} | Status: ${status} (No bundles found)`);
+      } else {
+        console.error(`❌ [API Error] ${method} ${url} | Status: ${status}`, {
+          message: error.message,
+          data: errorData,
+          hasToken: !!error.config?.headers?.Authorization
+        });
+      }
     }
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {

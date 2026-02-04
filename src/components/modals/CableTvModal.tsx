@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { CgClose } from "react-icons/cg";
-import { IoChevronDown } from "react-icons/io5";
+import { IoChevronDown, IoChevronBack } from "react-icons/io5";
 import CustomButton from "@/components/shared/Button";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 import {
@@ -12,85 +12,54 @@ import {
   usePayForCable,
 } from "@/api/cable/cable.queries";
 import SpinnerLoader from "@/components/Loader/SpinnerLoader";
-import ErrorToast from "@/components/toast/ErrorToast";
-import SuccessToast from "@/components/toast/SuccessToast";
+import { useTransactionProcessingStore } from "@/store/transactionProcessing.store";
+import Image from "next/image";
 
 interface CableTvModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type Step = "provider" | "smartcard" | "bouquet" | "confirm" | "result";
+
 const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
-  const [step, setStep] = useState<"form" | "verify" | "confirm" | "result">("form");
+  const [step, setStep] = useState<Step>("provider");
   const [providerOpen, setProviderOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<{ name: string; billerCode: string } | null>(null);
   const [smartcard, setSmartcard] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<{ name: string; amount: number; payAmount: number; itemCode: string } | null>(null);
+  const [selectedBouquet, setSelectedBouquet] = useState<{ name: string; amount: number; payAmount: number; itemCode: string } | null>(null);
   const [walletPin, setWalletPin] = useState<string>("");
-  const [resultSuccess, setResultSuccess] = useState<boolean | null>(null);
-  const [transactionData, setTransactionData] = useState<any>(null);
   const [verifiedCustomer, setVerifiedCustomer] = useState<any>(null);
-  const [verificationMessage, setVerificationMessage] = useState<string>("");
-  const [verificationError, setVerificationError] = useState<string>("");
+  const [transactionResult, setTransactionResult] = useState<any>(null);
 
   const providerRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(providerRef, () => setProviderOpen(false));
 
-  // Fetch cable plans - enabled when smartcard number is entered (matching bills/cable page exactly)
-  const { cablePlans, isPending: isCablePlanPending, isError: isCablePlanError } = useGetCablePlans({
+  const { showProcessing, showSuccess, showError } = useTransactionProcessingStore();
+
+  // Step 1: Fetch cable providers
+  const { cablePlans, isPending: providersLoading } = useGetCablePlans({
     currency: "NGN",
-    isEnabled: isOpen && !!smartcard && smartcard.length >= 10 && smartcard.length < 15,
+    isEnabled: isOpen,
   });
 
-  const isCablePlanLoading = isCablePlanPending && !isCablePlanError;
-
-  // Fetch variations when provider is selected (matching bills/cable page exactly)
-  const { variations, isLoading: cableVariationsPending, isError: cableVariationsError } = useGetCableVariations({
+  // Step 3: Fetch bouquets when provider is selected
+  const { variations: bouquets, isLoading: bouquetsLoading } = useGetCableVariations({
     billerCode: selectedProvider?.billerCode || "",
   });
 
-  const cableVariationsLoading = cableVariationsPending && !cableVariationsError;
-
-  useEffect(() => {
-    console.log("📺 [CABLE] Selected Provider:", selectedProvider);
-    console.log("📺 [CABLE] Variations:", variations);
-    console.log("📺 [CABLE] Variations Loading:", cableVariationsLoading, "Error:", cableVariationsError);
-  }, [selectedProvider, variations, cableVariationsLoading, cableVariationsError]);
-
-
-  const handleClose = () => {
-    setStep("form");
-    setProviderOpen(false);
-    setSelectedProvider(null);
-    setSmartcard("");
-    setSelectedPlan(null);
-    setWalletPin("");
-    setResultSuccess(null);
-    setTransactionData(null);
-    setVerifiedCustomer(null);
-    setVerificationMessage("");
-    setVerificationError("");
-    onClose();
-  };
-
+  // Step 2: Verify smartcard
   const onVerifySuccess = (data: any) => {
     const res = data?.data?.data;
     setVerifiedCustomer(res);
-    setVerificationMessage(res?.name || "");
-    setVerificationError("");
+    setStep("bouquet");
   };
 
   const onVerifyError = (error: any) => {
-    const errorMessage = error?.response?.data?.message;
-    setVerificationMessage("");
-    setVerificationError(errorMessage);
-    const descriptions = Array.isArray(errorMessage)
-      ? errorMessage
-      : [errorMessage];
-
-    ErrorToast({
-      title: "Error verifying smartcard number",
-      descriptions,
+    const msg = error?.response?.data?.message;
+    showError({
+      title: "Validation Failed",
+      message: Array.isArray(msg) ? msg[0] : msg || "Invalid smartcard number",
     });
   };
 
@@ -99,45 +68,21 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
     onVerifySuccess
   );
 
-  // Auto-verify when smartcard + provider + variations are available (matching bills/cable page exactly)
-  useEffect(() => {
-    if (
-      smartcard &&
-      smartcard.length >= 10 &&
-      smartcard.length < 15 &&
-      selectedProvider &&
-      selectedProvider.name && // watchedProvider equivalent
-      selectedProvider.billerCode && // watchedBillerCode equivalent
-      variations &&
-      variations.length > 0
-    ) {
-      verifySmartcard({
-        itemCode: variations[0].item_code,
-        billerCode: selectedProvider.billerCode,
-        billerNumber: smartcard,
-      });
-    }
-  }, [
-    smartcard,
-    cablePlans,
-    variations,
-    selectedProvider,
-    verifySmartcard,
-  ]);
-
+  // Payment handlers
   const onPaySuccess = (data: any) => {
-    setTransactionData(data?.data);
-    setResultSuccess(true);
+    showSuccess({
+      title: "Payment Successful",
+      message: `Successfully subscribed to ${selectedBouquet?.name}`,
+    });
+    setTransactionResult(data?.data?.data || data?.data);
     setStep("result");
   };
 
   const onPayError = (error: any) => {
-    const errorMessage = error?.response?.data?.message;
-    setResultSuccess(false);
-    setStep("result");
-    ErrorToast({
+    const msg = error?.response?.data?.message;
+    showError({
       title: "Payment Failed",
-      descriptions: Array.isArray(errorMessage) ? errorMessage : [errorMessage],
+      message: Array.isArray(msg) ? msg[0] : msg,
     });
   };
 
@@ -146,19 +91,49 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
     onPaySuccess
   );
 
+  const handleVerifySmartcard = () => {
+    if (!selectedProvider || !smartcard || !bouquets || bouquets.length === 0) return;
+
+    verifySmartcard({
+      itemCode: bouquets[0].item_code,
+      billerCode: selectedProvider.billerCode,
+      billerNumber: smartcard,
+    });
+  };
+
   const handleConfirm = () => {
-    if (walletPin.length !== 4 || !selectedProvider || !selectedPlan) return;
-    // Use exact same structure as bills/cable page
+    if (!selectedProvider || !selectedBouquet || !walletPin) return;
+
+    showProcessing({ title: "Processing", message: "Completing your subscription..." });
+
     payCable({
       billerCode: selectedProvider.billerCode,
       billerNumber: smartcard,
-      itemCode: selectedPlan.itemCode,
+      itemCode: selectedBouquet.itemCode,
       currency: "NGN",
       walletPin,
-      amount: Number(selectedPlan.payAmount),
+      amount: Number(selectedBouquet.payAmount),
       addBeneficiary: false,
     });
   };
+
+  const handleClose = () => {
+    setStep("provider");
+    setProviderOpen(false);
+    setSelectedProvider(null);
+    setSmartcard("");
+    setSelectedBouquet(null);
+    setWalletPin("");
+    setVerifiedCustomer(null);
+    setTransactionResult(null);
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      handleClose();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -167,85 +142,81 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
       <div className="fixed inset-0 transition-opacity" aria-hidden="true">
         <div className="absolute inset-0 bg-black/80 dark:bg-black/60" onClick={handleClose} />
       </div>
-      <div className="relative mx-4 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 w-full max-w-md rounded-2xl overflow-visible">
+
+      <div className="relative mx-4 bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 w-full max-w-md rounded-2xl overflow-visible shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 pb-2">
-          <div>
-            <h2 className="text-white text-lg font-semibold">{step === "form" ? "Cable TV" : step === "confirm" ? "Cable TV" : "Transaction History"}</h2>
-            <p className="text-white/60 text-sm">{step === "form" ? "Enter payment details to continue" : step === "confirm" ? "Confirm Transactions" : "View complete information about this transaction"}</p>
+          <div className="flex items-center gap-2">
+            {step !== "provider" && step !== "result" && (
+              <button
+                onClick={() => {
+                  if (step === "smartcard") { setStep("provider"); setSmartcard(""); setVerifiedCustomer(null); }
+                  else if (step === "bouquet") { setStep("smartcard"); setSelectedBouquet(null); }
+                  else if (step === "confirm") setStep("bouquet");
+                }}
+                className="p-1 hover:bg-white/10 rounded transition-colors text-white/70"
+              >
+                <IoChevronBack className="text-xl" />
+              </button>
+            )}
+            <div>
+              <h2 className="text-white text-lg font-semibold tracking-tight">
+                {step === "provider" ? "Cable TV" :
+                  step === "smartcard" ? "Verify Account" :
+                    step === "bouquet" ? "Select Bouquet" :
+                      step === "confirm" ? "Confirm Subscription" :
+                        "Transaction Success"}
+              </h2>
+              <p className="text-white/60 text-[13px]">
+                {step === "provider" ? "Choose your TV provider" :
+                  step === "smartcard" ? "Enter smartcard details" :
+                    step === "bouquet" ? "Choose your plan" :
+                      step === "confirm" ? "Review and confirm" :
+                        "Subscription activated"}
+              </p>
+            </div>
           </div>
           <button onClick={handleClose} className="p-1 hover:bg-white/10 rounded transition-colors">
-            <CgClose className="text-xl text-white/70" />
+            <CgClose className="text-2xl text-white/70" />
           </button>
         </div>
 
-        <div className="px-4 pb-4">
-          {step === "form" && (
-            <div className="flex flex-col gap-4">
-              {/* Smartcard - First Input */}
-              <div className="flex flex-col gap-2">
-                <label className="text-white/70 text-sm">Smartcard / IUC Number</label>
-                <div className="relative w-full">
-                  <input
-                    className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 pl-4 pr-10 text-white placeholder:text-white/60 text-sm outline-none"
-                    placeholder="Enter smartcard number"
-                    value={smartcard}
-                    minLength={10}
-                    maxLength={15}
-                    onChange={(e) => setSmartcard(e.target.value.replace(/\D/g, ""))}
-                  />
-                  {(verifying || cableVariationsLoading) && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <SpinnerLoader width={20} height={20} color="#D4B139" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Provider - Only enabled when smartcard is valid (matching bills/cable page) */}
+        <div className="px-4 pb-6 mt-3">
+          {/* Step 1: Provider Selection */}
+          {step === "provider" && (
+            <div className="space-y-5">
               <div className="flex flex-col gap-2 relative" ref={providerRef}>
-                <label className="text-white/70 text-sm">Provider</label>
+                <label className="text-white/70 text-sm font-medium px-1">Select Provider</label>
                 <div
-                  onClick={() => {
-                    if (smartcard && smartcard.length >= 10 && smartcard.length < 15) {
-                      setProviderOpen(!providerOpen);
-                    }
-                  }}
-                  className={`w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none flex items-center justify-between ${smartcard && smartcard.length >= 10 && smartcard.length < 15
-                      ? "cursor-pointer"
-                      : "cursor-not-allowed opacity-50"
-                    }`}
+                  onClick={() => setProviderOpen(!providerOpen)}
+                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-xl py-3.5 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between transition-all hover:bg-white/5"
                 >
-                  {!smartcard || smartcard.length < 10 || smartcard.length >= 15 ? (
-                    <span className="text-white/50">Enter valid smartcard number</span>
-                  ) : !selectedProvider ? (
-                    <span className="text-white/50">Select provider</span>
-                  ) : (
-                    <span className="text-white">{selectedProvider.name}</span>
-                  )}
+                  <span className={selectedProvider ? "text-white font-medium" : "text-white/50"}>
+                    {selectedProvider?.name || "Choose TV provider"}
+                  </span>
                   <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${providerOpen ? 'rotate-180' : ''}`} />
                 </div>
-                {providerOpen && smartcard && smartcard.length >= 10 && smartcard.length < 15 && (
+                {providerOpen && (
                   <div className="absolute top-full left-0 right-0 mt-1 z-[100]">
-                    <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-lg shadow-lg overflow-hidden max-h-60 overflow-y-auto">
-                      {isCablePlanLoading ? (
-                        <div className="flex items-center justify-center py-4">
-                          <SpinnerLoader width={20} height={20} color="#D4B139" />
+                    <div className="bg-bg-600 dark:bg-bg-1100 border border-border-800 dark:border-border-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
+                      {providersLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <SpinnerLoader width={24} height={24} color="#D4B139" />
                         </div>
                       ) : !cablePlans || cablePlans.length === 0 ? (
-                        <div className="px-4 py-3 text-white/50 text-sm text-center">
-                          {isCablePlanLoading ? "Loading providers..." : "No providers available"}
-                        </div>
+                        <div className="px-4 py-6 text-white/50 text-sm text-center">No providers available</div>
                       ) : (
                         cablePlans.map((p: any) => (
                           <button
                             key={p.billerCode || p.id}
                             onClick={() => {
-                              setSelectedProvider({ name: p.shortName || p.planName || p.name, billerCode: p.billerCode });
-                              setSelectedPlan(null);
+                              setSelectedProvider({
+                                name: p.shortName || p.planName || p.name,
+                                billerCode: p.billerCode
+                              });
                               setProviderOpen(false);
                             }}
-                            className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm"
+                            className="w-full text-left px-4 py-3 text-white/80 hover:bg-white/5 text-sm font-medium transition-colors border-b border-white/5 last:border-0"
                           >
                             {p.shortName || p.planName || p.name}
                           </button>
@@ -256,217 +227,235 @@ const CableTvModal: React.FC<CableTvModalProps> = ({ isOpen, onClose }) => {
                 )}
               </div>
 
-              {/* Verification Status - Matching bills/cable page exactly */}
-              {verifying || cableVariationsLoading ? (
-                <div className="flex items-center gap-2 p-2 text-white/70 text-sm">
-                  <SpinnerLoader width={20} height={20} color="#D4B139" />
-                  <p>Fetching customer and plans...</p>
-                </div>
-              ) : (
-                <>
-                  {cablePlans &&
-                    verificationMessage &&
-                    !verificationError &&
-                    selectedProvider &&
-                    selectedProvider.name &&
-                    selectedProvider.billerCode &&
-                    smartcard &&
-                    smartcard.length >= 10 &&
-                    smartcard.length < 15 ? (
-                    <div className="flex flex-col">
-                      <p className="text-[#D4B139] text-sm">{verificationMessage}</p>
-                    </div>
-                  ) : verificationError ? (
-                    <p className="flex self-start text-red-500 font-semibold text-sm">
-                      {verificationError}
-                    </p>
-                  ) : null}
-                </>
-              )}
-
-              {/* Plans Grid - Only show when verification is successful (matching bills/cable page exactly) */}
-              {cablePlans &&
-                verificationMessage &&
-                !verificationError &&
-                selectedProvider &&
-                selectedProvider.name &&
-                selectedProvider.billerCode &&
-                smartcard &&
-                smartcard.length >= 10 &&
-                smartcard.length < 15 && (
-                  <div className="flex flex-col gap-4">
-                    <h2 className="text-white/70 text-sm font-medium">Select Plan</h2>
-                    {verifying || cableVariationsLoading ? (
-                      <div className="flex items-center justify-center py-4">
-                        <SpinnerLoader width={20} height={20} color="#D4B139" />
-                      </div>
-                    ) : variations && variations.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-                        {variations.map((item: any, index: number) => (
-                          <button
-                            key={item.item_code || index}
-                            onClick={() => {
-                              setSelectedPlan({
-                                name: String(item.biller_name || item.short_name || item.name || item.item_name),
-                                amount: Number(item.amount) || 0,
-                                payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
-                                itemCode: item.item_code || item.itemCode,
-                              });
-                            }}
-                            className={`flex flex-col items-center justify-center gap-1 p-3 text-center border rounded-lg transition-colors ${selectedPlan?.itemCode === (item.item_code || item.itemCode)
-                                ? "bg-[#D4B139] text-black border-[#D4B139]"
-                                : "border-border-600 text-white hover:bg-white/5"
-                              }`}
-                          >
-                            <p className="text-xs">{String(item.biller_name || item.short_name || item.name || item.item_name)}</p>
-                            {item.validity_period && (
-                              <p className="text-xs">{String(item.validity_period)} Days</p>
-                            )}
-                            <p className="font-semibold text-sm">
-                              ₦{new Intl.NumberFormat("en-NG", {
-                                maximumFractionDigits: 2,
-                              }).format(Number(item.amount))}
-                            </p>
-                            {item.payAmount && item.payAmount - item.amount > 0 && (
-                              <p className="font-medium text-xs">
-                                Fee: ₦{item.payAmount - item.amount}
-                              </p>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="px-4 py-3 text-white/50 text-sm">No plans available</div>
-                    )}
-                  </div>
-                )}
-
-              {/* Amount Summary */}
-              {selectedPlan && (
-                <div className="flex items-center justify-center py-2">
-                  <div className="flex items-center gap-2 text-green-500">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    <span className="font-bold text-lg">₦{Number(selectedPlan.payAmount || 0).toLocaleString()}.00</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Next Button - Only show when plan is selected */}
-              {selectedPlan && (
+              {selectedProvider && (
                 <CustomButton
-                  type="button"
-                  className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-medium py-3 rounded-lg transition-colors mt-2"
-                  onClick={() => setStep("confirm")}
+                  onClick={() => setStep("smartcard")}
+                  className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-black py-4 rounded-2xl shadow-xl shadow-[#D4B139]/20 transition-all active:scale-95"
                 >
-                  Next
+                  CONTINUE
                 </CustomButton>
               )}
             </div>
           )}
 
-          {step === "confirm" && (
-            <div className="flex flex-col gap-6">
+          {/* Step 2: Smartcard Input & Validation */}
+          {step === "smartcard" && (
+            <div className="space-y-6">
+              <div className="bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#D4B139]/10 flex items-center justify-center">
+                  <span className="text-[#D4B139] text-lg font-black">📺</span>
+                </div>
+                <div>
+                  <p className="text-white font-bold tracking-tight">{selectedProvider?.name}</p>
+                  <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Selected Provider</p>
+                </div>
+              </div>
+
               <div className="space-y-3">
-                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Provider</span><span className="text-white text-sm font-medium">{selectedProvider?.name}</span></div>
-                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Smartcard</span><span className="text-white text-sm font-medium">{smartcard}</span></div>
-                {selectedPlan && (
-                  <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Plan</span><span className="text-white text-sm font-medium">{selectedPlan.name}</span></div>
-                )}
-                <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Amount</span><span className="text-white text-sm font-medium">₦{Number(selectedPlan?.payAmount || 0).toLocaleString()}</span></div>
-                {verifiedCustomer && (
-                  <div className="flex items-center justify-between"><span className="text-white/60 text-sm">Customer Name</span><span className="text-white text-sm font-medium">{verifiedCustomer.customerName || verifiedCustomer.name || "N/A"}</span></div>
-                )}
+                <label className="text-white/70 text-sm font-medium px-1">
+                  {selectedProvider?.name?.toLowerCase().includes('startimes') ? 'IUC Number' : 'Smartcard Number'}
+                </label>
+                <input
+                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-xl py-4 px-4 text-white text-lg font-bold outline-none focus:ring-1 focus:ring-[#D4B139] transition-all"
+                  placeholder="Enter number"
+                  type="text"
+                  inputMode="numeric"
+                  value={smartcard}
+                  onChange={(e) => setSmartcard(e.target.value.replace(/\D/g, ""))}
+                />
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-white/60 text-sm">Enter Transaction PIN</label>
-                <input type="password" maxLength={4} value={walletPin} onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
+
+              {verifiedCustomer && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                  <p className="text-emerald-400 text-sm font-bold">✓ Account Verified</p>
+                  <p className="text-white text-sm mt-1">{verifiedCustomer.customerName || verifiedCustomer.name}</p>
+                </div>
+              )}
+
+              <CustomButton
+                onClick={handleVerifySmartcard}
+                disabled={!smartcard || smartcard.length < 10 || verifying || !bouquets || bouquets.length === 0}
+                isLoading={verifying || bouquetsLoading}
+                className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-black py-4 rounded-2xl shadow-xl shadow-[#D4B139]/20 transition-all active:scale-95"
+              >
+                {bouquetsLoading ? "LOADING..." : "VERIFY ACCOUNT"}
+              </CustomButton>
+            </div>
+          )}
+
+          {/* Step 3: Bouquet Selection */}
+          {step === "bouquet" && (
+            <div className="space-y-5">
+              <div className="bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Customer</p>
+                  <p className="text-white text-sm font-bold">{verifiedCustomer?.customerName || verifiedCustomer?.name}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Smartcard</p>
+                  <p className="text-white text-sm font-bold font-mono">{smartcard}</p>
+                </div>
               </div>
-              <div className="flex gap-4 mt-2">
-                <CustomButton onClick={() => setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
-                <CustomButton onClick={handleConfirm} disabled={walletPin.length !== 4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
+
+              <div className="space-y-3">
+                <label className="text-white/70 text-sm font-medium px-1">Available Bouquets</label>
+                <div className="grid grid-cols-1 gap-2.5 max-h-80 overflow-y-auto">
+                  {bouquets && bouquets.length > 0 ? (
+                    bouquets.map((item: any, index: number) => (
+                      <button
+                        key={item.item_code || index}
+                        onClick={() => {
+                          setSelectedBouquet({
+                            name: String(item.biller_name || item.short_name || item.name || item.item_name),
+                            amount: Number(item.amount) || 0,
+                            payAmount: typeof item.payAmount === 'number' ? item.payAmount : Number(item.amount) || 0,
+                            itemCode: item.item_code || item.itemCode,
+                          });
+                        }}
+                        className={`flex items-center justify-between p-4 text-left border rounded-xl transition-all ${selectedBouquet?.itemCode === (item.item_code || item.itemCode)
+                            ? "bg-[#D4B139] text-black border-[#D4B139]"
+                            : "border-border-600 text-white hover:bg-white/5"
+                          }`}
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-bold">{String(item.biller_name || item.short_name || item.name || item.item_name)}</p>
+                          {item.validity_period && (
+                            <p className="text-xs opacity-70 mt-0.5">{String(item.validity_period)} Days</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-black text-base">
+                            ₦{new Intl.NumberFormat("en-NG", { maximumFractionDigits: 0 }).format(Number(item.amount))}
+                          </p>
+                          {item.payAmount && item.payAmount - item.amount > 0 && (
+                            <p className="text-xs opacity-70">+₦{item.payAmount - item.amount} fee</p>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-8 text-white/50 text-sm text-center">No bouquets available</div>
+                  )}
+                </div>
+              </div>
+
+              {selectedBouquet && (
+                <CustomButton
+                  onClick={() => setStep("confirm")}
+                  className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-black py-4 rounded-2xl shadow-xl shadow-[#D4B139]/20 transition-all active:scale-95"
+                >
+                  PROCEED TO PAY
+                </CustomButton>
+              )}
+            </div>
+          )}
+
+          {/* Step 4: Confirmation */}
+          {step === "confirm" && (
+            <div className="space-y-6 pt-2">
+              <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                <div className="p-4 bg-white/5 border-b border-white/5 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Provider</span>
+                    <span className="text-white text-sm font-bold">{selectedProvider?.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Smartcard</span>
+                    <span className="text-white text-sm font-mono font-bold">{smartcard}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Customer</span>
+                    <span className="text-white text-sm font-bold">{verifiedCustomer?.customerName || verifiedCustomer?.name}</span>
+                  </div>
+                </div>
+
+                <div className="p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 text-sm font-medium">Bouquet</span>
+                    <span className="text-white text-sm font-bold">{selectedBouquet?.name}</span>
+                  </div>
+                  <div className="pt-2 border-t border-white/5 flex justify-between items-end">
+                    <span className="text-white/70 font-black uppercase text-[10px] tracking-widest pb-1">Total Amount</span>
+                    <span className="text-[#D4B139] text-3xl font-black tracking-tight">₦{Number(selectedBouquet?.payAmount || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 px-1">
+                <label className="text-white/60 text-sm font-medium text-center block tracking-tight">Transaction PIN</label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-xl py-3.5 px-4 text-white text-center text-2xl tracking-[1em] outline-none focus:border-[#D4B139] shadow-inner"
+                  value={walletPin}
+                  onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="****"
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <CustomButton
+                  onClick={() => setStep("bouquet")}
+                  className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-xl font-bold transition-all"
+                >
+                  Back
+                </CustomButton>
+                <CustomButton
+                  onClick={handleConfirm}
+                  disabled={walletPin.length !== 4 || paying}
+                  isLoading={paying}
+                  className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-black py-3 rounded-xl"
+                >
+                  Pay Now
+                </CustomButton>
               </div>
             </div>
           )}
 
+          {/* Step 5: Result */}
           {step === "result" && (
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: resultSuccess ? '#22c55e' : '#ef4444' }}>
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {resultSuccess ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  )}
+            <div className="py-6 text-center space-y-6 animate-in zoom-in duration-300">
+              <div className="w-20 h-20 bg-emerald-500/10 border-4 border-emerald-500/20 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/10 transition-transform scale-110">
+                <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <span className={`${resultSuccess ? 'text-emerald-400' : 'text-red-400'} text-sm font-medium`}>{resultSuccess ? 'Payment Successful' : 'Payment Failed'}</span>
-              <span className="text-white text-2xl font-bold">₦{Number(selectedPlan?.payAmount || 0).toLocaleString()}.00</span>
 
-              {resultSuccess && transactionData && (
-                <div className="w-full bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/70 text-sm">Transaction Reference</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white text-sm font-mono">
-                        {transactionData?.transactionRef || transactionData?.transaction?.transactionRef || transactionData?.transactionId || "N/A"}
-                      </span>
-                      {(transactionData?.transactionRef || transactionData?.transaction?.transactionRef || transactionData?.transactionId) && (
-                        <button
-                          onClick={() => {
-                            const ref = transactionData?.transactionRef || transactionData?.transaction?.transactionRef || transactionData?.transactionId;
-                            if (ref) {
-                              navigator.clipboard.writeText(String(ref));
-                              SuccessToast({
-                                title: "Copied",
-                                description: "Transaction reference copied to clipboard",
-                              });
-                            }
-                          }}
-                          className="p-1 rounded hover:bg-white/10"
-                          title="Copy"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {transactionData?.pin && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/70 text-sm">PIN</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white text-sm font-mono">{transactionData.pin}</span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(transactionData.pin);
-                            SuccessToast({
-                              title: "Copied",
-                              description: "PIN copied to clipboard",
-                            });
-                          }}
-                          className="p-1 rounded hover:bg-white/10"
-                          title="Copy"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {transactionData?.transactionId && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/70 text-sm">Transaction ID</span>
-                      <span className="text-white text-sm font-mono">{transactionData.transactionId}</span>
-                    </div>
-                  )}
+              <div className="space-y-2">
+                <h3 className="text-emerald-400 text-2xl font-black tracking-tight">Subscription Successful</h3>
+                <p className="text-white/40 text-sm font-medium">Your subscription is now active</p>
+              </div>
+
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/5 divide-y divide-white/5 space-y-3 text-left">
+                <div className="flex justify-between items-center pb-3">
+                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Provider</span>
+                  <span className="text-white text-xs font-black">{selectedProvider?.name}</span>
                 </div>
-              )}
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Bouquet</span>
+                  <span className="text-white text-xs font-black">{selectedBouquet?.name}</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Smartcard</span>
+                  <span className="text-white/80 text-[10px] font-mono tracking-tighter">{smartcard}</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Reference</span>
+                  <span className="text-white/80 text-[10px] font-mono tracking-tighter">{transactionResult?.reference || transactionResult?.transactionRef || "-"}</span>
+                </div>
+                <div className="flex justify-between items-center pt-3">
+                  <span className="text-white/30 text-[10px] font-black uppercase tracking-widest">Amount Paid</span>
+                  <span className="text-[#D4B139] text-xl font-black tracking-tight">₦{Number(selectedBouquet?.payAmount || 0).toLocaleString()}</span>
+                </div>
+              </div>
 
-              <div className="flex gap-3 mt-4 w-full">
-                <CustomButton onClick={handleClose} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Contact Support</CustomButton>
-                <CustomButton onClick={handleClose} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Download Receipt</CustomButton>
+              <div className="flex flex-col gap-3">
+                <CustomButton className="w-full bg-[#D4B139] hover:bg-[#D4B139]/90 text-black font-black py-4 rounded-2xl shadow-xl shadow-[#D4B139]/10 transition-all active:scale-95">
+                  DOWNLOAD RECEIPT
+                </CustomButton>
+                <button onClick={handleClose} className="w-full py-2 text-white/40 hover:text-white font-black text-[10px] uppercase tracking-[0.3em] transition-colors">
+                  Close Window
+                </button>
               </div>
             </div>
           )}

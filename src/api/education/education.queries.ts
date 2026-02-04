@@ -62,6 +62,27 @@ export const useVerifyEducationCustomer = (
   });
 };
 
+import { getRemitaProvidersRequest, getRemitaProductsRequest } from "./education.apis";
+
+export const useGetRemitaProviders = () => {
+  const { isPending, isError, data } = useQuery({
+    queryKey: ["remita-providers"],
+    queryFn: () => getRemitaProvidersRequest(),
+  });
+  const providers = data?.data?.data || [];
+  return { isPending, isError, providers };
+};
+
+export const useGetRemitaProducts = (provider: string) => {
+  const { isLoading, isError, data } = useQuery({
+    queryKey: ["remita-products", provider],
+    queryFn: () => getRemitaProductsRequest(provider),
+    enabled: !!provider,
+  });
+  const products = data?.data?.data || [];
+  return { isLoading, isError, products };
+};
+
 export const usePayForEducation = (
   onError: (error: any) => void,
   onSuccess: (data: any) => void

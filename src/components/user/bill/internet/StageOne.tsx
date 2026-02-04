@@ -48,14 +48,14 @@ type StageOneProps = {
 const InternetStageOne: React.FC<StageOneProps> = ({
   currency,
   setStage,
-  setBillerNumber = () => {},
+  setBillerNumber = () => { },
   setAmount,
-  setBillerCode = () => {},
+  setBillerCode = () => { },
   setItemCode,
   setInternetProvider,
   isBeneficiaryChecked = false,
-  setIsBeneficiaryChecked = () => {},
-  setCheckoutMessage = () => {},
+  setIsBeneficiaryChecked = () => { },
+  setCheckoutMessage = () => { },
 }) => {
   const theme = useTheme();
 
@@ -353,7 +353,8 @@ const InternetStageOne: React.FC<StageOneProps> = ({
                     );
                   }}
                   onSelect={(plan) => {
-                    setValue("billerCode", plan.billerCode);
+                    const code = plan.billerCode || plan.biller_code || plan.item_code || plan.billerId;
+                    setValue("billerCode", String(code));
                     setValue("provider", plan.shortName);
                     setValue("itemCode", "");
                     clearErrors("billerCode");
@@ -483,8 +484,8 @@ const InternetStageOne: React.FC<StageOneProps> = ({
                 type="number"
                 disabled={fee === 0}
                 {...register("amount")}
-                // onKeyDown={handleNumericKeyDown}
-                // onPaste={handleNumericPaste}
+              // onKeyDown={handleNumericKeyDown}
+              // onPaste={handleNumericPaste}
               />
             </div>
             {fee && fee !== 0 ? (

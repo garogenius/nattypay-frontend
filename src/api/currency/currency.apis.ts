@@ -74,7 +74,7 @@ export const createCardRequest = async (formdata: ICreateCard) => {
       fullPayload: JSON.stringify(formdata),
     });
   }
-  
+
   // Try the endpoint as documented: /api/v1/currency/cards
   // If that doesn't work, the backend might expect a different path
   try {
@@ -98,7 +98,7 @@ export const createCardRequest = async (formdata: ICreateCard) => {
       console.log('Error Code:', error?.code);
       console.groupEnd();
     }
-    
+
     // Always log the response data for 400 errors to help debug
     if (error?.response?.status === 400) {
       const responseData = error.response.data;
@@ -110,7 +110,7 @@ export const createCardRequest = async (formdata: ICreateCard) => {
         fullResponse: responseData,
       });
     }
-    
+
     throw error;
   }
 };
@@ -226,6 +226,13 @@ export const convertCurrencyRequest = async (formdata: IConvertCurrency) => {
     url: "/currency/convert",
     method: "post",
     data: formdata,
+  });
+};
+
+export const getConvertCurrencyRequest = async (params: { amount: number; from: string; to: string }) => {
+  return request({
+    url: `/currency/convert?amount=${params.amount}&from=${params.from}&to=${params.to}`,
+    method: "get",
   });
 };
 
