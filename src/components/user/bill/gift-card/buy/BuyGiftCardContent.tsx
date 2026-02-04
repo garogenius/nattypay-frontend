@@ -88,6 +88,7 @@ const BuyGiftCardContent = () => {
                   amount: Number(amount),
                   unitPrice: giftCardDetails.unitPrice,
                   quantity: giftCardDetails.quantity,
+                  addBeneficiary: isBeneficiaryChecked,
                 });
               }
             }}
