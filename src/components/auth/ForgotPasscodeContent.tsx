@@ -105,37 +105,32 @@ const ForgotPasscodeContent = () => {
 
       {/* Right Panel - Theme-aware Background with Form */}
       <div
-        className={`w-full lg:w-[60%] ${
-          theme === "dark" ? "bg-[#141414]" : "bg-white"
-        } flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-8 sm:py-12`}
+        className={`w-full lg:w-[60%] ${theme === "dark" ? "bg-[#141414]" : "bg-white"
+          } flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-8 sm:py-12`}
       >
         <div className="w-full max-w-md">
           {/* Form Card */}
           <div
-            className={`rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg w-full overflow-hidden ${
-              theme === "dark" ? "bg-[#1b1b1b]" : "bg-white"
-            }`}
+            className={`rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg w-full overflow-hidden ${theme === "dark" ? "bg-[#1b1b1b]" : "bg-white"
+              }`}
           >
             <h2
-              className={`text-2xl font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              } mb-2`}
+              className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+                } mb-2`}
             >
               Forgot Passcode
             </h2>
             <p
-              className={`text-sm mb-6 ${
-                theme === "dark" ? "text-white/80" : "text-gray-600"
-              }`}
+              className={`text-sm mb-6 ${theme === "dark" ? "text-white/80" : "text-gray-600"
+                }`}
             >
               {activeTab === "email" ? "Enter your email address" : "Enter your phone number"}
             </p>
 
             {/* Tabs */}
             <div
-              className={`flex gap-6 mb-6 border-b ${
-                theme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
+              className={`flex gap-6 mb-6 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"
+                }`}
             >
               <button
                 type="button"
@@ -143,13 +138,12 @@ const ForgotPasscodeContent = () => {
                   setActiveTab("email");
                   setValue("email", "");
                 }}
-                className={`pb-2 text-sm font-medium ${
-                  activeTab === "email"
+                className={`pb-2 text-sm font-medium ${activeTab === "email"
                     ? "text-[#D4B139] border-b-2 border-[#D4B139]"
                     : theme === "dark"
                       ? "text-white/70"
                       : "text-gray-600"
-                }`}
+                  }`}
               >
                 Email
               </button>
@@ -159,13 +153,12 @@ const ForgotPasscodeContent = () => {
                   setActiveTab("phone");
                   setValue("email", "");
                 }}
-                className={`pb-2 text-sm font-medium ${
-                  activeTab === "phone"
+                className={`pb-2 text-sm font-medium ${activeTab === "phone"
                     ? "text-[#D4B139] border-b-2 border-[#D4B139]"
                     : theme === "dark"
                       ? "text-white/70"
                       : "text-gray-600"
-                }`}
+                  }`}
               >
                 Phone Number
               </button>
@@ -175,20 +168,18 @@ const ForgotPasscodeContent = () => {
               {activeTab === "email" ? (
                 <div className="flex flex-col gap-1">
                   <label
-                    className={`text-sm font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-700"
-                    }`}
+                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"
+                      }`}
                   >
                     Email
                   </label>
                   <input
                     type="email"
                     placeholder="user@email.com"
-                    className={`w-full border rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent ${
-                      theme === "dark"
+                    className={`w-full border rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent ${theme === "dark"
                         ? "border-gray-600 bg-[#1f1f1f] text-white placeholder:text-gray-400"
                         : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
-                    }`}
+                      }`}
                     {...register("email")}
                   />
                   {errors.email && (
@@ -198,25 +189,22 @@ const ForgotPasscodeContent = () => {
               ) : (
                 <div className="flex flex-col gap-1">
                   <label
-                    className={`text-sm font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-700"
-                    }`}
+                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-700"
+                      }`}
                   >
                     Phone Number
                   </label>
                   <div className="flex gap-2 w-full min-w-0">
                     <div
-                      className={`flex items-center gap-1.5 sm:gap-2 border rounded-lg px-2 sm:px-3 flex-shrink-0 ${
-                        theme === "dark"
+                      className={`flex items-center gap-1.5 sm:gap-2 border rounded-lg px-2 sm:px-3 flex-shrink-0 ${theme === "dark"
                           ? "border-gray-600 bg-[#1f1f1f]"
                           : "border-gray-300 bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <span className="text-lg sm:text-2xl">🇳🇬</span>
                       <span
-                        className={`text-sm sm:text-base whitespace-nowrap ${
-                          theme === "dark" ? "text-white" : "text-gray-700"
-                        }`}
+                        className={`text-sm sm:text-base whitespace-nowrap ${theme === "dark" ? "text-white" : "text-gray-700"
+                          }`}
                       >
                         +234
                       </span>
@@ -224,11 +212,10 @@ const ForgotPasscodeContent = () => {
                     <input
                       type="tel"
                       placeholder="Enter phone number"
-                      className={`flex-1 min-w-0 border rounded-lg py-3 px-3 sm:px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent text-sm sm:text-base ${
-                        theme === "dark"
+                      className={`flex-1 min-w-0 border rounded-lg py-3 px-3 sm:px-4 focus:outline-none focus:ring-2 focus:ring-[#D4B139] focus:border-transparent text-sm sm:text-base ${theme === "dark"
                           ? "border-gray-600 bg-[#1f1f1f] text-white placeholder:text-gray-400"
                           : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
-                      }`}
+                        }`}
                     />
                   </div>
                 </div>
@@ -247,17 +234,15 @@ const ForgotPasscodeContent = () => {
             {/* Account Options */}
             <div className="mt-6 space-y-2">
               <p
-                className={`text-sm text-center ${
-                  theme === "dark" ? "text-white/70" : "text-gray-600"
-                }`}
+                className={`text-sm text-center ${theme === "dark" ? "text-white/70" : "text-gray-600"
+                  }`}
               >
                 Switch account
               </p>
               <Link
                 href="/login"
-                className={`text-sm text-center block ${
-                  theme === "dark" ? "text-white/70" : "text-gray-600"
-                }`}
+                className={`text-sm text-center block ${theme === "dark" ? "text-white/70" : "text-gray-600"
+                  }`}
               >
                 Login with Finger Print or Face ID
               </Link>
@@ -265,9 +250,8 @@ const ForgotPasscodeContent = () => {
 
             {/* Footer */}
             <div
-              className={`text-center text-[9px] xs:text-xs mt-8 px-2 ${
-                theme === "dark" ? "text-white/60" : "text-gray-500"
-              }`}
+              className={`text-center text-[9px] xs:text-xs mt-8 px-2 ${theme === "dark" ? "text-white/60" : "text-gray-500"
+                }`}
             >
               <p className="flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 flex-nowrap whitespace-nowrap">
                 <span>Licenced by CBN</span>

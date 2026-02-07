@@ -254,14 +254,14 @@ const CreateAccountPersonalContent = () => {
             <p className={`text-sm ${theme === "dark" ? "text-white/80" : "text-gray-600"} mb-6`}>You Can Use Your Email or Mobile Number</p>
 
             {/* Tabs */}
-            <div className={`flex gap-6 mb-6 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+            <div className={`flex justify-between mb-6 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"} w-full`}>
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab("mobile");
                   setValue("tab", "mobile");
                 }}
-                className={`pb-2 text-sm font-medium ${activeTab === "mobile"
+                className={`pb-2 text-sm font-medium whitespace-nowrap ${activeTab === "mobile"
                   ? "text-[#D4B139] border-b-2 border-[#D4B139]"
                   : theme === "dark" ? "text-white/80" : "text-gray-600"
                   }`}
@@ -274,12 +274,12 @@ const CreateAccountPersonalContent = () => {
                   setActiveTab("email");
                   setValue("tab", "email");
                 }}
-                className={`pb-2 text-sm font-medium ${activeTab === "email"
+                className={`pb-2 text-sm font-medium whitespace-nowrap ${activeTab === "email"
                   ? "text-[#D4B139] border-b-2 border-[#D4B139]"
                   : theme === "dark" ? "text-white/80" : "text-gray-600"
                   }`}
               >
-                Email
+                Email Address
               </button>
             </div>
 
