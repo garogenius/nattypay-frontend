@@ -20,7 +20,7 @@ interface FundPlatformModalProps {
 const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState<"form" | "confirm" | "result">("form");
   const [platformOpen, setPlatformOpen] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<{ platformCode: string; platformName: string } | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<{ billerCode: string; billerName: string } | null>(null);
   const [platformUserId, setPlatformUserId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [walletPin, setWalletPin] = useState<string>("");
@@ -31,9 +31,11 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
   useOnClickOutside(platformRef, () => setPlatformOpen(false));
 
   const { data: platformsData, isLoading: platformsLoading, isError: platformsError } = useGetBettingPlatforms();
-  // Only show enabled platforms
-  const platforms = Array.isArray(platformsData?.data?.data)
-    ? platformsData.data.data
+
+  // Safe access to billers array
+  const rawData = platformsData?.data?.data;
+  const platforms = (rawData && 'billers' in rawData && Array.isArray(rawData.billers))
+    ? rawData.billers
     : [];
 
   const onSuccessHandler = (data: any) => {
@@ -42,7 +44,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
     setStep("result");
     SuccessToast({
       title: "Platform Funded Successfully",
-      description: `₦${amount} has been sent to ${selectedPlatform?.platformName}`,
+      description: `₦${amount} has been sent to ${selectedPlatform?.billerName}`,
     });
     if (onSuccess) onSuccess();
   };
@@ -77,12 +79,12 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
   const handleConfirm = () => {
     if (walletPin.length !== 4 || !selectedPlatform || !platformUserId || !amount || Number(amount) < 100) return;
     fundPlatform({
-      platform: selectedPlatform.platformCode,
+      platform: selectedPlatform.billerCode,
       platformUserId: platformUserId,
       amount: Number(amount),
       currency: "NGN",
       walletPin,
-      description: `Funding ${selectedPlatform.platformName} account`,
+      description: `Funding ${selectedPlatform.billerName} account`,
     });
   };
 
@@ -116,7 +118,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                   className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none cursor-pointer flex items-center justify-between"
                 >
                   <span className={selectedPlatform ? "text-white" : "text-white/50"}>
-                    {selectedPlatform?.platformName || "Select platform"}
+                    {selectedPlatform?.billerName || "Select platform"}
                   </span>
                   <IoChevronDown className={`w-4 h-4 text-white/70 transition-transform ${platformOpen ? 'rotate-180' : ''}`} />
                 </div>
@@ -134,14 +136,14 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                       ) : (
                         platforms.map((platform: any) => (
                           <button
-                            key={platform.platformCode}
+                            key={platform.billerCode}
                             onClick={() => {
-                              setSelectedPlatform({ platformCode: platform.platformCode, platformName: platform.platformName });
+                              setSelectedPlatform({ billerCode: platform.billerCode, billerName: platform.billerName });
                               setPlatformOpen(false);
                             }}
                             className="w-full text-left px-4 py-3 text-white hover:bg-white/5 text-sm"
                           >
-                            {platform.platformName}
+                            {platform.billerName}
                           </button>
                         ))
                       )}
@@ -154,7 +156,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                 <>
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                     <p className="text-blue-400 text-xs font-medium mb-1">Selected Platform</p>
-                    <p className="text-white text-sm font-semibold">{selectedPlatform.platformName}</p>
+                    <p className="text-white text-sm font-semibold">{selectedPlatform.billerName}</p>
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -165,7 +167,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                       value={platformUserId}
                       onChange={(e) => setPlatformUserId(e.target.value)}
                     />
-                    <p className="text-white/50 text-xs">Enter the user ID registered on {selectedPlatform.platformName}</p>
+                    <p className="text-white/50 text-xs">Enter the user ID registered on {selectedPlatform.billerName}</p>
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -223,7 +225,7 @@ const FundPlatformModal: React.FC<FundPlatformModalProps> = ({ isOpen, onClose, 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-white/70">Platform</span>
-                    <span className="text-white font-medium">{selectedPlatform?.platformName}</span>
+                    <span className="text-white font-medium">{selectedPlatform?.billerName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/70">User ID</span>

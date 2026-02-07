@@ -7,11 +7,11 @@ import { useState } from "react";
 import BuyGiftCardStageOne from "./StageOne";
 import BuyGiftCardStageTwo from "../../StageTwo";
 import BuyGiftCardStageThree from "../../StageThree";
-import ErrorToast from "@/components/toast/ErrorToast";
 import { IoChevronBack } from "react-icons/io5";
 import { BILL_TYPE, GiftCardDetails } from "@/constants/types";
 import GiftCardNav from "../GiftCardNav";
 import { usePayForGiftCard } from "@/api/gift-card/gift-card.queries";
+import { useTransactionProcessingStore } from "@/store/transactionProcessing.store";
 
 const BuyGiftCardContent = () => {
   const [stage, setStage] = useState<"one" | "two" | "three">("one");
@@ -23,19 +23,25 @@ const BuyGiftCardContent = () => {
   const [isBeneficiaryChecked, _setIsBeneficiaryChecked] = useState(false);
   const [giftCardDetails, setGiftCardDetails] = useState<GiftCardDetails>();
 
+  const { showProcessing, showSuccess, showError } = useTransactionProcessingStore();
+
   const onPayGiftCardSuccess = () => {
+    showSuccess({
+      title: "Purchase Successful",
+      message: `Successfully purchased gift card`,
+    });
     setStage("three");
   };
 
   const onPayGiftCardError = (error: any) => {
-    const errorMessage = error?.response?.data?.message;
+    const errorMessage = error?.response?.data?.message || error?.message;
     const descriptions = Array.isArray(errorMessage)
-      ? errorMessage
-      : [errorMessage];
+      ? errorMessage[0]
+      : errorMessage || "An unexpected error occurred during gift card purchase";
 
-    ErrorToast({
-      title: "Error during airtime purchase",
-      descriptions,
+    showError({
+      title: "Purchase Failed",
+      message: descriptions,
     });
   };
 
@@ -81,6 +87,10 @@ const BuyGiftCardContent = () => {
             giftCardDetails={giftCardDetails}
             payFunction={(walletPin: string) => {
               if (giftCardDetails) {
+                showProcessing({
+                  title: "Processing Payment",
+                  message: "Please wait while we process your gift card purchase...",
+                });
                 PayForGiftCard({
                   productId: Number(giftCardDetails.productId),
                   currency: "NGN",

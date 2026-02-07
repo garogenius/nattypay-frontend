@@ -181,10 +181,10 @@ const InternetModal: React.FC<InternetModalProps> = ({ isOpen, onClose }) => {
                 <div className="grid grid-cols-1 gap-2.5">
                   {isps.map((isp: any) => (
                     <button
-                      key={isp.billerCode || isp.id}
+                      key={isp.biller_code || isp.code || isp.billerCode || isp.id}
                       onClick={() => handleISPChange({
-                        name: isp.shortName || isp.planName || isp.name,
-                        billerCode: isp.billerCode || isp.id,
+                        name: isp.short_name || isp.shortName || isp.name || isp.planName,
+                        billerCode: String(isp.biller_code || isp.code || isp.billerCode || ""),
                         logo: isp.logo,
                       })}
                       className="flex items-center justify-between p-4 bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-2xl hover:bg-white/5 transition-all group"

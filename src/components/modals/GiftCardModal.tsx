@@ -84,7 +84,7 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
   });
 
   // Structural mapping for Reloadly FX response
-  const unitPriceNGN = fxRate?.convertedAmount || fxRate?.totalFee || fxRate?.amount || 0;
+  const unitPriceNGN = fxRate?.senderAmount || fxRate?.convertedAmount || fxRate?.totalFee || fxRate?.amount || 0;
   const totalAmountNGN = unitPriceNGN * quantity;
 
   useEffect(() => {
@@ -111,7 +111,7 @@ const GiftCardModal: React.FC<GiftCardModalProps> = ({ isOpen, onClose }) => {
   };
 
   const onPayError = (error: any) => {
-    const msg = error?.response?.data?.message || "Payment failed";
+    const msg = error?.response?.data?.message || error?.message || "An unexpected error occurred during gift card purchase";
     showError({
       title: "Purchase Failed",
       message: Array.isArray(msg) ? msg[0] : msg,

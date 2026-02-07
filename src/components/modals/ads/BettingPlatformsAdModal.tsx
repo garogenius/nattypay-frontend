@@ -16,7 +16,11 @@ interface BettingPlatformsAdModalProps {
 const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpen, onClose, onComplete }) => {
   const [isVisible, setIsVisible] = useState(false);
   const { data: platformsData, isLoading: platformsLoading } = useGetBettingPlatforms();
-  const platforms = platformsData?.data?.data || [];
+  // Safe access to billers array
+  const rawData = platformsData?.data?.data;
+  const platforms = (rawData && 'billers' in rawData && Array.isArray(rawData.billers))
+    ? rawData.billers
+    : [];
 
   useEffect(() => {
     if (isOpen) {
@@ -63,8 +67,8 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
 
   // Popular platforms to show if API is loading or empty
   const defaultPlatforms = [
-    { platformCode: "BET9JA", platformName: "Bet9ja" },
-    { platformCode: "SPORTYBET", platformName: "SportyBet" },
+    { billerCode: "BET9JA", billerName: "Bet9ja" },
+    { billerCode: "SPORTYBET", billerName: "SportyBet" },
   ];
 
   const displayPlatforms = platforms.length > 0 ? platforms : defaultPlatforms;
@@ -130,7 +134,7 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
                   .slice(0, 4)
                   .map((platform: any, index: number) => (
                     <div
-                      key={platform.platformCode}
+                      key={platform.billerCode}
                       className="flex items-center gap-2 sm:gap-2.5 md:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300"
                       style={{
                         animationDelay: `${index * 100}ms`,
@@ -142,7 +146,7 @@ const BettingPlatformsAdModal: React.FC<BettingPlatformsAdModalProps> = ({ isOpe
                       </div>
                       <div className="flex-1">
                         <h4 className="text-white font-semibold text-[11px] sm:text-xs md:text-sm lg:text-base">
-                          {platform.platformName}
+                          {platform.billerName}
                         </h4>
                         <p className="text-white/60 text-[9px] sm:text-[10px] md:text-xs">Ready to fund</p>
                       </div>

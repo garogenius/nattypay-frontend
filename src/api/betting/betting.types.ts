@@ -1,8 +1,11 @@
 export interface IBettingPlatform {
-  platformId: string;
-  platformName: string;
-  platformCode: string;
-  status: string;
+  billerId: string;
+  billerCode: string;
+  billerName: string;
+  billerIcon: string;
+  status: number;
+  minAmount: number;
+  maxAmount: number;
 }
 
 export interface IFundBettingPlatform {

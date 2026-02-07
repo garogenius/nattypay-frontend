@@ -197,12 +197,22 @@ const BuyGiftCardStageOne: React.FC<StageOneProps> = ({
         const rate = fxRate?.rate || fxRate?.exchangeRate;
         if (rate) {
           setValue("amount", watchedUnitPrice * Number(rate) * (watchedQuantity || 1));
-        } else if (fxRate?.totalAmount || fxRate?.amount) {
-          setValue("amount", Number(fxRate?.totalAmount || fxRate?.amount) * (watchedQuantity || 1));
+        } else if (fxRate?.totalAmount || fxRate?.amount || fxRate?.senderAmount) {
+          setValue("amount", Number(fxRate?.totalAmount || fxRate?.amount || fxRate?.senderAmount) * (watchedQuantity || 1));
         }
       }
     }
   }, [fxRate, watchedQuantity, setValue, watchedUnitPrice, product]);
+
+  // Handle FIXED products amount update when quantity changes
+  useEffect(() => {
+    if (product?.denominationType === "FIXED" && watchedUnitPrice) {
+      const selectedPrice = prices.find(p => p.price === watchedUnitPrice);
+      if (selectedPrice) {
+        setValue("amount", selectedPrice.amount * (watchedQuantity || 1));
+      }
+    }
+  }, [watchedQuantity, watchedUnitPrice, product, prices, setValue]);
 
 
   const onSubmit = async (data: FormData) => {
@@ -371,6 +381,15 @@ const BuyGiftCardStageOne: React.FC<StageOneProps> = ({
                 <p className="flex self-start text-red-500 font-semibold mt-0.5 text-sm">
                   {errors?.productId?.message}
                 </p>
+              )}
+              {product?.redeemInstruction && (
+                <button
+                  type="button"
+                  onClick={() => setOpenRedeemInstruction(true)}
+                  className="w-fit text-primary text-xs font-semibold hover:underline flex self-end mt-1"
+                >
+                  View Redeem Instructions
+                </button>
               )}
             </div>
 

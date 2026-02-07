@@ -334,28 +334,23 @@ const InternetStageOne: React.FC<StageOneProps> = ({
               <div className="absolute top-full my-2.5 px-1 py-2 overflow-y-auto h-fit max-h-60 w-full bg-bg-600 border dark:bg-bg-1100 border-gray-300 dark:border-border-600 rounded-md shadow-md z-10 no-scrollbar">
                 <SearchableDropdown
                   items={internetPlans}
-                  searchKey="shortName"
+                  searchKey="short_name"
                   displayFormat={(provider) => {
-                    // const providerData = ElectricityProvidersData.find(
-                    //   (item) => provider.shortName.toLowerCase() === item.disco
-                    // );
+                    const shortName = provider.short_name || provider.shortName || provider.name;
                     return (
                       <div className="flex items-center gap-2">
-                        {/* <Image
-                          src={providerData?.logo || ""}
-                          alt={`${provider.shortName} logo`}
-                          className="w-7 h-7 rounded-full"
-                        /> */}
                         <p className="uppercase 2xs:text-base text-sm font-medium text-text-200 dark:text-text-400">
-                          {provider.shortName}
+                          {shortName}
                         </p>
                       </div>
                     );
                   }}
                   onSelect={(plan) => {
-                    const code = plan.billerCode || plan.biller_code || plan.item_code || plan.billerId;
+                    const code = plan.biller_code || plan.code || plan.billerCode || "";
+                    const shortName = plan.short_name || plan.shortName || plan.name || "";
+
                     setValue("billerCode", String(code));
-                    setValue("provider", plan.shortName);
+                    setValue("provider", shortName);
                     setValue("itemCode", "");
                     clearErrors("billerCode");
                     clearErrors("provider");

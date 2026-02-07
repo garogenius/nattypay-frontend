@@ -11,6 +11,9 @@ import { LuShieldPlus, LuTv } from "react-icons/lu";
 import { MdCardGiftcard } from "react-icons/md";
 import { RiGovernmentLine } from "react-icons/ri";
 import { SlPlane, SlTrophy } from "react-icons/sl";
+import BettingModal from "@/components/modals/BettingModal";
+import EducationModal from "@/components/modals/EducationModal";
+import { useState } from "react";
 
 const Bills = [
   {
@@ -90,12 +93,23 @@ const Bills = [
 
 const BillsPaymentContent = () => {
   const navigate = useNavigate();
+  const [isBettingOpen, setIsBettingOpen] = useState(false);
+  const [isEducationOpen, setIsEducationOpen] = useState(false);
+
   return (
     <div className="w-full flex max-xl:flex-col 2xs:px-2 xs:px-4 sm:px-6 md:px-8 py-4 2xs:py-6 sm:py-10 bg-transparent xs:bg-bg-600 dark:xs:bg-bg-1100 gap-6 xs:gap-10 lg:gap-12 2xl:gap-16 rounded-xl">
       <div className="w-full grid grid-cols-1 2xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
         {Bills.map((item, index) => (
           <div
             onClick={() => {
+              if (item.name === "Betting") {
+                setIsBettingOpen(true);
+                return;
+              }
+              if (item.name === "Education") {
+                setIsEducationOpen(true);
+                return;
+              }
               if (
                 [
                   "Cable /TV Bills",
@@ -125,6 +139,14 @@ const BillsPaymentContent = () => {
           </div>
         ))}
       </div>
+      <BettingModal
+        isOpen={isBettingOpen}
+        onClose={() => setIsBettingOpen(false)}
+      />
+      <EducationModal
+        isOpen={isEducationOpen}
+        onClose={() => setIsEducationOpen(false)}
+      />
     </div>
   );
 };

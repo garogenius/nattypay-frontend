@@ -25,8 +25,8 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<"form" | "verify" | "confirm" | "result">("form");
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [itemOpen, setItemOpen] = useState(false);
-  const [selectedSchool, setSelectedSchool] = useState<{name: string; billerCode: string} | null>(null);
-  const [selectedItem, setSelectedItem] = useState<{name: string; itemCode: string; amount?: number} | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState<{ name: string; billerCode: string } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{ name: string; itemCode: string; amount?: number } | null>(null);
   const [billerNumber, setBillerNumber] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [walletPin, setWalletPin] = useState<string>("");
@@ -231,10 +231,10 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
                           <button
                             key={it.itemCode || it.item_code}
                             onClick={() => {
-                              setSelectedItem({ 
-                                name: it.itemName || it.name || it.short_name, 
-                                itemCode: it.itemCode || it.item_code, 
-                                amount: it.amount 
+                              setSelectedItem({
+                                name: it.itemName || it.name || it.short_name,
+                                itemCode: it.itemCode || it.item_code,
+                                amount: it.amount
                               });
                               if (it.amount) setAmount(String(it.amount));
                               setItemOpen(false);
@@ -254,7 +254,7 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
               {/* Biller Number */}
               <div className="flex flex-col gap-2">
                 <label className="text-white/70 text-sm">Student/Registration Number</label>
-                <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder="Enter student/registration number" value={billerNumber} onChange={(e)=> setBillerNumber(e.target.value)} />
+                <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder="Enter student/registration number" value={billerNumber} onChange={(e) => setBillerNumber(e.target.value)} />
               </div>
 
               {/* Verification Status */}
@@ -281,7 +281,7 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
               {selectedItem && !selectedItem.amount && (
                 <div className="flex flex-col gap-2">
                   <label className="text-white/70 text-sm">Amount</label>
-                  <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder="Enter amount" value={amount} onChange={(e)=> setAmount(e.target.value.replace(/[^\d.]/g, ''))} />
+                  <input className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white placeholder:text-white/60 text-sm outline-none" placeholder="Enter amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))} />
                 </div>
               )}
 
@@ -325,11 +325,11 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-white/60 text-sm">Enter Transaction PIN</label>
-                <input type="password" maxLength={4} value={walletPin} onChange={(e)=> setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
+                <input type="password" maxLength={4} value={walletPin} onChange={(e) => setWalletPin(e.target.value.replace(/\D/g, ""))} className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-lg py-3 px-4 text-white text-sm outline-none" />
               </div>
               <div className="flex gap-4 mt-2">
-                <CustomButton onClick={()=> setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
-                <CustomButton onClick={handleConfirm} disabled={walletPin.length!==4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
+                <CustomButton onClick={() => setStep("form")} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Back</CustomButton>
+                <CustomButton onClick={handleConfirm} disabled={walletPin.length !== 4 || paying} isLoading={paying} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Pay</CustomButton>
               </div>
             </div>
           )}
@@ -347,7 +347,7 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
               </div>
               <span className={`${resultSuccess ? 'text-emerald-400' : 'text-red-400'} text-sm font-medium`}>{resultSuccess ? 'Payment Successful' : 'Payment Failed'}</span>
               <span className="text-white text-2xl font-bold">₦{Number(selectedItem?.amount || amount || 0).toLocaleString()}.00</span>
-              
+
               {resultSuccess && transactionData && (
                 <div className="w-full bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -372,7 +372,7 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
                           title="Copy"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-white/70">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z"/>
+                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V7q0-.825.588-1.412T7 5h8q.825 0 1.413.588T17 7v12q0 .825-.587 1.413T15 21zm0-2h8V7H7zm10-2V5H9V3h8q.825 0 1.413.588T19 5v12z" />
                           </svg>
                         </button>
                       )}
@@ -386,7 +386,7 @@ const SchoolModal: React.FC<SchoolModalProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
               )}
-              
+
               <div className="flex gap-3 mt-4 w-full">
                 <CustomButton onClick={handleClose} className="flex-1 bg-transparent border border-border-600 text-white hover:bg-white/5 py-3 rounded-lg">Contact Support</CustomButton>
                 <CustomButton onClick={handleClose} className="flex-1 bg-[#D4B139] hover:bg-[#D4B139]/90 text-black py-3 rounded-lg">Download Receipt</CustomButton>

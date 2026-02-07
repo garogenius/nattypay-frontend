@@ -38,13 +38,18 @@ client.interceptors.request.use(
     }
 
     // Add Authorization header if token exists
-    if (token) {
+    if (token && !config.headers?.noauth) {
       const trimmedToken = token.trim();
       // Only add if it looks like a JWT (has 3 parts)
       // but don't remove it from cookies if it's not - let the API handle the error
       if (trimmedToken.split(".").length === 3) {
         config.headers.Authorization = `Bearer ${trimmedToken}`;
       }
+    }
+
+    // Remove the temporary noauth header if it exists
+    if (config.headers?.noauth) {
+      delete config.headers.noauth;
     }
     // SECURITY: Don't log missing tokens to prevent information disclosure
 

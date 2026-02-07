@@ -10,6 +10,7 @@ export const getEducationBillersRequest = async () => {
   return request({
     url: `/bill/remita/school/billers`,
     method: "get",
+    headers: { noauth: true }
   });
 };
 
@@ -44,13 +45,31 @@ export const getRemitaProvidersRequest = async () => {
   return request({
     url: `/bill/remita/vending/providers`,
     method: "get",
+    headers: { noauth: true }
   });
 };
 
 export const getRemitaProductsRequest = async (provider: string) => {
   return request({
-    url: `/bill/remita/vending/products?provider=${provider}`,
+    url: `/bill/remita/vending/products?provider=${provider}&categoryCode=education`,
     method: "get",
+    headers: { noauth: true }
+  });
+};
+
+export const payWaecRequest = async (formdata: IPayEducation) => {
+  return request({
+    url: `/bill/waec/pay`,
+    method: "post",
+    data: formdata,
+  });
+};
+
+export const payJambRequest = async (formdata: IPayEducation) => {
+  return request({
+    url: `/bill/jamb/pay`,
+    method: "post",
+    data: formdata,
   });
 };
 

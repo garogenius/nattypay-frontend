@@ -10,6 +10,8 @@ import {
   useGetEducationBillerItems,
   useVerifyEducationCustomer,
   usePayForEducation,
+  usePayForWaec,
+  usePayForJamb,
   useGetRemitaProviders,
   useGetRemitaProducts
 } from "@/api/education/education.queries";
@@ -21,9 +23,10 @@ import useUserStore from "@/store/user.store";
 interface EducationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialCategory?: "SCHOOL" | "WAEC" | "JAMB" | null;
 }
 
-const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
+const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose, initialCategory }) => {
   const [step, setStep] = useState<"category" | "form" | "confirm" | "result">("category");
   const [category, setCategory] = useState<"SCHOOL" | "WAEC" | "JAMB" | null>(null);
   const [billerOpen, setBillerOpen] = useState(false);
@@ -62,13 +65,53 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
     billerCode: category === "SCHOOL" ? selectedBiller?.billerCode || "" : "",
   });
 
+  // Find the correct provider code from the list
+  const targetProvider = React.useMemo(() => {
+    if (category !== "WAEC" && category !== "JAMB") return "";
+
+    // Debug log
+    if (process.env.NODE_ENV === "development") {
+      console.log("Resolving Provider:", { category, loading: providersLoading, providers: remitaProviders });
+    }
+
+    // Attempt to match if providers are available
+    if (remitaProviders && remitaProviders.length > 0) {
+      const target = category.toLowerCase();
+      const match = remitaProviders.find((p: any) => {
+        // Check code/provider field
+        const providerCode = p.provider || p.code;
+        if (providerCode && providerCode.toLowerCase() === target) return true;
+        // Check name/description
+        const name = (p.name || p.description || "").toLowerCase();
+        return name.includes(target);
+      });
+
+      if (match) {
+        if (process.env.NODE_ENV === "development") console.log("Matched Provider:", match.provider || match.code);
+        return match.provider || match.code;
+      }
+    }
+
+    // Fallback: If providers didn't load or no match found, try using the category name directly
+    // This handles cases where the provider list API fails but the products API might still work with standard codes
+    if (!providersLoading) {
+      console.warn("No provider match found, using fallback:", category.toLowerCase());
+      return category.toLowerCase();
+    }
+
+    return "";
+  }, [category, remitaProviders, providersLoading]);
+
   // WAEC/JAMB: fetch by provider (category name)
-  const { products: vendingProducts, isLoading: vendingLoading } = useGetRemitaProducts(
-    category === "WAEC" ? "WAEC" : category === "JAMB" ? "JAMB" : ""
-  );
+  const { products: vendingProducts, isLoading: vendingLoading } = useGetRemitaProducts(targetProvider);
 
   const activeItems = category === "SCHOOL" ? schoolItems : vendingProducts;
-  const itemsLoading = category === "SCHOOL" ? schoolItemsLoading : vendingLoading;
+
+  // Only show loading if we are actually waiting for something
+  // If we fell back to a default provider, we are only waiting for vendingLoading
+  const itemsLoading = category === "SCHOOL"
+    ? schoolItemsLoading
+    : (vendingLoading || (["WAEC", "JAMB"].includes(category || "") && providersLoading && !targetProvider));
 
   // Verify Mutation
   const onVerifySuccess = (data: any) => {
@@ -93,7 +136,18 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
     setResultSuccess(false);
     setStep("result");
   };
-  const { mutate: payEducation, isPending: paying } = usePayForEducation(onPayError, onPaySuccess);
+  const { mutate: payEducation, isPending: payingSchool } = usePayForEducation(onPayError, onPaySuccess);
+  const { mutate: payWaec, isPending: payingWaec } = usePayForWaec(onPayError, onPaySuccess);
+  const { mutate: payJamb, isPending: payingJamb } = usePayForJamb(onPayError, onPaySuccess);
+
+  const paying = payingSchool || payingWaec || payingJamb;
+
+  // Handle Initial Category
+  React.useEffect(() => {
+    if (isOpen && initialCategory) {
+      handleCategorySelect(initialCategory);
+    }
+  }, [isOpen, initialCategory]);
 
   // Reset logic
   const handleClose = () => {
@@ -135,16 +189,17 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
   const handleVerify = () => {
     verifyCustomer({
       billerCode: selectedBiller?.billerCode || "",
-      itemCode: selectedItem?.itemCode || selectedItem?.code || "", // API might return 'code' or 'itemCode'
+      itemCode: selectedItem?.itemCode || selectedItem?.code || selectedItem?.billPaymentProductId || "", // API might return 'code' or 'itemCode' or 'billPaymentProductId'
       customerId,
     });
   };
 
   const handleConfirm = () => {
     if (!selectedBiller || !selectedItem) return;
-    payEducation({
-      billerCode: selectedBiller.billerCode,
-      itemCode: selectedItem.itemCode || selectedItem.code,
+
+    const payload = {
+      billerCode: selectedItem.billerId || selectedBiller.billerCode,
+      itemCode: selectedItem.itemCode || selectedItem.code || selectedItem.billPaymentProductId,
       customerId,
       amount: Number(amount || selectedItem.amount || 0),
       currency: "NGN",
@@ -153,7 +208,15 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
       customerEmail: user?.email || "",
       customerPhone: user?.phoneNumber || "",
       addBeneficiary: false,
-    });
+    };
+
+    if (category === "WAEC") {
+      payWaec(payload);
+    } else if (category === "JAMB") {
+      payJamb(payload);
+    } else {
+      payEducation(payload);
+    }
   };
 
   if (!isOpen) return null;
@@ -182,7 +245,7 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
         <div className="p-6 overflow-y-auto custom-scrollbar">
 
           {/* Step 0: Category Selection */}
-          {step === "category" && (
+          {step === "category" && !initialCategory && (
             <div className="grid grid-cols-1 gap-4">
               {[
                 { id: "SCHOOL", label: "School Fees", icon: "🏫" },
@@ -279,15 +342,15 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
                       {activeItems.length === 0 ? (
                         <div className="px-4 py-4 text-white/50 text-sm text-center">No items available</div>
                       ) : (
-                        activeItems.map((it: any) => (
+                        activeItems.map((it: any, i: number) => (
                           <button
-                            key={it.itemCode || it.code}
+                            key={it.itemCode || it.code || it.billPaymentProductId || i}
                             onClick={() => {
                               // Normalize item data
                               const normalized = {
                                 ...it,
-                                itemCode: it.itemCode || it.code,
-                                name: it.itemName || it.name || it.short_name,
+                                itemCode: it.itemCode || it.code || it.billPaymentProductId,
+                                name: it.itemName || it.name || it.short_name || it.billPaymentProductName,
                                 amount: it.amount || it.fixedPrice
                               };
                               setSelectedItem(normalized);
@@ -300,7 +363,7 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
                             }}
                             className="w-full text-left px-4 py-3 text-white text-sm font-medium hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex justify-between items-center"
                           >
-                            <span>{it.itemName || it.name || it.short_name}</span>
+                            <span>{it.itemName || it.name || it.short_name || it.billPaymentProductName}</span>
                             {(it.amount || it.fixedPrice) && (
                               <span className="text-[#D4B139] font-bold">₦{Number(it.amount || it.fixedPrice).toLocaleString()}</span>
                             )}
@@ -328,14 +391,11 @@ const EducationModal: React.FC<EducationModalProps> = ({ isOpen, onClose }) => {
 
                 {/* Dynamic Fields if any (basic implementation for now) */}
                 {selectedItem?.metadata?.customFields?.map((field: any) => (
-                  <div key={field.name} className="space-y-2">
-                    <label className="text-white/70 text-sm font-medium px-1">{field.columnName || field.name}</label>
+                  <div key={field.variable_name || field.name} className="space-y-2">
+                    <label className="text-white/70 text-sm font-medium px-1">{field.display_name || field.columnName || field.name}</label>
                     <input
                       className="w-full bg-bg-2400 dark:bg-bg-2100 border border-border-600 rounded-xl py-3.5 px-4 text-white placeholder:text-white/30 text-sm font-medium outline-none"
-                      placeholder={`Enter ${field.columnName || field.name}`}
-                    //    value={customFields[field.name] || ""}
-                    //    onChange={(e) => setCustomFields({ ...customFields, [field.name]: e.target.value })}
-                    // Note: For simplicity, we stick to mandatory CustomerID. Complex dynamic forms require dynamic state management.
+                      placeholder={`Enter ${field.display_name || field.columnName || field.name}`}
                     />
                   </div>
                 ))}

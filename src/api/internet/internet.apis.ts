@@ -9,6 +9,7 @@ export const getInternetPlansRequest = async (formdata: IGetInternetPlans) => {
   return request({
     url: `/bill/flutterwave/internet/get-plan?currency=${formdata.currency}`,
     method: "get",
+    headers: { noauth: true }
   });
 };
 
@@ -16,8 +17,9 @@ export const getInternetVariationsRequest = async (
   formdata: IGetInternetVariationsPayload
 ) => {
   return request({
-    url: `/bill/flutterwave/billers/${formdata.billerCode}/items`,
+    url: `/bill/flutterwave/internet/get-bill-info?billerCode=${formdata.billerCode}`,
     method: "get",
+    headers: { noauth: true }
   });
 };
 

@@ -9,11 +9,12 @@ import {
 } from "./betting.types";
 
 export const getBettingPlatformsRequest = async (): Promise<{
-  data: { data: IBettingPlatform[] };
+  data: { data: { billers: IBettingPlatform[] } };
 }> => {
   return request({
     url: `/bill/betting/palmpay/platforms`,
     method: "get",
+    headers: { noauth: true }
   });
 };
 

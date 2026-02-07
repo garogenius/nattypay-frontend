@@ -23,7 +23,7 @@ export const useGetSchoolPlans = (payload: IGetSchoolPlans) => {
   // Handle nested data structure: data.data.data
   const responseData = data?.data?.data?.data || data?.data?.data || [];
   const rawPlans: any[] = Array.isArray(responseData) ? responseData : [];
-  
+
   // Map API response fields to component-expected fields
   // API returns: billerId, billerName, billerShortName
   // Component expects: billerCode, name, shortName
@@ -47,11 +47,11 @@ export const useGetSchoolBillInfo = (payload: IGetSchoolBillInfo) => {
   // Extract products/items from nested response structure
   // Response structure could be: data.data.data.products or data.data.data.items or data.data.data
   const responseData = data?.data?.data?.data || data?.data?.data || {};
-  
+
   // Try to get items from different possible locations
   const products = responseData?.products || responseData?.items || [];
   const rawItems = Array.isArray(products) ? products : (Array.isArray(responseData) ? responseData : []);
-  
+
   // Map products/items to items format expected by component
   const items = rawItems.map((item: any) => ({
     itemName: item.billPaymentProductName || item.itemName || item.name || item.short_name,

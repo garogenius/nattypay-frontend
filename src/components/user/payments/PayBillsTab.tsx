@@ -12,6 +12,7 @@ import InternetModal from "@/components/modals/InternetModal";
 import TransportModal from "@/components/modals/TransportModal";
 import EducationModal from "@/components/modals/EducationModal";
 import GiftCardModal from "@/components/modals/GiftCardModal";
+import BettingModal from "@/components/modals/BettingModal";
 import SellGiftCardModal from "@/components/modals/SellGiftCardModal";
 import ConvertCurrencyModal from "@/components/modals/ConvertCurrencyModal";
 import { AiOutlineInsurance, AiOutlineThunderbolt } from "react-icons/ai";
@@ -89,7 +90,9 @@ const sections: { title: string; items: BillItem[] }[] = [
   {
     title: "School",
     items: [
-      { name: "Education", icon: IoSchoolOutline, available: true },
+      { name: "School Fees", icon: IoSchoolOutline, available: true },
+      { name: "WAEC", icon: IoSchoolOutline, available: true },
+      { name: "JAMB", icon: IoSchoolOutline, available: true },
     ],
   },
 ];
@@ -102,8 +105,9 @@ const Card: React.FC<BillItem & {
   onInternationalAirtimeClick?: () => void;
   onInternetClick?: () => void;
   onTransportClick?: () => void;
-  onEducationClick?: () => void;
+  onEducationClick?: (cat?: "SCHOOL" | "WAEC" | "JAMB") => void;
   onGiftCardClick?: () => void;
+  onBettingClick?: () => void;
   onSellGiftCardClick?: () => void;
   onConvertCurrencyClick?: () => void;
 }> = ({
@@ -121,6 +125,7 @@ const Card: React.FC<BillItem & {
   onTransportClick,
   onEducationClick,
   onGiftCardClick,
+  onBettingClick,
   onSellGiftCardClick,
   onConvertCurrencyClick,
 }) => {
@@ -149,12 +154,16 @@ const Card: React.FC<BillItem & {
         onCableClick();
       } else if ((name === "Bus Tickets" || name === "Flight") && onTransportClick) {
         onTransportClick();
-      } else if (name === "Education" && onEducationClick) {
-        onEducationClick();
+      } else if (name === "School Fees" && onEducationClick) {
+        onEducationClick("SCHOOL");
+      } else if (name === "WAEC" && onEducationClick) {
+        onEducationClick("WAEC");
+      } else if (name === "JAMB" && onEducationClick) {
+        onEducationClick("JAMB");
       } else if (name === "Buy Giftcards" && onGiftCardClick) {
         onGiftCardClick();
-      } else if (name === "Betting") {
-        navigate("/user/betting");
+      } else if (name === "Betting" && onBettingClick) {
+        onBettingClick();
       } else if (name === "Convert Currency" && onConvertCurrencyClick) {
         onConvertCurrencyClick();
       } else if (available && path) {
@@ -173,8 +182,8 @@ const Card: React.FC<BillItem & {
         type="button"
         disabled={isSellGiftCardDisabled}
         className={`w-full flex px-2 py-3 sm:px-4 sm:py-5 flex-col gap-1.5 sm:gap-2.5 justify-center items-center bg-bg-600 dark:bg-bg-1100 rounded-lg sm:rounded-xl border border-border-600 transition-colors ${isSellGiftCardDisabled
-            ? "cursor-not-allowed opacity-50"
-            : "cursor-pointer hover:bg-white/5"
+          ? "cursor-not-allowed opacity-50"
+          : "cursor-pointer hover:bg-white/5"
           }`}
       >
         <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full p-2 sm:p-3 flex justify-center items-center bg-bg-2700 dark:bg-bg-1200">
@@ -194,7 +203,9 @@ const PayBillsTab: React.FC = () => {
   const [isInternetOpen, setIsInternetOpen] = useState(false);
   const [isTransportOpen, setIsTransportOpen] = useState(false);
   const [isEducationOpen, setIsEducationOpen] = useState(false);
+  const [eduCategory, setEduCategory] = useState<"SCHOOL" | "WAEC" | "JAMB" | null>(null);
   const [isGiftCardOpen, setIsGiftCardOpen] = useState(false);
+  const [isBettingOpen, setIsBettingOpen] = useState(false);
   const [isSellGiftCardOpen, setIsSellGiftCardOpen] = useState(false);
   const [isConvertCurrencyOpen, setIsConvertCurrencyOpen] = useState(false);
 
@@ -215,8 +226,12 @@ const PayBillsTab: React.FC = () => {
                 onInternationalAirtimeClick={() => setIsInternationalAirtimeOpen(true)}
                 onInternetClick={() => setIsInternetOpen(true)}
                 onTransportClick={() => setIsTransportOpen(true)}
-                onEducationClick={() => setIsEducationOpen(true)}
+                onEducationClick={(cat) => {
+                  setEduCategory(cat || null);
+                  setIsEducationOpen(true);
+                }}
                 onGiftCardClick={() => setIsGiftCardOpen(true)}
+                onBettingClick={() => setIsBettingOpen(true)}
                 onSellGiftCardClick={() => setIsSellGiftCardOpen(true)}
                 onConvertCurrencyClick={() => setIsConvertCurrencyOpen(true)}
               />
@@ -262,12 +277,21 @@ const PayBillsTab: React.FC = () => {
 
       <EducationModal
         isOpen={isEducationOpen}
-        onClose={() => setIsEducationOpen(false)}
+        onClose={() => {
+          setIsEducationOpen(false);
+          setEduCategory(null);
+        }}
+        initialCategory={eduCategory}
       />
 
       <GiftCardModal
         isOpen={isGiftCardOpen}
         onClose={() => setIsGiftCardOpen(false)}
+      />
+
+      <BettingModal
+        isOpen={isBettingOpen}
+        onClose={() => setIsBettingOpen(false)}
       />
 
       <SellGiftCardModal
