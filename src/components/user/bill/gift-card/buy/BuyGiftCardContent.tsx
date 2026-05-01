@@ -12,6 +12,7 @@ import { BILL_TYPE, GiftCardDetails } from "@/constants/types";
 import GiftCardNav from "../GiftCardNav";
 import { usePayForGiftCard } from "@/api/gift-card/gift-card.queries";
 import { useTransactionProcessingStore } from "@/store/transactionProcessing.store";
+import { IGCPayload } from "@/api/gift-card/gift-card.types";
 
 const BuyGiftCardContent = () => {
   const [stage, setStage] = useState<"one" | "two" | "three">("one");
@@ -99,7 +100,7 @@ const BuyGiftCardContent = () => {
                   unitPrice: giftCardDetails.unitPrice,
                   quantity: giftCardDetails.quantity,
                   addBeneficiary: isBeneficiaryChecked,
-                });
+                } as IGCPayload);
               }
             }}
             isLoading={giftCardLoading}
