@@ -1,238 +1,92 @@
-@import 'swiper/css';
-@import 'swiper/css/navigation';
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&family=Figtree:wght@400;500;600&family=Inter:wght@400;500&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  /* Base text color - dark in light mode, light in dark mode */
-  html {
-    color: #141414; /* text-200 - dark color for light mode */
-  }
-  
-  html.dark {
-    color: #ffffff; /* white for dark mode */
-  }
-  
-  /* Default text color for body */
-  body {
-    color: inherit;
-  }
-  
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus,
-  input:-webkit-autofill:active,
-  textarea:-webkit-autofill,
-  textarea:-webkit-autofill:hover,
-  textarea:-webkit-autofill:focus,
-  textarea:-webkit-autofill:active,
-  select:-webkit-autofill,
-  select:-webkit-autofill:hover,
-  select:-webkit-autofill:focus,
-  select:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-    /* Important: keep autofilled / OTP-pasted text readable in BOTH themes.
-       Using prefers-color-scheme breaks when user switches theme manually. */
-    -webkit-text-fill-color: inherit !important;
-    transition: background-color 5000s ease-in-out 0s;
-  }
+:root {
+  --gold: #F0BF4C;
+  --gold-dark: #D4B039;
+  --black: #000000;
+  --dark: #2A2A2A;
+  --grey: #4A4A4A;
+  --light-grey: #CCCCCC;
+  --white: #FFFFFF;
+  --green: #46B900;
+  --red: #EA0000;
+  --blue: #008DFF;
+  --blue-mid: #02B1FF;
+  --blue-light: #02D3FF;
 }
 
-@layer utilities {
-  /* Make text-white adapt to theme in light mode */
-  html:not(.dark) .text-white {
-    color: #141414 !important; /* text-200 - dark color for light mode */
-  }
-
-  /* Fix: many modals/pages use text-white/{opacity} even in light mode.
-     In light mode, map those to readable dark grays. */
-  html:not(.dark) .text-white\/95,
-  html:not(.dark) .text-white\/90,
-  html:not(.dark) .text-white\/80 {
-    color: #141414 !important; /* strong text */
-  }
-  html:not(.dark) .text-white\/70 {
-    color: #46484F !important; /* text-700 */
-  }
-  html:not(.dark) .text-white\/60 {
-    color: #707072 !important; /* text-1700 */
-  }
-  html:not(.dark) .text-white\/50,
-  html:not(.dark) .text-white\/40 {
-    color: #797B86 !important; /* text-1000 */
-  }
-
-  /* Placeholders commonly use placeholder:text-white/{opacity} */
-  html:not(.dark) .placeholder\:text-white::placeholder {
-    color: #797B86 !important;
-    opacity: 1 !important;
-  }
-  html:not(.dark) .placeholder\:text-white\/70::placeholder,
-  html:not(.dark) .placeholder\:text-white\/60::placeholder,
-  html:not(.dark) .placeholder\:text-white\/50::placeholder,
-  html:not(.dark) .placeholder\:text-white\/40::placeholder {
-    color: #797B86 !important;
-    opacity: 1 !important;
-  }
-  
-  /* Ensure text-white stays white in dark mode */
-  html.dark .text-white {
-    color: #ffffff !important;
-  }
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Hide the arrows in WebKit browsers */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* Hide the arrows in Firefox */
-input[type="number"] {
-  -moz-appearance: textfield;
+html {
+  scroll-behavior: smooth;
 }
 
-/* Autofill/OTP-paste color must follow APP THEME (not system theme). */
-html.dark input:-webkit-autofill,
-html.dark input:-webkit-autofill:hover,
-html.dark input:-webkit-autofill:focus,
-html.dark input:-webkit-autofill:active,
-html.dark textarea:-webkit-autofill,
-html.dark textarea:-webkit-autofill:hover,
-html.dark textarea:-webkit-autofill:focus,
-html.dark textarea:-webkit-autofill:active,
-html.dark select:-webkit-autofill,
-html.dark select:-webkit-autofill:hover,
-html.dark select:-webkit-autofill:focus,
-html.dark select:-webkit-autofill:active {
-  -webkit-text-fill-color: #ffffff !important;
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #fff;
+  color: #2A2A2A;
+  overflow-x: hidden;
 }
 
-html:not(.dark) input:-webkit-autofill,
-html:not(.dark) input:-webkit-autofill:hover,
-html:not(.dark) input:-webkit-autofill:focus,
-html:not(.dark) input:-webkit-autofill:active,
-html:not(.dark) textarea:-webkit-autofill,
-html:not(.dark) textarea:-webkit-autofill:hover,
-html:not(.dark) textarea:-webkit-autofill:focus,
-html:not(.dark) textarea:-webkit-autofill:active,
-html:not(.dark) select:-webkit-autofill,
-html:not(.dark) select:-webkit-autofill:hover,
-html:not(.dark) select:-webkit-autofill:focus,
-html:not(.dark) select:-webkit-autofill:active {
-  -webkit-text-fill-color: #141414 !important;
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #F0BF4C;
+  border-radius: 3px;
 }
 
-/* Auth/Onboarding: keep light-mode overrides only when not in dark theme */
-html[data-auth-onboarding="true"]:not(.dark) input,
-html[data-auth-onboarding="true"]:not(.dark) textarea,
-html[data-auth-onboarding="true"]:not(.dark) select {
-  color: #141414 !important;
-  -webkit-text-fill-color: #141414 !important;
-  caret-color: #141414 !important;
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-html[data-auth-onboarding="true"]:not(.dark) input::placeholder,
-html[data-auth-onboarding="true"]:not(.dark) textarea::placeholder {
-  color: #797B86 !important;
-  opacity: 1 !important;
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill,
-html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill:hover,
-html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill:focus,
-html[data-auth-onboarding="true"]:not(.dark) input:-webkit-autofill:active,
-html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill,
-html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill:hover,
-html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill:focus,
-html[data-auth-onboarding="true"]:not(.dark) textarea:-webkit-autofill:active,
-html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill,
-html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill:hover,
-html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill:focus,
-html[data-auth-onboarding="true"]:not(.dark) select:-webkit-autofill:active {
-  -webkit-text-fill-color: #141414 !important;
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes heartbeat {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.5;
-  }
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 191, 76, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(240, 191, 76, 0); }
 }
 
-.animate-heartbeat {
-  animation: heartbeat 1.5s ease-in-out infinite;
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* Swiper navigation styles */
-.swiper-button-prev,
-.swiper-button-next {
-  color: #D4B139; /* primary */
-  z-index: 10;
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
 }
 
-.swiper-button-disabled {
-  opacity: 0.35;
-}
+.animate-fade-up { animation: fadeInUp 0.7s ease forwards; }
+.animate-fade-left { animation: fadeInLeft 0.7s ease forwards; }
+.animate-fade-right { animation: fadeInRight 0.7s ease forwards; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-marquee { animation: marquee 25s linear infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
-/* Swiper pagination dots for stats cards slider */
-.swiper-pagination-bullet {
-  background: rgba(255, 255, 255, 0.3) !important;
-  width: 8px !important;
-  height: 8px !important;
-  opacity: 1 !important;
-}
-
-.swiper-pagination-bullet-active {
-  background: #ffffff !important;
-  width: 8px !important;
-  height: 8px !important;
-}
-
-/* Professional scrollbar for in-app scroll areas */
-.scroll-area {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #2C3947 transparent;
-}
-.scroll-area::-webkit-scrollbar {
-  width: 8px;
-}
-.scroll-area::-webkit-scrollbar-thumb {
-  background-color: #2C3947;
-  border-radius: 8px;
-}
-.scroll-area:hover::-webkit-scrollbar-thumb {
-  background-color: #3A4A5C;
-}
-.scroll-area::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* Delay utilities */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
