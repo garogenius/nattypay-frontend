@@ -13,7 +13,7 @@ export default function DeveloperHeader() {
         {/* Left side: Logo & Search */}
         <div className="flex items-center gap-4 lg:gap-[105px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 lg:gap-[14px]">
+          <Link href="/" className="flex items-center gap-0">
             <img
               src="/img/logo.png"
               alt="NattyPay"

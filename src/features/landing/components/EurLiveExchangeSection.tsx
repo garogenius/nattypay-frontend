@@ -28,6 +28,7 @@ export default function EurLiveExchangeSection() {
 
         {/* ─── Left Card: How it Works (yellow gradient) ─── */}
         <div
+          className="w-full flex-shrink-0 lg:flex-1 max-md:p-6"
           style={{
             flex: '1 1 400px',
             maxWidth: '786px',
@@ -41,7 +42,7 @@ export default function EurLiveExchangeSection() {
             gap: '24px',
           }}
         >
-          <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '34px', lineHeight: 1.5, color: '#000', margin: 0 }}>
+          <h2 className="max-md:text-[26px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '34px', lineHeight: 1.5, color: '#000', margin: 0 }}>
             How it Works
           </h2>
 
@@ -49,6 +50,7 @@ export default function EurLiveExchangeSection() {
             {steps.map((step) => (
               <div
                 key={step.number}
+                className="max-md:rounded-[24px] max-md:px-4 max-md:py-4 max-md:gap-4"
                 style={{
                   backgroundColor: '#000000',
                   borderRadius: '36px',
@@ -62,23 +64,26 @@ export default function EurLiveExchangeSection() {
                 }}
               >
                 {/* Number Circle */}
-                <div style={{
-                  width: '60px', height: '60px', borderRadius: '50%',
-                  backgroundColor: '#FFCE65',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: 1, color: '#000' }}>
+                <div 
+                  className="max-md:w-[48px] max-md:h-[48px]"
+                  style={{
+                    width: '60px', height: '60px', borderRadius: '50%',
+                    backgroundColor: '#FFCE65',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span className="max-md:text-[24px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '32px', lineHeight: 1, color: '#000' }}>
                     {step.number}
                   </span>
                 </div>
 
                 {/* Text */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '20px', color: '#FFCE65', lineHeight: 1.4 }}>
+                  <span className="max-md:text-[16px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '20px', color: '#FFCE65', lineHeight: 1.4 }}>
                     {step.title}
                   </span>
-                  <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '13px', color: '#FFCE65', lineHeight: 1.5, opacity: 0.85 }}>
+                  <span className="max-md:text-[12px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '13px', color: '#FFCE65', lineHeight: 1.5, opacity: 0.85 }}>
                     {step.subtitle}
                   </span>
                 </div>

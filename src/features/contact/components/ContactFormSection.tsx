@@ -81,8 +81,8 @@ export default function ContactFormSection() {
                   <path d="M9 22V12H15V22" stroke="#FFCE65" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <p className="text-black text-[20px] leading-[145%] max-w-[300px]">
-                4074 Ebert Summit Suite 375<br/>Lake Leonardchester
+              <p className="text-black text-[16px] md:text-[20px] leading-[145%] max-w-[300px]">
+                Head office: C3 & C4 Suite second floor Ejiobi plaza new market road Main market onitsha Anambra state
               </p>
             </div>
 

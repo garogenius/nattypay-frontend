@@ -7,19 +7,19 @@ export default function ContactSocialSection() {
       style={{ paddingTop: '80px', paddingBottom: '80px' }}
     >
       {/* Heading */}
-      <div className="flex flex-col items-center text-center gap-2 max-w-[871px] w-full">
-        <h2 className="text-black font-bold text-[20px] md:text-[38px] leading-[28px] md:leading-[57px] font-poppins" style={{ whiteSpace: 'nowrap' }}>
-          Connect with us via our social media handles
+      <div className="flex flex-col items-start md:items-center text-left md:text-center gap-3 md:gap-2 max-w-[871px] w-full px-2 md:px-0">
+        <h2 className="text-black font-bold text-[26px] md:text-[38px] leading-[36px] md:leading-[57px] font-poppins whitespace-normal md:whitespace-nowrap">
+          Connect with us via our<br className="md:hidden" /> social media handles
         </h2>
-        <p className="text-black text-[14px] md:text-[18px] leading-[22px] md:leading-[32px] font-poppins">
+        <p className="text-black text-[16px] md:text-[18px] leading-[26px] md:leading-[32px] font-poppins mb-4 md:mb-0">
           The following is NattyPay social media Handles
         </p>
       </div>
 
       {/* Social Media Icons Pill */}
       <div
-        className="flex items-center justify-center gap-3 md:gap-8 flex-wrap w-full max-w-[900px] rounded-[40px] px-4 md:px-[28px]"
-        style={{ backgroundColor: '#111111', paddingTop: '32px', paddingBottom: '32px' }}
+        className="flex items-center justify-center gap-3 md:gap-8 flex-wrap w-full max-w-[900px] rounded-[16px] md:rounded-[40px] px-4 md:px-[28px]"
+        style={{ backgroundColor: '#111111', paddingTop: '24px', paddingBottom: '24px', marginTop: '16px' }}
       >
         {/* Facebook */}
         <a href="https://www.facebook.com/profile.php?id=100084829514458" target="_blank" rel="noopener noreferrer" className="w-10 h-10 md:w-[72px] md:h-[72px] bg-[#1877F2] rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity">

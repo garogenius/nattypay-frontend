@@ -69,7 +69,7 @@ export default function TermsContentSection() {
       
       {/* Header Info */}
       <div className="flex flex-col items-center text-center gap-4 pb-6 w-full max-w-[800px]">
-        <h2 className="font-poppins font-bold text-[36px] md:text-[48px] leading-tight text-black m-0">
+        <h2 className="font-poppins font-bold text-[36px] md:text-[48px] leading-tight text-white m-0">
           Terms of Use
         </h2>
         <div className="flex items-center gap-2">
@@ -86,23 +86,23 @@ export default function TermsContentSection() {
         {terms.map((term) => (
           <div 
             key={term.id} 
-            className="flex flex-col md:flex-row gap-6 md:gap-[40px] items-start w-full bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.03)] border border-[#F2F2F2] hover:shadow-[0_15px_50px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
+            className="flex flex-col md:flex-row gap-6 md:gap-[40px] items-start w-full bg-[#16161E] rounded-[24px] shadow-2xl border border-white/5 hover:border-[#F0BF4C]/40 hover:bg-[#1A1A24] hover:-translate-y-2 transition-all duration-300"
             style={{ padding: 'clamp(20px, 4vw, 40px)' }}
           >
             
             {/* Number Badge */}
-            <div className="flex-shrink-0 flex items-center justify-center w-[50px] h-[50px] md:w-[60px] md:h-[60px] rounded-2xl bg-gradient-to-br from-[#F0BF4C] to-[#E5A823] shadow-lg">
-              <span className="font-poppins font-bold text-[20px] md:text-[24px] text-white drop-shadow-md">
+            <div className="flex-shrink-0 flex items-center justify-center w-[50px] h-[50px] md:w-[60px] md:h-[60px] rounded-2xl bg-[#F0BF4C]/10 border border-[#F0BF4C]/30">
+              <span className="font-poppins font-bold text-[20px] md:text-[24px] text-[#F0BF4C]">
                 {term.id}
               </span>
             </div>
 
             {/* Content */}
             <div className="flex flex-col items-start text-left gap-4 w-full pt-1">
-              <h3 className="font-poppins font-semibold text-[22px] md:text-[26px] leading-tight text-black m-0 text-left">
+              <h3 className="font-poppins font-semibold text-[22px] md:text-[26px] leading-tight text-white m-0 text-left">
                 {term.title}
               </h3>
-              <p className="font-poppins font-normal text-[15px] md:text-[17px] leading-[1.85] text-[#555555] whitespace-pre-line m-0 text-left">
+              <p className="font-poppins font-normal text-[15px] md:text-[17px] leading-[1.85] text-white/60 whitespace-pre-line m-0 text-left">
                 {term.content}
               </p>
             </div>

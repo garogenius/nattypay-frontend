@@ -27,14 +27,14 @@ export default function BlogPostPage({ slug }: BlogPostPageProps) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#F9F9FB] overflow-x-hidden font-['Poppins']">
+    <main className="flex min-h-screen flex-col bg-[#0B0B0F] overflow-x-hidden font-['Poppins']">
       <Header currentCurrency="NGN" />
       
       {/* Blog Post Hero */}
       <BlogPostHero post={post} />
 
       {/* Main Content Area */}
-      <div className="w-full flex justify-center bg-white">
+      <div className="w-full flex justify-center bg-[#0B0B0F]">
         <BlogPostContent post={post} />
       </div>
 

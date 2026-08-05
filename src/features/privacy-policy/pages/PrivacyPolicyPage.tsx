@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
       <PrivacyPolicyHeroSection />
 
       {/* Main Legal Content */}
-      <div className="w-full flex justify-center bg-[#F4F6F8]">
+      <div className="w-full flex justify-center bg-[#0B0B0F]">
         <PrivacyPolicyContentSection />
       </div>
 

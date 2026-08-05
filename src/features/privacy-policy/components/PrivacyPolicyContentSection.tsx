@@ -59,23 +59,23 @@ export default function PrivacyPolicyContentSection() {
       
       {/* Introduction Card */}
       <div 
-        className="w-full bg-white rounded-[24px] shadow-sm border border-[#EAEAEA]"
+        className="w-full bg-[#16161E] rounded-[24px] shadow-2xl border border-white/5"
         style={{ padding: 'clamp(30px, 5vw, 50px)' }}
       >
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 w-full border-b border-[#EAEAEA]">
-          <h2 className="font-poppins font-bold text-[28px] md:text-[36px] leading-tight text-black m-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 w-full border-b border-white/5">
+          <h2 className="font-poppins font-bold text-[28px] md:text-[36px] leading-tight text-white m-0">
             Privacy Policy Overview
           </h2>
           <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#F0BF4C]/10 border border-[#F0BF4C]/20">
             <svg className="w-5 h-5 text-[#F0BF4C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="font-poppins font-semibold text-[14px] text-black m-0 tracking-wide uppercase">
+            <p className="font-poppins font-semibold text-[14px] text-white/80 m-0 tracking-wide uppercase">
               Last Updated: 10 Nov 2024
             </p>
           </div>
         </div>
-        <p className="font-poppins font-normal text-[16px] md:text-[18px] leading-[1.8] text-[#555555] whitespace-pre-line m-0 mt-6">
+        <p className="font-poppins font-normal text-[16px] md:text-[18px] leading-[1.8] text-white/60 whitespace-pre-line m-0 mt-6">
           {privacyIntro}
         </p>
       </div>
@@ -90,11 +90,11 @@ export default function PrivacyPolicyContentSection() {
             
             {/* Left Column: Number & Title */}
             <div className="flex-shrink-0 w-full lg:w-[350px] flex flex-col gap-2 relative pl-2 lg:pl-0">
-              <span className="absolute -top-6 lg:-top-8 -left-2 lg:-left-4 text-[60px] lg:text-[80px] font-bold text-black/5 opacity-50 select-none z-0 leading-none">
+              <span className="absolute -top-6 lg:-top-8 -left-2 lg:-left-4 text-[60px] lg:text-[80px] font-bold text-white/5 select-none z-0 leading-none">
                 0{section.id}
               </span>
               <div className="relative z-10 flex flex-col gap-2 pt-3 lg:pt-4">
-                <h3 className="font-poppins font-semibold text-[20px] md:text-[28px] leading-tight text-black m-0">
+                <h3 className="font-poppins font-semibold text-[20px] md:text-[28px] leading-tight text-white m-0">
                   {section.title}
                 </h3>
                 <div className="w-12 h-1 bg-[#F0BF4C] rounded-full mb-2 lg:mb-0"></div>
@@ -103,10 +103,10 @@ export default function PrivacyPolicyContentSection() {
 
             {/* Right Column: Detailed Content */}
             <div 
-              className="flex-grow w-full bg-white rounded-[20px] shadow-sm border border-[#EAEAEA] hover:shadow-md transition-shadow duration-300"
+              className="flex-grow w-full bg-[#16161E] rounded-[20px] shadow-2xl border border-white/5 hover:border-[#F0BF4C]/40 hover:bg-[#1A1A24] transition-all duration-300"
               style={{ padding: 'clamp(24px, 4vw, 40px)' }}
             >
-              <p className="font-poppins font-normal text-[15px] md:text-[17px] leading-[1.8] text-[#4A4A4A] whitespace-pre-line m-0 text-left">
+              <p className="font-poppins font-normal text-[15px] md:text-[17px] leading-[1.8] text-white/60 whitespace-pre-line m-0 text-left">
                 {section.content}
               </p>
             </div>

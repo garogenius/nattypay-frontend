@@ -47,7 +47,7 @@ export default function Header({ currentCurrency = 'NGN' }: HeaderProps) {
           style={{ paddingLeft: '96px', paddingRight: '96px' }}
         >
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-[14px]">
+          <Link href="/" className="flex items-center gap-0">
             <img
               src="/img/logo.png"
               alt="NattyPay"
@@ -217,7 +217,7 @@ export default function Header({ currentCurrency = 'NGN' }: HeaderProps) {
           className="mx-auto flex h-full w-full items-center justify-between px-[32px]"
         >
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-[8px]">
+          <Link href="/" className="flex items-center gap-0">
             <img
               src="/img/logo.png"
               alt="NattyPay"
@@ -309,10 +309,10 @@ export default function Header({ currentCurrency = 'NGN' }: HeaderProps) {
           >
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '94px', padding: '0 32px', borderBottom: '1px solid #F6C65B', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <img src="/img/logo.png" alt="NattyPay" style={{ width: '36px', height: '36px' }} />
-                <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '20px', fontWeight: 400, color: '#ffffff' }}>
-                  NattyPay
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0px' }}>
+                <img src="/img/logo.png" alt="NattyPay" style={{ width: '40px', height: '40px' }} />
+                <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '24px', fontWeight: 'bold', color: '#F6C65B', lineHeight: '1' }}>
+                  NATTYPAY
                 </span>
               </div>
               <button

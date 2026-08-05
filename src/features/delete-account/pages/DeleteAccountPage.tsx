@@ -6,7 +6,7 @@ import ContactSocialSection from '@/features/contact/components/ContactSocialSec
 
 export default function DeleteAccountPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-white">
+    <main className="flex min-h-screen flex-col bg-[#0B0B0F]">
       <Header />
       <DeleteAccountForm />
       <ContactSocialSection />

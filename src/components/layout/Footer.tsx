@@ -22,7 +22,7 @@ export default function Footer() {
               <div className="flex flex-row items-center justify-start w-full gap-[60px]">
 
                 {/* Left: Logo Text */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-0">
                   <img src="/img/logo.png" alt="NattyPay Logo" className="w-[50px] h-[50px] object-contain" />
                   <span className="font-roboto font-medium text-[37px] leading-[43px] text-[#FFCE65]">
                     NATTYPAY
@@ -190,38 +190,33 @@ export default function Footer() {
           >
 
             {/* Top Section: Logos and Intro */}
-            <div className="flex flex-col items-start gap-8">
+            <div className="flex flex-col items-center gap-8 w-full">
 
-              {/* Logos Row */}
-              <div className="flex flex-col items-start w-full gap-6">
-
-                {/* Left: Logo Text */}
-                <div className="flex items-center gap-3">
-                  <img src="/img/logo.png" alt="NattyPay Logo" className="w-[40px] h-[40px] object-contain" />
-                  <span className="font-roboto font-medium text-[28px] leading-[36px] text-[#FFCE65]">
-                    NATTYPAY
-                  </span>
-                </div>
-
-                {/* Right: 5 Compliance Badges (1.png to 5.png) */}
-                <div className="flex flex-row items-center gap-3 flex-wrap">
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <div key={num} className="bg-white rounded-[8px] w-[120px] h-[40px] flex items-center justify-center overflow-hidden">
-                      <img
-                        src={`/img/${num}.png`}
-                        alt={`Compliance Badge ${num}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-
+              {/* Logo Text */}
+              <div className="flex items-center justify-center gap-0 w-full">
+                <img src="/img/logo.png" alt="NattyPay Logo" className="w-[45px] h-[45px] object-contain" />
+                <span className="font-roboto font-medium text-[30px] leading-[36px] text-[#FFCE65]">
+                  NATTYPAY
+                </span>
               </div>
 
               {/* Intro Text */}
-              <p className="font-poppins font-normal text-[15px] leading-[26px] text-white text-left m-0">
+              <p className="font-poppins font-normal text-[14px] leading-[26px] text-white/90 text-left w-full m-0">
                 NattyPay is more than just a financial service provider; we are a community dedicated to improving financial well-being. Join thousands of satisfied users who trust NattyPay for their financial needs. Download the NattyPay app today and experience the future of finance in Nigeria.
               </p>
+
+              {/* 5 Compliance Badges (1.png to 5.png) */}
+              <div className="flex flex-row items-center justify-center gap-3 flex-wrap w-full max-w-[320px] mx-auto">
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <div key={num} className="bg-white rounded-[8px] w-[130px] h-[40px] flex items-center justify-center overflow-hidden">
+                    <img
+                      src={`/img/${num}.png`}
+                      alt={`Compliance Badge ${num}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
 
             </div>
 

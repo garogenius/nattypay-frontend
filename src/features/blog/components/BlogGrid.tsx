@@ -15,7 +15,7 @@ export default function BlogGrid() {
     : MOCK_POSTS.filter((post) => post.category === activeCategory);
 
   return (
-    <section className="w-full bg-[#F5F5F0] flex flex-col items-center justify-center font-['Poppins'] px-6 md:px-12" style={{ paddingTop: 'clamp(60px, 10vw, 100px)', paddingBottom: 'clamp(80px, 12vw, 120px)' }}>
+    <section className="w-full bg-transparent flex flex-col items-center justify-center font-['Poppins'] px-6 md:px-12" style={{ paddingTop: 'clamp(60px, 10vw, 100px)', paddingBottom: 'clamp(80px, 12vw, 120px)' }}>
 
       {/* Filters */}
       <div
@@ -30,8 +30,8 @@ export default function BlogGrid() {
               onClick={() => setActiveCategory(category)}
               className={`rounded-full text-[15px] font-medium transition-colors ${
                 isActive
-                  ? 'bg-black text-white hover:bg-black/80'
-                  : 'bg-white border border-[#DDDDDD] text-[#555555] hover:border-black hover:text-black'
+                  ? 'bg-[#F0BF4C] text-black'
+                  : 'bg-[#16161E] border border-white/5 text-white/60 hover:text-white hover:border-white/20'
               }`}
               style={{ padding: '10px 24px' }}
             >

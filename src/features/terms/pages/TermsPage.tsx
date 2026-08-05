@@ -16,7 +16,7 @@ export default function TermsPage() {
       <TermsHeroSection />
 
       {/* Main Legal Content */}
-      <div className="w-full flex justify-center bg-[#FAFAFA]">
+      <div className="w-full flex justify-center bg-[#0B0B0F]">
         <TermsContentSection />
       </div>
 

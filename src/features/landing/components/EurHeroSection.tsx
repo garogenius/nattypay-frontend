@@ -81,11 +81,11 @@ export default function EurHeroSection() {
 
               {/* Trust Badges */}
               <div className="flex flex-row items-center gap-[40px] opacity-90 flex-shrink-0">
-                <div className="flex items-center gap-[12px]">
+                <div className="flex items-center gap-0">
                   <span className="font-poppins text-[16px] text-[#CCCCCC] whitespace-nowrap">Licenced by CBN</span>
                   <img src="/img/icons/cbn.png" alt="CBN Logo" className="h-[36px] object-contain flex-shrink-0" />
                 </div>
-                <div className="flex items-center gap-[12px]">
+                <div className="flex items-center gap-0">
                   <span className="font-poppins text-[16px] text-[#CCCCCC] whitespace-nowrap">Deposits Insured by</span>
                   <img src="/img/icons/ndic.png" alt="NDIC Logo" className="h-[36px] object-contain flex-shrink-0" />
                 </div>
@@ -164,11 +164,11 @@ export default function EurHeroSection() {
 
               {/* Trust Badges */}
               <div className="flex flex-row items-center justify-center gap-4 opacity-90 w-full mt-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0">
                   <span className="font-poppins text-[11px] text-[#CCCCCC] whitespace-nowrap">Licenced by CBN</span>
                   <img src="/img/icons/cbn.png" alt="CBN Logo" className="h-[24px] object-contain flex-shrink-0" />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0">
                   <span className="font-poppins text-[11px] text-[#CCCCCC] whitespace-nowrap">Deposits Insured by</span>
                   <img src="/img/icons/ndic.png" alt="NDIC Logo" className="h-[20px] object-contain flex-shrink-0" />
                 </div>

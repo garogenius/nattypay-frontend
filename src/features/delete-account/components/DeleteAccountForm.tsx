@@ -48,16 +48,16 @@ export default function DeleteAccountForm() {
   };
 
   return (
-    <section className="w-full bg-[#F5F5F0] flex justify-center font-['Poppins'] px-6 md:px-12" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
+    <section className="w-full bg-transparent flex justify-center font-['Poppins'] px-6 md:px-12" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
       <Toaster position="top-right" />
       <div className="max-w-[1240px] w-full flex flex-col lg:flex-row justify-between gap-12 lg:gap-20 items-start">
         
         {/* Left Side: Content */}
         <div className="flex flex-col gap-6 lg:w-[45%] pt-4">
-          <h1 className="text-black font-medium text-[36px] md:text-[52px] leading-tight m-0">
+          <h1 className="text-white font-medium text-[36px] md:text-[52px] leading-tight m-0">
             Account Deletion
           </h1>
-          <p className="text-[#333333] font-normal text-[16px] md:text-[20px] leading-[1.6]">
+          <p className="text-white/60 font-normal text-[16px] md:text-[20px] leading-[1.6]">
             You may request to permanently delete your NattyPay account at any time. Once your deletion request is processed, you will no longer be able to log in, and all non-essential personal data associated with your account will be permanently removed from our systems.
           </p>
         </div>
@@ -72,7 +72,7 @@ export default function DeleteAccountForm() {
                 value={formData.fullname}
                 onChange={handleChange}
                 placeholder="Name *" 
-                className="w-full bg-white border border-transparent rounded-[8px] text-[#494949] text-[15px] outline-none focus:border-[#F0BF4C] transition-colors shadow-sm"
+                className="w-full bg-[#16161E] border border-white/5 rounded-[8px] text-white placeholder-white/40 text-[15px] outline-none focus:border-[#F0BF4C] transition-colors shadow-sm"
                 style={{ padding: '20px 24px', height: '64px' }}
                 disabled={isSubmitting}
               />
@@ -85,7 +85,7 @@ export default function DeleteAccountForm() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Email (Linked to your account) *" 
-                className="w-full bg-white border border-transparent rounded-[8px] text-[#494949] text-[15px] outline-none focus:border-[#F0BF4C] transition-colors shadow-sm"
+                className="w-full bg-[#16161E] border border-white/5 rounded-[8px] text-white placeholder-white/40 text-[15px] outline-none focus:border-[#F0BF4C] transition-colors shadow-sm"
                 style={{ padding: '20px 24px', height: '64px' }}
                 disabled={isSubmitting}
               />
@@ -98,7 +98,7 @@ export default function DeleteAccountForm() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Phone number" 
-                className="w-full bg-white border border-transparent rounded-[8px] text-[#494949] text-[15px] outline-none focus:border-[#F0BF4C] transition-colors shadow-sm"
+                className="w-full bg-[#16161E] border border-white/5 rounded-[8px] text-white placeholder-white/40 text-[15px] outline-none focus:border-[#F0BF4C] transition-colors shadow-sm"
                 style={{ padding: '20px 24px', height: '64px' }}
                 disabled={isSubmitting}
               />
@@ -110,7 +110,7 @@ export default function DeleteAccountForm() {
                 value={formData.reason}
                 onChange={handleChange}
                 placeholder="Reason for deletion *" 
-                className="w-full bg-white border border-transparent rounded-[8px] text-[#494949] text-[15px] outline-none focus:border-[#F0BF4C] transition-colors resize-none shadow-sm"
+                className="w-full bg-[#16161E] border border-white/5 rounded-[8px] text-white placeholder-white/40 text-[15px] outline-none focus:border-[#F0BF4C] transition-colors resize-none shadow-sm"
                 style={{ padding: '20px 24px', height: '160px' }}
                 disabled={isSubmitting}
               ></textarea>

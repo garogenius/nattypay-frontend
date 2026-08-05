@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
       <RefundPolicyHeroSection />
 
       {/* Main Legal Content */}
-      <div className="w-full flex justify-center bg-white">
+      <div className="w-full flex justify-center bg-[#0B0B0F]">
         <RefundPolicyContentSection />
       </div>
 

@@ -75,21 +75,21 @@ export default function TestimonialsSection() {
         {/* Header Row: Title & Nav Buttons */}
         <div
           className="flex flex-col lg:flex-row items-start lg:items-end justify-between w-full"
-          style={{ paddingRight: 'clamp(16px, 6vw, 96px)', marginBottom: '100px' }}
+          style={{ paddingRight: 'clamp(16px, 6vw, 96px)', marginBottom: '48px' }}
         >
 
           {/* Title and Subtitle */}
-          <div className="flex flex-col max-w-[612px] gap-6">
-            <h2 className="font-poppins font-medium text-[32px] lg:text-[38px] leading-tight lg:leading-[57px] text-black m-0">
+          <div className="flex flex-col max-w-[612px] gap-2 lg:gap-6">
+            <h2 className="font-poppins font-medium text-[22px] lg:text-[38px] leading-[30px] lg:leading-[57px] text-black m-0">
               Customers Feedback
             </h2>
-            <p className="font-poppins font-normal text-[16px] lg:text-[18px] leading-relaxed lg:leading-[32px] text-[#4A4A4A] m-0">
+            <p className="font-poppins font-normal text-[12px] lg:text-[18px] leading-[20px] lg:leading-[32px] text-[#4A4A4A] m-0">
               Our users share stories of satisfaction, trust, and exceptional experiences. Explore now!
             </p>
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex flex-row items-center gap-6 mt-8 lg:mt-0">
+          {/* Navigation Buttons (Hidden on Mobile) */}
+          <div className="hidden lg:flex flex-row items-center gap-6 mt-8 lg:mt-0">
             <button
               onClick={scrollLeft}
               className="flex items-center justify-center w-[150px] lg:w-[173px] h-[54px] rounded-[8px] border border-[#D4B039] bg-transparent hover:bg-[#D4B039]/10 transition-colors"
@@ -114,18 +114,18 @@ export default function TestimonialsSection() {
         {/* We remove right padding on the container so the cards bleed to the edge of the screen */}
         <div
           ref={sliderRef}
-          className="flex flex-row items-start gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-8"
+          className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-4 lg:pb-8"
           style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
         >
           {testimonials.map((testimonial, idx) => (
             <div
               key={idx}
-              className="flex flex-col flex-shrink-0 w-[350px] lg:w-[453px] h-[500px] bg-[#F0BF4C] rounded-[24px] snap-center"
-              style={{ padding: '32px 40px' }}
+              className="flex flex-col flex-shrink-0 w-[260px] lg:w-[453px] h-[340px] lg:h-[440px] bg-[#F0BF4C] rounded-[16px] lg:rounded-[24px] snap-center"
+              style={{ padding: 'clamp(24px, 4vw, 40px)' }}
             >
 
               {/* Profile Image (Centered) */}
-              <div className="w-[140px] h-[140px] lg:w-[172px] lg:h-[172px] rounded-full overflow-hidden self-center flex-shrink-0">
+              <div className="w-[90px] h-[90px] lg:w-[140px] lg:h-[140px] rounded-full overflow-hidden self-center flex-shrink-0">
                 <img
                   src={testimonial.image}
                   alt={testimonial.name}
@@ -134,11 +134,11 @@ export default function TestimonialsSection() {
               </div>
 
               {/* Text Content (Left Aligned) */}
-              <div className="flex flex-col items-start text-left gap-3 w-full mt-[36px]">
-                <h3 className="font-poppins font-medium text-[24px] lg:text-[28px] leading-[32px] lg:leading-[42px] text-black m-0">
+              <div className="flex flex-col items-start text-left gap-2 lg:gap-3 w-full mt-6 lg:mt-[36px]">
+                <h3 className="font-poppins font-medium text-[16px] lg:text-[28px] leading-[22px] lg:leading-[42px] text-black m-0">
                   {testimonial.name}
                 </h3>
-                <p className="font-poppins font-normal text-[14px] lg:text-[18px] leading-[24px] lg:leading-[32px] text-[#4A4A4A] m-0 line-clamp-4">
+                <p className="font-poppins font-normal text-[12px] lg:text-[18px] leading-[18px] lg:leading-[32px] text-[#4A4A4A] m-0 line-clamp-4">
                   {testimonial.text}
                 </p>
               </div>
@@ -162,6 +162,13 @@ export default function TestimonialsSection() {
 
             </div>
           ))}
+        </div>
+
+        {/* Scrollbar / Progress Bar (Mobile Only) */}
+        <div className="w-full flex lg:hidden mt-4 items-center justify-start max-w-[260px] mx-auto">
+          <div className="w-full h-[3px] bg-[#D1D5DB] rounded-full overflow-hidden">
+             <div className="w-1/3 h-full bg-[#F0BF4C] rounded-full"></div>
+          </div>
         </div>
 
       </div>

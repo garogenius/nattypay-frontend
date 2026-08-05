@@ -69,21 +69,21 @@ export default function NewsSection() {
         {/* Header Row: Title & Nav Buttons */}
         <div 
           className="flex flex-col lg:flex-row items-start lg:items-end justify-between w-full" 
-          style={{ paddingRight: 'clamp(16px, 6vw, 96px)', marginBottom: '100px' }}
+          style={{ paddingRight: 'clamp(16px, 6vw, 96px)', marginBottom: '48px' }}
         >
           
           {/* Title and Subtitle */}
-          <div className="flex flex-col max-w-[707px] gap-6">
-            <h2 className="font-poppins font-medium text-[32px] lg:text-[38px] leading-tight lg:leading-[57px] text-black m-0">
+          <div className="flex flex-col max-w-[707px] gap-2 lg:gap-6">
+            <h2 className="font-poppins font-medium text-[22px] lg:text-[38px] leading-[30px] lg:leading-[57px] text-black m-0">
               Latest Finance Information for You
             </h2>
-            <p className="font-poppins font-normal text-[16px] lg:text-[18px] leading-relaxed lg:leading-[32px] text-[#4A4A4A] m-0">
+            <p className="font-poppins font-normal text-[12px] lg:text-[18px] leading-[20px] lg:leading-[32px] text-[#4A4A4A] m-0">
               Stay updated with the latest in internet banking and financial innovations
             </p>
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex flex-row items-center gap-6 mt-8 lg:mt-0">
+          {/* Navigation Buttons (Hidden on Mobile) */}
+          <div className="hidden lg:flex flex-row items-center gap-6 mt-8 lg:mt-0">
             <button 
               onClick={scrollLeft}
               className="flex items-center justify-center w-[150px] lg:w-[173px] h-[54px] rounded-[8px] border border-[#D4B039] bg-transparent hover:bg-[#D4B039]/10 transition-colors"
@@ -107,52 +107,52 @@ export default function NewsSection() {
         {/* Slider Container */}
         <div 
           ref={sliderRef}
-          className="flex flex-row items-start gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-8"
+          className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-4 lg:pb-8"
           style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
         >
           {newsItems.map((news, idx) => (
             <div 
               key={idx}
-              className="flex flex-col flex-shrink-0 w-[350px] lg:w-[608px] h-[534px] relative snap-center"
+              className="flex flex-col flex-shrink-0 w-[280px] lg:w-[608px] h-[340px] lg:h-[534px] relative snap-center"
             >
               
               {/* Top Image */}
               <div 
-                className="w-full h-[300px] absolute top-0 left-0 bg-gray-300"
-                style={{ borderRadius: '24px 24px 0px 0px' }}
+                className="w-full h-[180px] lg:h-[300px] absolute top-0 left-0 bg-gray-300"
+                style={{ borderRadius: '16px 16px 0px 0px' }}
               >
                 <img 
                   src={news.image} 
                   alt={news.title}
                   className="w-full h-full object-cover"
-                  style={{ borderRadius: '24px 24px 0px 0px' }}
+                  style={{ borderRadius: '16px 16px 0px 0px' }}
                 />
               </div>
 
-              {/* Bottom Yellow Card (Overlaps the image by 40px) */}
+              {/* Bottom Yellow Card */}
               <div 
                 className="flex flex-col items-start bg-[#F0BF4C] absolute left-0 w-full"
                 style={{ 
-                  top: '260px', 
-                  height: '274px', 
-                  borderRadius: '24px',
-                  padding: '40px 40px 60px'
+                  top: 'clamp(150px, 25vw, 260px)', 
+                  height: 'clamp(190px, 27vw, 274px)', 
+                  borderRadius: 'clamp(16px, 2vw, 24px)',
+                  padding: 'clamp(24px, 4vw, 40px)' 
                 }}
               >
-                <div className="flex flex-col gap-6 w-full h-full justify-between">
+                <div className="flex flex-col gap-2 lg:gap-6 w-full h-full justify-between">
                   
                   {/* Title */}
-                  <h3 className="font-poppins font-semibold text-[22px] lg:text-[28px] leading-[32px] lg:leading-[38px] text-black m-0 line-clamp-1">
+                  <h3 className="font-poppins font-semibold text-[14px] lg:text-[28px] leading-[20px] lg:leading-[38px] text-black m-0 line-clamp-1">
                     {news.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="font-poppins font-normal text-[14px] lg:text-[18px] leading-[24px] lg:leading-[32px] text-black m-0 line-clamp-2">
+                  <p className="font-poppins font-normal text-[11px] lg:text-[18px] leading-[16px] lg:leading-[32px] text-black m-0 line-clamp-2">
                     {news.description}
                   </p>
 
                   {/* Date */}
-                  <p className="font-poppins font-normal text-[14px] lg:text-[16px] leading-[24px] text-[#7D7D7D] m-0 self-end">
+                  <p className="font-poppins font-normal text-[10px] lg:text-[16px] leading-[14px] lg:leading-[24px] text-[#7D7D7D] m-0 self-end mt-auto">
                     {news.date}
                   </p>
                   
@@ -161,6 +161,13 @@ export default function NewsSection() {
 
             </div>
           ))}
+        </div>
+
+        {/* Scrollbar / Progress Bar (Mobile Only) */}
+        <div className="w-full flex lg:hidden mt-4 items-center justify-start max-w-[280px] mx-auto">
+          <div className="w-full h-[3px] bg-[#D1D5DB] rounded-full overflow-hidden">
+             <div className="w-1/3 h-full bg-[#F0BF4C] rounded-full"></div>
+          </div>
         </div>
 
       </div>

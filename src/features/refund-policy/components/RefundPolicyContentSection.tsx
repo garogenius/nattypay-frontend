@@ -43,20 +43,20 @@ const refundSections = [
 export default function RefundPolicyContentSection() {
   return (
     <section 
-      className="w-full flex flex-col items-center bg-white"
+      className="w-full flex flex-col items-center bg-transparent"
       style={{ paddingTop: 'clamp(60px, 8vw, 120px)', paddingBottom: 'clamp(80px, 8vw, 120px)' }}
     >
       <div className="w-full max-w-[1240px] px-6 lg:px-12 flex flex-col items-start text-left">
         
         {/* Intro */}
-        <div className="w-full pb-10 border-b border-[#EAEAEA] mb-12">
+        <div className="w-full pb-10 border-b border-white/5 mb-12">
           <p className="font-poppins font-medium text-[13px] tracking-[0.2em] text-[#F0BF4C] uppercase mb-4">
             Last Updated: 10 Nov 2024
           </p>
-          <h2 className="font-poppins font-bold text-[32px] md:text-[48px] leading-[1.2] text-black mb-6">
+          <h2 className="font-poppins font-bold text-[32px] md:text-[48px] leading-[1.2] text-white mb-6">
             Refund Policy Overview
           </h2>
-          <p className="font-poppins font-normal text-[18px] md:text-[22px] leading-[1.6] text-[#555555] whitespace-pre-line">
+          <p className="font-poppins font-normal text-[18px] md:text-[22px] leading-[1.6] text-white/60 whitespace-pre-line">
             {refundIntro}
           </p>
         </div>
@@ -66,18 +66,18 @@ export default function RefundPolicyContentSection() {
           {refundSections.map((section, idx) => (
             <div 
               key={section.id} 
-              className="flex flex-col lg:flex-row items-start w-full gap-4 lg:gap-10 py-10 px-4 lg:px-8 border-b border-[#F2F2F2] group hover:bg-[#FAFAFA] transition-colors duration-500 rounded-2xl"
+              className="flex flex-col lg:flex-row items-start w-full gap-4 lg:gap-10 py-10 px-4 lg:px-8 border-b border-white/5 group hover:bg-[#16161E] transition-colors duration-500 rounded-2xl"
             >
               <div className="w-[80px] flex-shrink-0 pt-1">
-                <span className="font-poppins font-light text-[40px] md:text-[48px] leading-none text-[#E0E0E0] group-hover:text-[#F0BF4C] transition-colors duration-500">
+                <span className="font-poppins font-light text-[40px] md:text-[48px] leading-none text-white/20 group-hover:text-[#F0BF4C] transition-colors duration-500">
                   {String(idx + 1).padStart(2, '0')}.
                 </span>
               </div>
               <div className="flex flex-col gap-4 w-full">
-                <h3 className="font-poppins font-semibold text-[22px] md:text-[26px] leading-tight text-black">
+                <h3 className="font-poppins font-semibold text-[22px] md:text-[26px] leading-tight text-white">
                   {section.title}
                 </h3>
-                <p className="font-poppins font-normal text-[16px] md:text-[18px] leading-[1.8] text-[#666666] whitespace-pre-line">
+                <p className="font-poppins font-normal text-[16px] md:text-[18px] leading-[1.8] text-white/60 whitespace-pre-line">
                   {section.content}
                 </p>
               </div>

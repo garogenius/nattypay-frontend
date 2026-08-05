@@ -67,7 +67,7 @@ export default function HowItWorksSection() {
         backgroundImage: 'url(/img/background-line-abstract-gradient-design_483537-2558.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        padding: '100px 29px'
+        padding: '100px 0px'
       }}
     >
       <div 
@@ -76,20 +76,20 @@ export default function HowItWorksSection() {
       >
         
         {/* Left Side: Stats Grid */}
-        <div className="flex flex-col items-center gap-[60px] md:gap-[80px] lg:gap-[47px] mb-[60px] lg:mb-0 w-full lg:w-auto px-4 lg:px-0">
+        <div className="flex flex-col items-center w-full lg:w-auto" style={{ gap: 'clamp(30px, 8vw, 47px)', marginBottom: 'clamp(40px, 8vw, 0px)' }}>
           
           {/* Top Row */}
-          <div className="flex flex-row justify-between md:justify-center md:gap-[80px] w-full max-w-[600px]">
+          <div className="flex flex-row items-start justify-center w-full" style={{ gap: 'clamp(16px, 5vw, 80px)', maxWidth: '600px' }}>
             {stats.slice(0, 2).map((stat, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-[15px] w-[45%] lg:w-[138px]">
-                <div className="w-[100px] h-[100px] lg:w-[80px] lg:h-[80px] bg-[#FFCE65] rounded-[24px] lg:rounded-[12px] flex items-center justify-center flex-shrink-0">
-                  {React.cloneElement(stat.icon, { className: "w-[50px] h-[50px] lg:w-[40px] lg:h-[40px]" })}
+              <div key={idx} className="flex flex-col items-center" style={{ gap: '12px', width: 'clamp(130px, 40vw, 150px)' }}>
+                <div className="bg-[#FFCE65] flex items-center justify-center flex-shrink-0" style={{ width: 'clamp(80px, 25vw, 100px)', height: 'clamp(80px, 25vw, 100px)', borderRadius: 'clamp(16px, 5vw, 24px)' }}>
+                  {React.cloneElement(stat.icon, { style: { width: 'clamp(40px, 12vw, 50px)', height: 'clamp(40px, 12vw, 50px)' } })}
                 </div>
-                <div className="flex flex-col items-center">
-                  <h3 className="font-inter font-bold text-[18px] md:text-[22px] lg:text-[19px] leading-tight text-white m-0 text-center">
+                <div className="flex flex-col items-center w-full">
+                  <h3 className="font-inter font-bold leading-tight text-white m-0 text-center" style={{ fontSize: 'clamp(18px, 5vw, 22px)' }}>
                     {stat.title}
                   </h3>
-                  <p className="font-inter font-normal text-[14px] md:text-[16px] lg:text-[12px] leading-tight text-[#EAEAEA] lg:text-white m-0 text-center mt-1">
+                  <p className="font-inter font-normal leading-tight text-white m-0 text-center mt-1" style={{ fontSize: 'clamp(11px, 3.5vw, 14px)' }}>
                     {stat.subtitle}
                   </p>
                 </div>
@@ -98,17 +98,17 @@ export default function HowItWorksSection() {
           </div>
 
           {/* Bottom Row */}
-          <div className="flex flex-row justify-between md:justify-center md:gap-[80px] w-full max-w-[600px]">
+          <div className="flex flex-row items-start justify-center w-full" style={{ gap: 'clamp(16px, 5vw, 80px)', maxWidth: '600px' }}>
             {stats.slice(2, 4).map((stat, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-[15px] w-[45%] lg:w-[138px]">
-                <div className="w-[100px] h-[100px] lg:w-[80px] lg:h-[80px] bg-[#FFCE65] rounded-[24px] lg:rounded-[12px] flex items-center justify-center flex-shrink-0">
-                  {React.cloneElement(stat.icon, { className: "w-[50px] h-[50px] lg:w-[40px] lg:h-[40px]" })}
+              <div key={idx} className="flex flex-col items-center" style={{ gap: '12px', width: 'clamp(130px, 40vw, 150px)' }}>
+                <div className="bg-[#FFCE65] flex items-center justify-center flex-shrink-0" style={{ width: 'clamp(80px, 25vw, 100px)', height: 'clamp(80px, 25vw, 100px)', borderRadius: 'clamp(16px, 5vw, 24px)' }}>
+                  {React.cloneElement(stat.icon, { style: { width: 'clamp(40px, 12vw, 50px)', height: 'clamp(40px, 12vw, 50px)' } })}
                 </div>
-                <div className="flex flex-col items-center">
-                  <h3 className="font-inter font-bold text-[18px] md:text-[22px] lg:text-[19px] leading-tight text-white m-0 text-center">
+                <div className="flex flex-col items-center w-full">
+                  <h3 className="font-inter font-bold leading-tight text-white m-0 text-center" style={{ fontSize: 'clamp(18px, 5vw, 22px)' }}>
                     {stat.title}
                   </h3>
-                  <p className="font-inter font-normal text-[14px] md:text-[16px] lg:text-[12px] leading-tight text-[#EAEAEA] lg:text-white m-0 text-center mt-1">
+                  <p className="font-inter font-normal leading-tight text-white m-0 text-center mt-1" style={{ fontSize: 'clamp(11px, 3.5vw, 14px)' }}>
                     {stat.subtitle}
                   </p>
                 </div>
@@ -119,20 +119,20 @@ export default function HowItWorksSection() {
         </div>
 
         {/* Right Side: Titles & Mockups */}
-        <div className="flex flex-col items-center lg:items-start gap-[43px] max-w-[701px] w-full lg:w-auto">
+        <div className="flex flex-col items-center lg:items-start gap-[24px] lg:gap-[43px] max-w-[701px] w-full lg:w-auto">
           
           {/* Titles */}
-          <div className="flex flex-col text-center lg:text-left px-4 lg:px-0">
-            <h2 className="font-poppins font-medium text-[18px] md:text-[24px] lg:text-[32px] xl:text-[38px] leading-tight lg:leading-normal xl:leading-[57px] text-[#FFCE65] m-0">
+          <div className="flex flex-col text-left w-full" style={{ paddingLeft: 'clamp(8px, 4vw, 0px)' }}>
+            <h2 className="font-poppins font-medium leading-tight lg:leading-normal xl:leading-[57px] text-[#FFCE65] m-0" style={{ fontSize: 'clamp(18px, 5vw, 38px)' }}>
               Beautiful, Simple and Powerful
             </h2>
-            <p className="font-poppins font-normal text-[12px] md:text-[16px] lg:text-[20px] xl:text-[25px] leading-normal xl:leading-[38px] text-[#FFCE65] m-0 mt-1 lg:mt-0">
+            <p className="font-poppins font-normal leading-normal xl:leading-[38px] text-[#FFCE65] m-0 mt-1 lg:mt-0" style={{ fontSize: 'clamp(12px, 3.5vw, 25px)' }}>
               Beautiful, Simple and Powerful
             </p>
           </div>
 
           {/* Mockups Row */}
-          <div className="flex flex-row items-center gap-[9px] overflow-x-auto w-full pb-4 scrollbar-hide">
+          <div className="flex flex-row items-center justify-start lg:justify-start gap-[12px] overflow-x-auto w-full pb-4 hide-scroll">
             {mockups.map((src, idx) => (
               <img 
                 key={idx}
@@ -140,8 +140,10 @@ export default function HowItWorksSection() {
                 alt={`NattyPay Mockup ${idx + 1}`}
                 className="flex-shrink-0 object-cover"
                 style={{
-                  width: '168px',
-                  height: '364px',
+                  width: 'calc(50vw - 22px)',
+                  maxWidth: '168px',
+                  height: 'auto',
+                  aspectRatio: '168/364',
                   borderRadius: '13px'
                 }}
               />
