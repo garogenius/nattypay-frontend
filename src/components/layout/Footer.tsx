@@ -183,14 +183,14 @@ export default function Footer() {
       <div className="block lg:hidden">
         <footer 
           className="w-full bg-[#000000] flex flex-col items-center relative"
-          style={{ paddingTop: '80px', paddingBottom: '80px' }}
+          style={{ paddingTop: '40px', paddingBottom: '60px' }}
         >
           <div
             className="w-full mx-auto flex flex-col gap-12 px-[32px]"
           >
 
             {/* Top Section: Logos and Intro */}
-            <div className="flex flex-col items-center gap-8 w-full">
+            <div className="flex flex-col items-center gap-2 w-full">
 
               {/* Logo Text */}
               <div className="flex items-center justify-center gap-0 w-full">

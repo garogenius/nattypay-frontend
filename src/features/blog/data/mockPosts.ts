@@ -11,6 +11,22 @@ export interface BlogPost {
 
 export const MOCK_POSTS: BlogPost[] = [
   {
+    slug: 'nattypay-multi-currency-business-wallets',
+    title: 'NattyPay Launches Multi-Currency Business Wallets',
+    excerpt: 'Experience borderless financial growth with our newly released multi-currency wallets, designed to reduce conversion fees for global businesses.',
+    category: 'Product News',
+    date: 'December 12, 2026',
+    readTime: '3 min read',
+    imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200',
+    content: `
+      <h2>Going Borderless</h2>
+      <p>Today, we are incredibly excited to announce the launch of NattyPay Multi-Currency Business Wallets. This new product feature allows entrepreneurs and global businesses to hold, receive, and spend money in NGN, USD, GBP, and EUR—all from a single, unified dashboard.</p>
+      
+      <h2>Why Multi-Currency?</h2>
+      <p>For too long, businesses have suffered from exorbitant conversion rates and slow processing times when dealing with international clients. With our new wallets, you can receive payments directly in the native currency of your client, hold the funds securely, and convert them to your local currency only when rates are favorable.</p>
+    `
+  },
+  {
     slug: 'future-of-digital-payments-nigeria',
     title: 'The Future of Digital Payments in Nigeria: What to Expect in 2026',
     excerpt: 'Explore how mobile money, blockchain, and regulatory shifts are fundamentally reshaping the way Nigerians transact on a daily basis.',

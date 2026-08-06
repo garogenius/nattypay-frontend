@@ -63,7 +63,7 @@ export default function PrivacyPolicyContentSection() {
         style={{ padding: 'clamp(30px, 5vw, 50px)' }}
       >
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 w-full border-b border-white/5">
-          <h2 className="font-poppins font-bold text-[28px] md:text-[36px] leading-tight text-white m-0">
+          <h2 className="font-poppins font-bold text-[24px] sm:text-[28px] md:text-[36px] leading-tight text-white m-0">
             Privacy Policy Overview
           </h2>
           <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#F0BF4C]/10 border border-[#F0BF4C]/20">

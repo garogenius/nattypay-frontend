@@ -69,7 +69,7 @@ export default function TermsContentSection() {
       
       {/* Header Info */}
       <div className="flex flex-col items-center text-center gap-4 pb-6 w-full max-w-[800px]">
-        <h2 className="font-poppins font-bold text-[36px] md:text-[48px] leading-tight text-white m-0">
+        <h2 className="font-poppins font-bold text-[24px] sm:text-[28px] md:text-[48px] leading-tight text-white m-0">
           Terms of Use
         </h2>
         <div className="flex items-center gap-2">

@@ -99,7 +99,7 @@ export default function GbpHeroSection() {
 
       {/* ─── MOBILE VIEW ─── */}
       <div className="block lg:hidden">
-        <section className="relative w-full flex flex-col items-center justify-start min-h-[700px] overflow-hidden bg-[#111]">
+        <section className="relative w-full bg-[#111] flex items-start pt-16 pb-16 overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0 z-0">
             <div
@@ -109,8 +109,8 @@ export default function GbpHeroSection() {
             <div className="absolute inset-0 bg-black/70 bg-gradient-to-t from-black via-black/80 to-black/30" />
           </div>
 
-          <div className="relative z-10 w-full mx-auto flex flex-col items-start justify-center h-full px-[32px] py-[60px]">
-            <div className="flex flex-col items-start gap-8 w-full mt-10">
+          <div className="relative z-10 w-full max-w-[1720px] mx-auto flex flex-col items-start h-full px-[16px]">
+            <div className="w-full flex flex-col items-start pt-6 overflow-hidden gap-6 sm:gap-8">
 
               <div className="flex flex-col items-start gap-6 w-full">
                 {/* Pill */}
@@ -163,13 +163,13 @@ export default function GbpHeroSection() {
               </div>
 
               {/* Trust Badges */}
-              <div className="flex flex-row items-center justify-center gap-4 opacity-90 w-full mt-4">
+              <div className="flex flex-row items-center justify-center gap-4 sm:gap-6 opacity-90 w-full" style={{ marginBottom: '40px' }}>
                 <div className="flex items-center gap-0">
-                  <span className="font-poppins text-[11px] text-[#CCCCCC] whitespace-nowrap">Licenced by CBN</span>
+                  <span className="font-poppins text-[11px] sm:text-[13px] text-[#CCCCCC] whitespace-nowrap">Licenced by CBN</span>
                   <img src="/img/icons/cbn.png" alt="CBN Logo" className="h-[24px] object-contain flex-shrink-0" />
                 </div>
                 <div className="flex items-center gap-0">
-                  <span className="font-poppins text-[11px] text-[#CCCCCC] whitespace-nowrap">Deposits Insured by</span>
+                  <span className="font-poppins text-[11px] sm:text-[13px] text-[#CCCCCC] whitespace-nowrap">Deposits Insured by</span>
                   <img src="/img/icons/ndic.png" alt="NDIC Logo" className="h-[20px] object-contain flex-shrink-0" />
                 </div>
               </div>

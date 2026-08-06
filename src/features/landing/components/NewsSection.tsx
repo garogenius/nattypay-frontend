@@ -3,10 +3,18 @@ import React, { useRef } from 'react';
 
 const newsItems = [
   {
+    category: "Product News",
+    title: "NattyPay Launches Multi-Currency Business Wallets",
+    description: "Experience borderless financial growth with our newly released multi-currency wallets, designed to reduce conversion fees for global businesses.",
+    date: "December 12th, 2023",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80" 
+  },
+  {
+    category: "Market Update",
     title: "Global Markets Rally as Economic Recovery Gains Momentum",
     description: "Global markets surge on the back of a strengthening economic recovery, reflecting increased optimism and positive momentum in various sectors worldwide.",
     date: "December 07th, 2023",
-    image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80" // Stock market/finance image
+    image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80"
   },
   {
     title: "Financial Experts Predict Positive Outlook for Q4 Economic Growth",
@@ -141,6 +149,13 @@ export default function NewsSection() {
               >
                 <div className="flex flex-col gap-2 lg:gap-6 w-full h-full justify-between">
                   
+                  {/* Category */}
+                  {news.category && (
+                    <span className="font-poppins font-bold text-[10px] lg:text-[14px] leading-none text-black/60 uppercase tracking-widest mb-[-4px] lg:mb-[-12px]">
+                      {news.category}
+                    </span>
+                  )}
+
                   {/* Title */}
                   <h3 className="font-poppins font-semibold text-[14px] lg:text-[28px] leading-[20px] lg:leading-[38px] text-black m-0 line-clamp-1">
                     {news.title}
