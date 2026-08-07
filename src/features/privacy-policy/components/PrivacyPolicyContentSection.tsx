@@ -36,7 +36,7 @@ const privacySections = [
   {
     id: '7',
     title: 'Changes to This Privacy Policy',
-    content: 'We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on our website and updating the “Last Updated” 10th November 2024.'
+    content: 'We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on our website and updating the “Last Updated” 30th April 2026.'
   },
   {
     id: '8',
@@ -71,7 +71,7 @@ export default function PrivacyPolicyContentSection() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="font-poppins font-semibold text-[14px] text-white/80 m-0 tracking-wide uppercase">
-              Last Updated: 10 Nov 2024
+              Last Updated: 30 Apr 2026
             </p>
           </div>
         </div>

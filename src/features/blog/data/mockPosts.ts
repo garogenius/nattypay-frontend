@@ -15,7 +15,7 @@ export const MOCK_POSTS: BlogPost[] = [
     title: 'NattyPay Launches Multi-Currency Business Wallets',
     excerpt: 'Experience borderless financial growth with our newly released multi-currency wallets, designed to reduce conversion fees for global businesses.',
     category: 'Product News',
-    date: 'December 12, 2026',
+    date: 'March 30, 2026',
     readTime: '3 min read',
     imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200',
     content: `

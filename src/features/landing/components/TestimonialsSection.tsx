@@ -10,25 +10,25 @@ const testimonials = [
   },
   {
     name: "Chinedu Eze",
-    image: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=400&q=80", // Changed to a smiling black man
     text: "Seamless and secure, Internet banking streamlines my transactions, providing convenience and peace of mind. Highly recommended!",
     rating: 4 // One white star as shown in the screenshot for Owen
   },
   {
     name: "Oluwaseun Adeyemi",
-    image: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", // Changed to a smiling black man
     text: "Exceptional service! Internet banking ensures swift transactions and top-notch security. A reliable partner in managing finances efficiently.",
     rating: 5
   },
   {
     name: "Ngozi Chukwu",
-    image: "https://images.unsplash.com/photo-1543269664-56d93c1b41a6?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=400&q=80", // Changed to a smiling black woman
     text: "NattyPay has completely transformed how I handle my business payments. The instant transfers are truly instant. I love it!",
     rating: 5
   },
   {
     name: "Fatima Ibrahim",
-    image: "https://images.unsplash.com/photo-1517462964-21fdcec3f25b?w=400&q=80",
+    image: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=400&q=80", // Moved from Oluwaseun to Fatima
     text: "I used to worry about hidden fees, but NattyPay is transparent and affordable. The virtual cards work perfectly for my international subscriptions.",
     rating: 5
   }

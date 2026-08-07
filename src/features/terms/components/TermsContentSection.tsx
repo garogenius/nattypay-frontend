@@ -75,7 +75,7 @@ export default function TermsContentSection() {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#F0BF4C]"></div>
           <p className="font-poppins font-medium text-[16px] md:text-[18px] text-[#808080] m-0 tracking-wide">
-            LAST UPDATED: 11TH NOVEMBER 2024
+            LAST UPDATED: 30TH APRIL 2026
           </p>
           <div className="w-2 h-2 rounded-full bg-[#F0BF4C]"></div>
         </div>

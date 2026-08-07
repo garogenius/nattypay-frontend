@@ -6,7 +6,7 @@ const newsItems = [
     category: "Product News",
     title: "NattyPay Launches Multi-Currency Business Wallets",
     description: "Experience borderless financial growth with our newly released multi-currency wallets, designed to reduce conversion fees for global businesses.",
-    date: "December 12th, 2023",
+    date: "March 30th, 2026",
     image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80" 
   },
   {
