@@ -194,11 +194,11 @@ export default function Header({ currentCurrency = 'NGN' }: HeaderProps) {
                           {currency.flag}
                         </div>
                         <div className="flex flex-col items-start leading-tight">
-                          <span className={`font-poppins font-light text-[15px] leading-tight ${isActive ? 'text-[#F6C65B]' : 'text-black'}`}>
-                            {currency.name}
-                          </span>
                           <span className={`font-poppins font-semibold text-[15px] leading-tight ${isActive ? 'text-[#F6C65B]' : 'text-black'}`}>
                             {currency.code}
+                          </span>
+                          <span className={`font-poppins font-light text-[15px] leading-tight ${isActive ? 'text-[#F6C65B]' : 'text-black'}`}>
+                            {currency.name}
                           </span>
                         </div>
                       </Link>
@@ -269,11 +269,11 @@ export default function Header({ currentCurrency = 'NGN' }: HeaderProps) {
                           {currency.flag}
                         </div>
                         <div className="flex flex-col items-start leading-tight">
-                          <span className={`font-poppins font-light text-[15px] leading-tight ${isActive ? 'text-[#F6C65B]' : 'text-black'}`}>
-                            {currency.name}
-                          </span>
                           <span className={`font-poppins font-semibold text-[15px] leading-tight ${isActive ? 'text-[#F6C65B]' : 'text-black'}`}>
                             {currency.code}
+                          </span>
+                          <span className={`font-poppins font-light text-[15px] leading-tight ${isActive ? 'text-[#F6C65B]' : 'text-black'}`}>
+                            {currency.name}
                           </span>
                         </div>
                       </Link>

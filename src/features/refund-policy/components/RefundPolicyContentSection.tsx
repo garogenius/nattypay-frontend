@@ -50,9 +50,10 @@ export default function RefundPolicyContentSection() {
         
         {/* Intro */}
         <div className="w-full pb-10 border-b border-white/5 mb-12">
-          <p className="font-poppins font-medium text-[13px] tracking-[0.2em] text-[#F0BF4C] uppercase mb-4">
+          <p className="font-poppins font-medium text-[13px] tracking-[0.2em] text-[#F0BF4C] uppercase mb-1 md:mb-4">
             Last Updated: 30 Apr 2026
           </p>
+          <div className="block md:hidden h-8 w-full" />
           <h2 className="font-poppins font-bold text-[24px] sm:text-[32px] md:text-[48px] leading-[1.2] text-white mb-6">
             Refund Policy Overview
           </h2>

@@ -75,7 +75,8 @@ export default function PrivacyPolicyContentSection() {
             </p>
           </div>
         </div>
-        <p className="font-poppins font-normal text-[16px] md:text-[18px] leading-[1.8] text-white/60 whitespace-pre-line m-0 mt-6">
+        <div className="block md:hidden h-8 w-full" />
+        <p className="font-poppins font-normal text-[16px] md:text-[18px] leading-[1.8] text-white/60 whitespace-pre-line m-0 md:mt-6">
           {privacyIntro}
         </p>
       </div>
