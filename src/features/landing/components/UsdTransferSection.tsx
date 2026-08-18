@@ -187,7 +187,7 @@ export default function UsdTransferSection() {
                     onChange={(e) => {
                       setSendAmount(e.target.value);
                     }}
-                    className="max-md:!text-[19px] max-md:!leading-[29px] max-md:!w-[100px]"
+                    className="max-md:!text-[19px] max-md:!leading-[29px] max-md:!w-[150px]"
                     style={{
                       fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '42px', color: '#FFFFFF',
                       background: 'transparent', border: 'none', outline: 'none', width: '240px',
@@ -211,16 +211,15 @@ export default function UsdTransferSection() {
                   <span className="max-md:!text-[10px]" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '20px', color: '#FFFFFF', fontWeight: 400, opacity: 0.7 }}>
                     {receiveCurrency.code === 'NGN' ? '₦' : receiveCurrency.code === 'GHS' ? 'GH₵' : ''}
                   </span>
-                  <input
-                    type="text"
-                    value={receiveAmount}
-                    readOnly
-                    className="max-md:!text-[19px] max-md:!leading-[29px] max-md:!w-[120px]"
+                  <div
+                    className="max-md:!text-[19px] max-md:!leading-[29px] max-md:!min-w-[120px]"
                     style={{
                       fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '42px', color: '#FFFFFF',
-                      background: 'transparent', border: 'none', outline: 'none', width: '280px',
+                      minWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                     }}
-                  />
+                  >
+                    {receiveAmount || '0'}
+                  </div>
                 </div>
               </div>
               <CurrencyDropdown selected={receiveCurrency} onSelect={setReceiveCurrency} />
