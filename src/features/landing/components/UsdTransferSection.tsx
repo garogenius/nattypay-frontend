@@ -136,19 +136,59 @@ export default function UsdTransferSection() {
           setReceiveAmount('');
           return;
         }
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/convert?from=${sendCurrency.code}&to=${receiveCurrency.code}&amount=${rawSendAmount}`,
-          { signal: controller.signal }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.result !== undefined) {
-            const formattedResult = new Intl.NumberFormat('en-US', {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 2,
-            }).format(Number(data.result));
-            setReceiveAmount(formattedResult);
+
+        let convertedAmount: number | undefined = undefined;
+
+        // Try the convert endpoint first
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/convert?from=${sendCurrency.code}&to=${receiveCurrency.code}&amount=${rawSendAmount}`,
+            { signal: controller.signal }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const possibleValue = data.result ?? data.convertedAmount ?? data.amount ?? data.data?.result ?? data.data?.convertedAmount;
+            if (possibleValue !== undefined) {
+              convertedAmount = typeof possibleValue === 'string' ? Number(possibleValue.replace(/,/g, '')) : Number(possibleValue);
+            }
           }
+        } catch (e: any) {
+          if (e.name === 'AbortError') throw e;
+          console.warn('Convert API failed, falling back to rates API:', e);
+        }
+
+        // Fallback to rates endpoint if convert didn't work
+        if (convertedAmount === undefined || isNaN(convertedAmount)) {
+          const ratesRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/rates`, { signal: controller.signal });
+          if (ratesRes.ok) {
+            const ratesData = await ratesRes.json();
+            if (ratesData && ratesData.rates) {
+              const fromRateObj = ratesData.rates.find((r: any) => r.currency === sendCurrency.code);
+              const toRateObj = ratesData.rates.find((r: any) => r.currency === receiveCurrency.code);
+              const amountNum = Number(rawSendAmount);
+              const baseCurrency = ratesData.baseCurrency || 'NGN';
+
+              if (sendCurrency.code === receiveCurrency.code) {
+                convertedAmount = amountNum;
+              } else if (sendCurrency.code === baseCurrency && toRateObj) {
+                convertedAmount = amountNum / Number(toRateObj.rate);
+              } else if (receiveCurrency.code === baseCurrency && fromRateObj) {
+                convertedAmount = amountNum * Number(fromRateObj.rate);
+              } else if (fromRateObj && toRateObj) {
+                convertedAmount = (amountNum * Number(fromRateObj.rate)) / Number(toRateObj.rate);
+              }
+            }
+          }
+        }
+
+        if (convertedAmount !== undefined && !isNaN(convertedAmount)) {
+          const formattedResult = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+          }).format(convertedAmount);
+          setReceiveAmount(formattedResult);
+        } else {
+          setReceiveAmount('');
         }
       } catch (err: any) {
         if (err.name !== 'AbortError') {

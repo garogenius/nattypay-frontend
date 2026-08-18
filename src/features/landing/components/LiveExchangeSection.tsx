@@ -64,15 +64,16 @@ const initialRates: RateData[] = [
   { currency: 'USD', pair: 'USD/NGN', flag1: '🇺🇸', flag2: '🇳🇬', rate: 'N1,550.00', rawRate: 1550, trend: 'up' },
   { currency: 'EUR', pair: 'EUR/NGN', flag1: '🇪🇺', flag2: '🇳🇬', rate: 'N1,680.00', rawRate: 1680, trend: 'up' },
   { currency: 'GBP', pair: 'GBP/NGN', flag1: '🇬🇧', flag2: '🇳🇬', rate: 'N1,980.00', rawRate: 1980, trend: 'up' },
-  { currency: 'KES', pair: 'KES/NGN', flag1: '🇰🇪', flag2: '🇳🇬', rate: 'N12.00', rawRate: 12, trend: 'up' },
-  { currency: 'GHS', pair: 'GHS/NGN', flag1: '🇬🇭', flag2: '🇳🇬', rate: 'N105.00', rawRate: 105, trend: 'up' },
-  { currency: 'UGX', pair: 'UGX/NGN', flag1: '🇺🇬', flag2: '🇳🇬', rate: 'N0.42', rawRate: 0.42, trend: 'up' },
+  { currency: 'KES', pair: 'KES/NGN', flag1: '🇰🇪', flag2: '🇳🇬', rate: 'N12.00', rawRate: 12, trend: 'down' },
+  { currency: 'GHS', pair: 'GHS/NGN', flag1: '🇬🇭', flag2: '🇳🇬', rate: 'N105.00', rawRate: 105, trend: 'down' },
+  { currency: 'UGX', pair: 'UGX/NGN', flag1: '🇺🇬', flag2: '🇳🇬', rate: 'N0.42', rawRate: 0.42, trend: 'down' },
 ];
 
 export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExchangeSectionProps) {
   const [exchangeRates, setExchangeRates] = useState<RateData[]>(initialRates);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCurrency, setSelectedCurrency] = useState(targetCurrency.toUpperCase());
+  const [tagPosition, setTagPosition] = useState<'left' | 'right' | 'center'>('right');
 
   useEffect(() => {
     const fetchRates = async () => {
@@ -88,7 +89,7 @@ export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExch
             flag2: getFlag(data.baseCurrency),
             rate: `N${Number(r.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             rawRate: Number(r.rate),
-            trend: 'up' as const
+            trend: Number(r.rate) < 500 ? 'down' : 'up'
           }));
           setExchangeRates(mappedRates);
         }
@@ -101,7 +102,28 @@ export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExch
     fetchRates();
   }, []);
 
-  const baseSendAmount = 2000400; // N2,000,400
+  // Automatically cycle and rotate currencies every 2 seconds to act like a dynamic display
+  useEffect(() => {
+    if (exchangeRates.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setExchangeRates(prevRates => {
+        const newRates = [...prevRates];
+        const first = newRates.shift();
+        if (first) {
+          newRates.push(first);
+          setSelectedCurrency(newRates[0].currency);
+        }
+        return newRates;
+      });
+      const positions: ('left' | 'right' | 'center')[] = ['left', 'right', 'center'];
+      setTagPosition(positions[Math.floor(Math.random() * positions.length)]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [exchangeRates.length]);
+
+  const baseSendAmount = 100000; // N100,000
 
   const getRecipientDetails = () => {
     const target = selectedCurrency;
@@ -129,12 +151,27 @@ export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExch
 
         {/* Left Side: Live Exchange Rate */}
         <div
-          className="w-full xl:w-[503px] bg-black rounded-[40px] flex flex-col gap-[30px] lg:gap-[45px] flex-shrink-0"
+          className="w-full xl:w-[503px] bg-black rounded-[40px] flex flex-col gap-[30px] lg:gap-[45px] flex-shrink-0 relative"
           style={{ padding: '30px' }}
         >
           <h2 className="font-poppins font-medium text-[24px] lg:text-[30px] leading-tight lg:leading-[45px] text-[#F0BF4C] m-0">
             Live Exchange Rate
           </h2>
+            
+          {/* Active rates floating tags - Half outside */}
+          <div className={`absolute -top-[14px] ${tagPosition === 'left' ? 'left-6 lg:left-10' : tagPosition === 'center' ? 'left-1/2 -translate-x-1/2' : 'right-6 lg:right-10'} flex items-center gap-2 lg:gap-3 z-10 transition-all duration-700 ease-in-out`}>
+            {exchangeRates.slice(0, 3).map((rate, idx) => (
+              <div key={`tag-${rate.currency}-${idx}`} className={`bg-white px-3 py-1.5 rounded-[12px] border-[1.5px] border-[#F0BF4C] transition-all duration-300 items-center gap-2 shadow-[0_4px_12px_rgba(0,0,0,0.1)] ${idx > 1 ? 'hidden lg:flex' : 'flex'}`}>
+                 <span className="relative flex h-2.5 w-2.5">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                 </span>
+                 <span className="font-poppins font-medium text-[11px] lg:text-[13px] text-black whitespace-nowrap">
+                   <span className="font-bold text-[#F0BF4C]">{rate.pair}</span> {rate.rate}
+                 </span>
+              </div>
+            ))}
+          </div>
 
           <div className={`flex flex-col w-full gap-[12px] transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`}>
             {exchangeRates.map((item, idx) => (
@@ -221,7 +258,7 @@ export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExch
                 </div>
                 <div className="flex flex-col items-start leading-tight">
                   <span className="font-poppins font-normal text-[10px] md:text-[14px] lg:text-[20px] text-black mb-1">You sent</span>
-                  <span className="font-poppins font-medium text-[12px] md:text-[20px] lg:text-[29px] text-black">N2,000,400</span>
+                  <span className="font-poppins font-medium text-[12px] md:text-[20px] lg:text-[29px] text-black">N100,000</span>
                   <span className="font-poppins font-normal text-[10px] md:text-[14px] lg:text-[20px] text-black mt-1">Nigeria</span>
                 </div>
               </div>

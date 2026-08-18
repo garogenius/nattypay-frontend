@@ -29,9 +29,9 @@ const initialRates: RateData[] = [
   { currency: 'USD', pair: 'USD/NGN', flag1: 'https://flagcdn.com/w80/us.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,550.00', rawRate: 1550, trend: 'up' },
   { currency: 'EUR', pair: 'EUR/NGN', flag1: 'https://flagcdn.com/w80/eu.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,680.00', rawRate: 1680, trend: 'up' },
   { currency: 'GBP', pair: 'GBP/NGN', flag1: 'https://flagcdn.com/w80/gb.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,980.00', rawRate: 1980, trend: 'up' },
-  { currency: 'KES', pair: 'KES/NGN', flag1: 'https://flagcdn.com/w80/ke.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N12.00', rawRate: 12, trend: 'up' },
-  { currency: 'GHS', pair: 'GHS/NGN', flag1: 'https://flagcdn.com/w80/gh.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N105.00', rawRate: 105, trend: 'up' },
-  { currency: 'UGX', pair: 'UGX/NGN', flag1: 'https://flagcdn.com/w80/ug.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N0.42', rawRate: 0.42, trend: 'up' },
+  { currency: 'KES', pair: 'KES/NGN', flag1: 'https://flagcdn.com/w80/ke.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N12.00', rawRate: 12, trend: 'down' },
+  { currency: 'GHS', pair: 'GHS/NGN', flag1: 'https://flagcdn.com/w80/gh.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N105.00', rawRate: 105, trend: 'down' },
+  { currency: 'UGX', pair: 'UGX/NGN', flag1: 'https://flagcdn.com/w80/ug.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N0.42', rawRate: 0.42, trend: 'down' },
 ];
 
 const featuredServices = [
@@ -73,6 +73,8 @@ const featuredServices = [
 export default function GbpLiveExchangeSection() {
   const [exchangeRates, setExchangeRates] = useState<RateData[]>(initialRates);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [tagPosition, setTagPosition] = useState<'left' | 'right' | 'center'>('right');
 
   useEffect(() => {
     const fetchRates = async () => {
@@ -88,7 +90,7 @@ export default function GbpLiveExchangeSection() {
             flag2: getFlagUrl(data.baseCurrency),
             rate: `N${Number(r.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             rawRate: Number(r.rate),
-            trend: 'up' as const
+            trend: Number(r.rate) < 500 ? 'down' : 'up'
           }));
           setExchangeRates(mappedRates);
         }
@@ -100,6 +102,27 @@ export default function GbpLiveExchangeSection() {
     };
     fetchRates();
   }, []);
+
+  // Automatically cycle and rotate currencies every 2 seconds
+  useEffect(() => {
+    if (exchangeRates.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setExchangeRates(prevRates => {
+        const newRates = [...prevRates];
+        const first = newRates.shift();
+        if (first) {
+          newRates.push(first);
+          setSelectedCurrency(newRates[0].currency);
+        }
+        return newRates;
+      });
+      const positions: ('left' | 'right' | 'center')[] = ['left', 'right', 'center'];
+      setTagPosition(positions[Math.floor(Math.random() * positions.length)]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [exchangeRates.length]);
 
   return (
     <section
@@ -113,7 +136,7 @@ export default function GbpLiveExchangeSection() {
 
         {/* ─── Left Card: Red background ─── */}
         <div
-          className="w-full"
+          className="w-full relative"
           style={{
             maxWidth: '503px',
             backgroundColor: '#FF0000',
@@ -129,11 +152,31 @@ export default function GbpLiveExchangeSection() {
           <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '26px', lineHeight: 1.5, color: '#FFFFFF', margin: 0 }}>
             Live Exchange Rate
           </h2>
+          
+          {/* Active rates floating tags - Half outside */}
+          <div className={`absolute -top-[14px] ${tagPosition === 'left' ? 'left-6 lg:left-10' : tagPosition === 'center' ? 'left-1/2 -translate-x-1/2' : 'right-6 lg:right-10'} flex items-center gap-2 lg:gap-3 z-10 transition-all duration-700 ease-in-out`} style={{ top: '-14px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}>
+            {exchangeRates.slice(0, 3).map((rate, idx) => (
+              <div key={`tag-${rate.currency}-${idx}`} className={`bg-white px-3 py-1.5 rounded-[12px] border-[1.5px] border-[#F0BF4C] transition-all duration-300 ${idx > 1 ? 'hidden lg:flex' : 'flex'}`} style={{ backgroundColor: '#ffffff', padding: '6px 12px', borderRadius: '12px', border: '1.5px solid #F0BF4C', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                 <span className="relative flex h-2.5 w-2.5">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                 </span>
+                 <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '13px', color: '#000000', whiteSpace: 'nowrap' }}>
+                   <span style={{ fontWeight: 700, color: '#F0BF4C' }}>{rate.pair}</span> {rate.rate}
+                 </span>
+              </div>
+            ))}
+          </div>
 
           <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`} style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {exchangeRates.map((item, index) => (
               <React.Fragment key={index}>
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 0' }}>
+                <div style={{
+                  display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 'calc(100% + 20px)',
+                  padding: '10px', margin: '0 -10px', borderRadius: '8px',
+                  backgroundColor: selectedCurrency === item.currency ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                  transition: 'background-color 0.3s ease'
+                }}>
 
                   {/* Flags + Pair */}
                   <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', flex: '1 1 0', minWidth: 0 }}>
