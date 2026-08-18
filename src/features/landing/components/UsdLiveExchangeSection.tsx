@@ -38,7 +38,11 @@ export default function UsdLiveExchangeSection() {
   const [exchangeRates, setExchangeRates] = useState<RateData[]>(initialRates);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
-  const [tagPosition, setTagPosition] = useState<'left' | 'right' | 'center'>('right');
+  const [tagPositions, setTagPositions] = useState([
+    "absolute -top-[24px] left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-[10%] z-20 flex",
+    "absolute -bottom-[24px] left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-auto lg:right-[10%] z-20 flex",
+    "absolute top-1/2 -translate-y-1/2 right-[10px] lg:-right-[30px] z-20 hidden lg:flex"
+  ]);
 
   useEffect(() => {
     const fetchRates = async () => {
@@ -81,8 +85,12 @@ export default function UsdLiveExchangeSection() {
         }
         return newRates;
       });
-      const positions: ('left' | 'right' | 'center')[] = ['left', 'right', 'center'];
-      setTagPosition(positions[Math.floor(Math.random() * positions.length)]);
+      const allPos = [
+        "absolute -top-[24px] left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-[10%] z-20 flex",
+        "absolute -bottom-[24px] left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-auto lg:right-[10%] z-20 flex",
+        "absolute top-1/2 -translate-y-1/2 right-[10px] lg:-right-[30px] z-20 hidden lg:flex"
+      ];
+      setTagPositions([...allPos].sort(() => 0.5 - Math.random()));
     }, 2000);
 
     return () => clearInterval(interval);
@@ -118,20 +126,25 @@ export default function UsdLiveExchangeSection() {
             Live Exchange Rate
           </h2>
           
-          {/* Active rates floating tags - Half outside */}
-          <div className={`absolute -top-[14px] ${tagPosition === 'left' ? 'left-6 lg:left-10' : tagPosition === 'center' ? 'left-1/2 -translate-x-1/2' : 'right-6 lg:right-10'} flex items-center gap-2 lg:gap-3 z-10 transition-all duration-700 ease-in-out`} style={{ top: '-14px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}>
-            {exchangeRates.slice(0, 3).map((rate, idx) => (
-              <div key={`tag-${rate.currency}-${idx}`} className={`bg-white px-3 py-1.5 rounded-[12px] border-[1.5px] border-[#F0BF4C] transition-all duration-300 ${idx > 1 ? 'hidden lg:flex' : 'flex'}`} style={{ backgroundColor: '#ffffff', padding: '6px 12px', borderRadius: '12px', border: '1.5px solid #F0BF4C', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                 <span className="relative flex h-2.5 w-2.5">
-                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+          {/* Scattered Satellite Active Rate Tags */}
+          {exchangeRates.slice(0, 3).map((rate, idx) => {
+            return (
+              <div 
+                key={`tag-pos-${idx}`} 
+                className={`${tagPositions[idx] || "hidden"} bg-white rounded-full border border-gray-100 items-center shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out`}
+                style={{ padding: '12px 24px', gap: '12px' }}
+              >
+                 <span className="relative flex h-3 w-3 flex-shrink-0">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
                  </span>
-                 <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '13px', color: '#000000', whiteSpace: 'nowrap' }}>
-                   <span style={{ fontWeight: 700, color: '#F0BF4C' }}>{rate.pair}</span> {rate.rate}
+                 <span className="font-poppins text-[14px] text-black whitespace-nowrap flex items-center">
+                   <span className="text-gray-500 font-medium mr-2">{rate.pair}</span>
+                   <span className="font-bold text-[15px]">{rate.rate}</span>
                  </span>
               </div>
-            ))}
-          </div>
+            );
+          })}
 
           <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`} style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {exchangeRates.map((item, index) => (
