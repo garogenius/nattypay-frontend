@@ -124,8 +124,58 @@ const features = [
 export default function UsdTransferSection() {
   const [sendCurrency, setSendCurrency] = useState(currencies[0]); // USD
   const [receiveCurrency, setReceiveCurrency] = useState(currencies[3]); // NGN
-  const [sendAmount, setSendAmount] = useState('200.00');
-  const [receiveAmount, setReceiveAmount] = useState('2000.00');
+  const [sendAmount, setSendAmount] = useState('100');
+  const [receiveAmount, setReceiveAmount] = useState('');
+  const [lastEdited, setLastEdited] = useState<'send' | 'receive'>('send');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
+      try {
+        if (lastEdited === 'send') {
+          if (!sendAmount || isNaN(Number(sendAmount))) {
+            setReceiveAmount('');
+            return;
+          }
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/convert?from=${sendCurrency.code}&to=${receiveCurrency.code}&amount=${sendAmount}`,
+            { signal: controller.signal }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.result !== undefined) {
+              setReceiveAmount(data.result.toString());
+            }
+          }
+        } else {
+          if (!receiveAmount || isNaN(Number(receiveAmount))) {
+            setSendAmount('');
+            return;
+          }
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/convert?from=${receiveCurrency.code}&to=${sendCurrency.code}&amount=${receiveAmount}`,
+            { signal: controller.signal }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.result !== undefined) {
+              setSendAmount(data.result.toString());
+            }
+          }
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Conversion error:', err);
+        }
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [sendAmount, receiveAmount, sendCurrency, receiveCurrency, lastEdited]);
 
   return (
     <section className="max-md:!p-[10px]" style={{ width: '100%', backgroundColor: '#000000', display: 'flex', justifyContent: 'center', padding: '0' }}>
@@ -148,7 +198,10 @@ export default function UsdTransferSection() {
                   <input
                     type="text"
                     value={sendAmount}
-                    onChange={(e) => setSendAmount(e.target.value)}
+                    onChange={(e) => {
+                      setLastEdited('send');
+                      setSendAmount(e.target.value);
+                    }}
                     className="max-md:!text-[19px] max-md:!leading-[29px] max-md:!w-[100px]"
                     style={{
                       fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '42px', color: '#FFFFFF',
@@ -176,7 +229,10 @@ export default function UsdTransferSection() {
                   <input
                     type="text"
                     value={receiveAmount}
-                    onChange={(e) => setReceiveAmount(e.target.value)}
+                    onChange={(e) => {
+                      setLastEdited('receive');
+                      setReceiveAmount(e.target.value);
+                    }}
                     className="max-md:!text-[19px] max-md:!leading-[29px] max-md:!w-[120px]"
                     style={{
                       fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '42px', color: '#FFFFFF',
@@ -194,6 +250,7 @@ export default function UsdTransferSection() {
 
           {/* ─── Get Started Button ─── */}
           <button
+            onClick={() => setIsModalOpen(true)}
             className="max-md:!h-[39px] max-md:!rounded-[3.6px] max-md:!gap-[3.6px] max-md:!p-[5.4px]"
             style={{
               width: '100%', height: '86px', backgroundColor: '#F0BF4C', borderRadius: '8px',
@@ -227,6 +284,96 @@ export default function UsdTransferSection() {
               </div>
             ))}
           </div>
+
+          {/* ─── Modal Popup ─── */}
+          {isModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+              <div 
+                className="bg-[#111111] rounded-[24px] w-full max-w-[480px] p-6 md:p-8 flex flex-col gap-6 shadow-2xl border border-white/10 relative"
+                style={{ animation: 'fadeIn 0.3s ease-out' }}
+              >
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-poppins font-semibold text-[24px] md:text-[28px] text-white m-0">
+                    Transfer Summary
+                  </h3>
+                  <p className="font-poppins text-[14px] text-white/50 m-0">
+                    Review your transaction details below.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {/* Sending */}
+                  <div className="flex flex-row justify-between items-center p-5 bg-[#1A1A1A] rounded-[16px] border border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-white/20"></div>
+                    <div className="flex flex-col gap-1 z-10">
+                      <span className="font-poppins text-[13px] text-white/50 uppercase tracking-wider">You send</span>
+                      <span className="font-poppins font-semibold text-[24px] text-white">
+                        {sendCurrency.code === 'USD' ? '$' : sendCurrency.code === 'GBP' ? '£' : sendCurrency.code === 'EUR' ? '€' : ''}
+                        {Number(sendAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 z-10 bg-black/40 px-3 py-2 rounded-[10px]">
+                      <div className="w-[28px] h-[20px] rounded-[4px] overflow-hidden">
+                        <div style={{ width: '100%', height: '100%', backgroundImage: `url(${sendCurrency.flag})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                      </div>
+                      <span className="font-poppins font-medium text-[16px] text-white">{sendCurrency.code}</span>
+                    </div>
+                  </div>
+
+                  {/* Icon separator */}
+                  <div className="flex justify-center -my-4 z-20">
+                    <div className="bg-[#F0BF4C] rounded-full p-2 border-[4px] border-[#111111] shadow-lg">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Receiving */}
+                  <div className="flex flex-row justify-between items-center p-5 bg-[#1A1A1A] rounded-[16px] border border-[#F0BF4C]/20 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[#F0BF4C]"></div>
+                    <div className="flex flex-col gap-1 z-10">
+                      <span className="font-poppins text-[13px] text-[#F0BF4C]/70 uppercase tracking-wider">Recipient gets</span>
+                      <span className="font-poppins font-semibold text-[24px] text-[#F0BF4C]">
+                        {receiveCurrency.code === 'NGN' ? '₦' : receiveCurrency.code === 'GHS' ? 'GH₵' : ''}
+                        {Number(receiveAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 z-10 bg-black/40 px-3 py-2 rounded-[10px]">
+                      <div className="w-[28px] h-[20px] rounded-[4px] overflow-hidden">
+                        <div style={{ width: '100%', height: '100%', backgroundImage: `url(${receiveCurrency.flag})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                      </div>
+                      <span className="font-poppins font-medium text-[16px] text-[#F0BF4C]">{receiveCurrency.code}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="font-poppins text-[14px] leading-relaxed text-white/60 text-center m-0 mt-2">
+                  Please sign in or download the NattyPay app to complete your secure international transfer.
+                </p>
+
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-full h-[56px] bg-[#F0BF4C] rounded-[14px] font-poppins font-semibold text-[16px] text-black hover:bg-[#F0BF4C]/90 transition-all active:scale-[0.98] mt-2 border-none cursor-pointer"
+                >
+                  Continue to App
+                </button>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

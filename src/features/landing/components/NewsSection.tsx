@@ -1,43 +1,54 @@
 "use client";
-import React, { useRef } from 'react';
-
-const newsItems = [
-  {
-    category: "Product News",
-    title: "NattyPay Launches Multi-Currency Business Wallets",
-    description: "Experience borderless financial growth with our newly released multi-currency wallets, designed to reduce conversion fees for global businesses.",
-    date: "March 30th, 2026",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80" 
-  },
-  {
-    category: "Market Update",
-    title: "Global Markets Rally as Economic Recovery Gains Momentum",
-    description: "Global markets surge on the back of a strengthening economic recovery, reflecting increased optimism and positive momentum in various sectors worldwide.",
-    date: "December 07th, 2023",
-    image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80"
-  },
-  {
-    title: "Financial Experts Predict Positive Outlook for Q4 Economic Growth",
-    description: "Robert Mc Caney, Financial experts, anticipate a positive Q4 economic growth outlook, forecasting optimism and potential opportunities for sustained financial improvement.",
-    date: "December 07th, 2023",
-    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80" // Trading/ROI image
-  },
-  {
-    title: "Tech Sector Leads the Way in Green Energy Investments",
-    description: "Major technology firms are increasingly pouring funds into renewable energy, signaling a massive shift towards sustainable corporate operations in the coming decade.",
-    date: "November 28th, 2023",
-    image: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800&q=80" // Modern tech/energy image
-  },
-  {
-    title: "Central Bank Announces New Interest Rate Policies for 2024",
-    description: "In an unexpected move, the Central Bank has outlined a revised framework for interest rates, aiming to curb inflation while stimulating small business growth.",
-    date: "November 15th, 2023",
-    image: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80" // Money/Banking image
-  }
-];
+import React, { useRef, useState, useEffect } from 'react';
 
 export default function NewsSection() {
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('/api/content/nattypay/news');
+        if (response.ok) {
+          const data = await response.json();
+          const mappedPosts = data.slice(0, 5).map((apiPost: any) => {
+            // Excerpt from content
+            let textContent = "";
+            if (typeof document !== 'undefined') {
+              const tmp = document.createElement("DIV");
+              tmp.innerHTML = apiPost.content || "";
+              textContent = tmp.textContent || tmp.innerText || "";
+            } else {
+              textContent = (apiPost.content || "").replace(/<[^>]*>?/gm, '');
+            }
+            const excerpt = textContent.substring(0, 150) + (textContent.length > 150 ? "..." : "");
+
+            const dateObj = new Date(apiPost.createdAt);
+            const formattedDate = dateObj.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+
+            return {
+              title: apiPost.title,
+              description: excerpt,
+              category: apiPost.tags && apiPost.tags.length > 0 ? apiPost.tags[0] : 'News',
+              date: formattedDate,
+              image: apiPost.thumbnail || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800'
+            };
+          });
+          setNewsItems(mappedPosts);
+        }
+      } catch (error) {
+        console.error("Error fetching news:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchNews();
+  }, []);
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -112,13 +123,26 @@ export default function NewsSection() {
 
         </div>
 
-        {/* Slider Container */}
-        <div 
-          ref={sliderRef}
-          className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-4 lg:pb-8"
-          style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
-        >
-          {newsItems.map((news, idx) => (
+          {isLoading ? (
+            <div className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full hide-scroll">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col flex-shrink-0 w-[280px] lg:w-[608px] h-[340px] lg:h-[534px] relative bg-[#E5E7EB] rounded-[16px] lg:rounded-[24px] animate-pulse">
+                  <div className="w-full h-[180px] lg:h-[300px] bg-gray-300 rounded-t-[16px]"></div>
+                  <div className="flex flex-col gap-4 p-6 mt-4">
+                    <div className="h-4 w-24 bg-gray-300 rounded"></div>
+                    <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
+                    <div className="h-4 w-full bg-gray-300 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div 
+              ref={sliderRef}
+              className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-4 lg:pb-8"
+              style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
+            >
+              {newsItems.map((news, idx) => (
             <div 
               key={idx}
               className="flex flex-col flex-shrink-0 w-[280px] lg:w-[608px] h-[340px] lg:h-[534px] relative snap-center"
@@ -177,6 +201,7 @@ export default function NewsSection() {
             </div>
           ))}
         </div>
+        )}
 
         {/* Scrollbar / Progress Bar (Mobile Only) */}
         <div className="w-full flex lg:hidden mt-4 items-center justify-start max-w-[280px] mx-auto">

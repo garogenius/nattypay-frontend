@@ -1,21 +1,69 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { BlogPost, MOCK_POSTS } from '../data/mockPosts';
 
 interface BlogPostContentProps {
-  post: BlogPost;
+  post: {
+    title: string;
+    content?: string;
+    excerpt: string;
+  };
+  recentPosts: {
+    slug: string;
+    title: string;
+    category: string;
+    date: string;
+    imageUrl: string;
+  }[];
 }
 
-export default function BlogPostContent({ post }: BlogPostContentProps) {
+export default function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [subscribeMsg, setSubscribeMsg] = useState('');
+
+  const handleSubscribe = async () => {
+    if (!email || !email.includes('@')) {
+      setSubscribeStatus('error');
+      setSubscribeMsg('Please enter a valid email.');
+      return;
+    }
+
+    setIsSubscribing(true);
+    setSubscribeStatus('idle');
+    setSubscribeMsg('');
+
+    try {
+      const response = await fetch('/api/content/nattypay/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (response.ok) {
+        setSubscribeStatus('success');
+        setSubscribeMsg('Subscribed successfully!');
+        setEmail('');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setSubscribeStatus('error');
+        setSubscribeMsg(errorData.message || 'Failed to subscribe. Please try again.');
+      }
+    } catch (err) {
+      setSubscribeStatus('error');
+      setSubscribeMsg('An error occurred. Please try again later.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
   
   // If the post has HTML content, we'll render it safely.
   // Otherwise, we just fall back to the excerpt.
   const contentToRender = post.content || `<p>${post.excerpt}</p><p><em>Full article content coming soon...</em></p>`;
-
-  // Get 3 recent posts excluding the current one
-  const recentPosts = MOCK_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
     <section 
@@ -148,31 +196,35 @@ export default function BlogPostContent({ post }: BlogPostContentProps) {
           </h3>
           
           <div className="flex flex-col" style={{ gap: '24px' }}>
-            {recentPosts.map((rp) => (
-              <Link 
-                href={`/blog/${rp.slug}`} 
-                key={rp.slug}
-                className="flex items-start group"
-                style={{ gap: '16px' }}
-              >
-                {/* Tiny Thumbnail */}
-                <div 
-                  className="w-[100px] h-[75px] rounded-xl flex-shrink-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${rp.imageUrl})` }}
-                />
-                <div className="flex flex-col" style={{ gap: '4px' }}>
-                  <span className="text-[#F0BF4C] font-semibold text-[11px] uppercase tracking-wider">
-                    {rp.category}
-                  </span>
-                  <h4 className="text-white font-semibold text-[14px] leading-[1.4] line-clamp-2 group-hover:text-[#F0BF4C] transition-colors">
-                    {rp.title}
-                  </h4>
-                  <span className="text-white/60 font-medium text-[12px]">
-                    {rp.date}
-                  </span>
-                </div>
-              </Link>
-            ))}
+            {recentPosts && recentPosts.length > 0 ? (
+              recentPosts.map((rp) => (
+                <Link 
+                  href={`/blog/${rp.slug}`} 
+                  key={rp.slug}
+                  className="flex items-start group"
+                  style={{ gap: '16px' }}
+                >
+                  {/* Tiny Thumbnail */}
+                  <div 
+                    className="w-[100px] h-[75px] rounded-xl flex-shrink-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${rp.imageUrl})` }}
+                  />
+                  <div className="flex flex-col" style={{ gap: '4px' }}>
+                    <span className="text-[#F0BF4C] font-semibold text-[11px] uppercase tracking-wider">
+                      {rp.category}
+                    </span>
+                    <h4 className="text-white font-semibold text-[14px] leading-[1.4] line-clamp-2 group-hover:text-[#F0BF4C] transition-colors">
+                      {rp.title}
+                    </h4>
+                    <span className="text-white/60 font-medium text-[12px]">
+                      {rp.date}
+                    </span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <span className="text-white/60 text-[14px]">No recent news available.</span>
+            )}
           </div>
 
           <div className="border-t border-white/5" style={{ marginTop: '32px', paddingTop: '32px' }}>
@@ -188,16 +240,27 @@ export default function BlogPostContent({ post }: BlogPostContentProps) {
                 <input 
                   type="email" 
                   placeholder="Email address"
-                  className="w-full bg-[#0B0B0F] text-white placeholder-white/40 border border-white/10 rounded-l-lg text-[14px] outline-none focus:border-[#F0BF4C]"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubscribing}
+                  className="w-full bg-[#0B0B0F] text-white placeholder-white/40 border border-white/10 rounded-l-lg text-[14px] outline-none focus:border-[#F0BF4C] disabled:opacity-50"
                   style={{ padding: '12px 16px' }}
                 />
                 <button 
-                  className="bg-[#F0BF4C] hover:bg-[#d4a844] text-black transition-colors font-medium text-[14px] rounded-r-lg"
+                  onClick={handleSubscribe}
+                  disabled={isSubscribing}
+                  className="bg-[#F0BF4C] hover:bg-[#d4a844] text-black transition-colors font-medium text-[14px] rounded-r-lg disabled:opacity-50 min-w-[80px]"
                   style={{ padding: '0 16px' }}
                 >
-                  Join
+                  {isSubscribing ? '...' : 'Join'}
                 </button>
               </div>
+              {subscribeStatus === 'success' && (
+                <p className="text-green-500 text-[12px] m-0 mt-2">{subscribeMsg}</p>
+              )}
+              {subscribeStatus === 'error' && (
+                <p className="text-red-500 text-[12px] m-0 mt-2">{subscribeMsg}</p>
+              )}
             </div>
           </div>
 

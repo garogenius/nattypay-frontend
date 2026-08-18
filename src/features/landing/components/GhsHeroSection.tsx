@@ -60,11 +60,11 @@ export default function GhsHeroSection() {
                 </a>
                 {/* Google Play Store */}
                 <a href="https://play.google.com/store/apps/details?id=com.nattypay.nattypay" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 flex items-center gap-[10px] bg-black border border-white/20 rounded-[10px] hover:bg-white/10 transition-colors" style={{ padding: '16px 32px' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24">
-                    <path d="M3.18 23.76a2 2 0 0 1-.93-1.76V2a2 2 0 0 1 .93-1.76l.1-.06 12.09 12.09-.1.09L3.18 23.76z" fill="#EA4335" />
-                    <path d="M20.49 13.7l-2.4 1.38-2.68-2.68.01-.01 2.67-2.67 2.41 1.38a1.5 1.5 0 0 1 0 2.6z" fill="#FBBC04" />
-                    <path d="M3.28.18l12 12-2.68 2.68L3.18.24l.1-.06z" fill="#4285F4" />
-                    <path d="M3.18 23.76l9.42-9.42 2.68 2.68-12.1 6.8v-.06z" fill="#34A853" />
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4"/>
+                    <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04"/>
+                    <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335"/>
+                    <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853"/>
                   </svg>
                   <div className="flex flex-col items-start leading-none">
                     <span className="font-poppins text-[10px] text-white/70">Get it on</span>
@@ -75,11 +75,11 @@ export default function GhsHeroSection() {
 
               {/* Trust Badges */}
               <div className="flex flex-row items-center gap-[40px] opacity-90 flex-shrink-0 mt-[16px]">
-                <div className="flex items-center gap-0">
+                <div className="flex items-center gap-2">
                   <span className="font-figtree text-[21px] leading-[20px] text-[#CCCCCC] whitespace-nowrap">Licenced by CBN</span>
                   <img src="/img/icons/cbn.png" alt="CBN Logo" className="w-[62px] object-contain flex-shrink-0" />
                 </div>
-                <div className="flex items-center gap-0">
+                <div className="flex items-center gap-2">
                   <span className="font-figtree text-[21px] leading-[20px] text-[#CCCCCC] whitespace-nowrap">Deposits Insured by</span>
                   <img src="/img/icons/ndic.png" alt="NDIC Logo" className="w-[78px] object-contain flex-shrink-0" />
                 </div>
@@ -145,11 +145,11 @@ export default function GhsHeroSection() {
                 </a>
                 {/* Google Play Store */}
                 <a href="https://play.google.com/store/apps/details?id=com.nattypay.nattypay" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-[8px] bg-black border border-white/20 rounded-[10px] hover:bg-white/10 transition-colors" style={{ padding: '14px 20px' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" className="flex-shrink-0">
-                    <path d="M3.18 23.76a2 2 0 0 1-.93-1.76V2a2 2 0 0 1 .93-1.76l.1-.06 12.09 12.09-.1.09L3.18 23.76z" fill="#EA4335" />
-                    <path d="M20.49 13.7l-2.4 1.38-2.68-2.68.01-.01 2.67-2.67 2.41 1.38a1.5 1.5 0 0 1 0 2.6z" fill="#FBBC04" />
-                    <path d="M3.28.18l12 12-2.68 2.68L3.18.24l.1-.06z" fill="#4285F4" />
-                    <path d="M3.18 23.76l9.42-9.42 2.68 2.68-12.1 6.8v-.06z" fill="#34A853" />
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                    <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4"/>
+                    <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04"/>
+                    <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335"/>
+                    <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853"/>
                   </svg>
                   <div className="flex flex-col items-start leading-none">
                     <span className="font-poppins text-[9px] text-white/70">Get it on</span>
@@ -160,11 +160,11 @@ export default function GhsHeroSection() {
 
               {/* Trust Badges */}
               <div className="flex flex-row items-center justify-center gap-4 sm:gap-6 opacity-90 w-full" style={{ marginBottom: '40px' }}>
-                <div className="flex items-center gap-0">
+                <div className="flex items-center gap-2">
                   <span className="font-figtree text-[13px] sm:text-[15px] text-[#CCCCCC] whitespace-nowrap">Licenced by CBN</span>
                   <img src="/img/icons/cbn.png" alt="CBN Logo" className="w-[40px] sm:w-[50px] object-contain flex-shrink-0" />
                 </div>
-                <div className="flex items-center gap-0">
+                <div className="flex items-center gap-2">
                   <span className="font-figtree text-[13px] sm:text-[15px] text-[#CCCCCC] whitespace-nowrap">Deposits Insured by</span>
                   <img src="/img/icons/ndic.png" alt="NDIC Logo" className="w-[50px] sm:w-[60px] object-contain flex-shrink-0" />
                 </div>

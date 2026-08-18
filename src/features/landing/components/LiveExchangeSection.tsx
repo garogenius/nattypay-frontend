@@ -1,13 +1,43 @@
-import React from 'react';
+"use client";
 
-const exchangeRates = [
-  { pair: 'USD/NGN', flag1: '🇺🇸', flag2: '🇳🇬', rate: 'N1,350.00', trend: 'up' },
-  { pair: 'GBP/NGN', flag1: '🇬🇧', flag2: '🇳🇬', rate: 'N1,350.00', trend: 'up' },
-  { pair: 'EUR/NGN', flag1: '🇪🇺', flag2: '🇳🇬', rate: 'N1,350.00', trend: 'down' },
-  { pair: 'GCD/NGN', flag1: '🇬🇭', flag2: '🇳🇬', rate: 'N1,350.00', trend: 'up' },
-  { pair: 'SAC/NGN', flag1: '🇿🇦', flag2: '🇳🇬', rate: 'N1,350.00', trend: 'down' },
-  { pair: 'AGC/NGN', flag1: '🇦🇴', flag2: '🇳🇬', rate: 'N1,350.00', trend: 'up' },
-];
+import React, { useState, useEffect } from 'react';
+
+const getFlag = (currency: string) => {
+  switch (currency.toUpperCase()) {
+    case 'USD': return '🇺🇸';
+    case 'EUR': return '🇪🇺';
+    case 'GBP': return '🇬🇧';
+    case 'KES': return '🇰🇪';
+    case 'GHS': return '🇬🇭';
+    case 'UGX': return '🇺🇬';
+    case 'NGN': return '🇳🇬';
+    default: return '🏳️';
+  }
+};
+
+const getCountry = (currency: string) => {
+  switch (currency.toUpperCase()) {
+    case 'USD': return 'United States';
+    case 'EUR': return 'European Union';
+    case 'GBP': return 'United Kingdom';
+    case 'KES': return 'Kenya';
+    case 'GHS': return 'Ghana';
+    case 'UGX': return 'Uganda';
+    default: return 'Unknown';
+  }
+};
+
+const getCurrencySymbol = (currency: string) => {
+  switch (currency.toUpperCase()) {
+    case 'USD': return '$';
+    case 'EUR': return '€';
+    case 'GBP': return '£';
+    case 'KES': return 'KSh ';
+    case 'GHS': return '₵';
+    case 'UGX': return 'USh ';
+    default: return '';
+  }
+};
 
 const features = [
   { label: 'Lower Fee' },
@@ -20,15 +50,71 @@ interface LiveExchangeSectionProps {
   targetCurrency?: string;
 }
 
+interface RateData {
+  currency: string;
+  pair: string;
+  flag1: string;
+  flag2: string;
+  rate: string;
+  rawRate: number;
+  trend: 'up' | 'down';
+}
+
+const initialRates: RateData[] = [
+  { currency: 'USD', pair: 'USD/NGN', flag1: '🇺🇸', flag2: '🇳🇬', rate: 'N1,550.00', rawRate: 1550, trend: 'up' },
+  { currency: 'EUR', pair: 'EUR/NGN', flag1: '🇪🇺', flag2: '🇳🇬', rate: 'N1,680.00', rawRate: 1680, trend: 'up' },
+  { currency: 'GBP', pair: 'GBP/NGN', flag1: '🇬🇧', flag2: '🇳🇬', rate: 'N1,980.00', rawRate: 1980, trend: 'up' },
+  { currency: 'KES', pair: 'KES/NGN', flag1: '🇰🇪', flag2: '🇳🇬', rate: 'N12.00', rawRate: 12, trend: 'up' },
+  { currency: 'GHS', pair: 'GHS/NGN', flag1: '🇬🇭', flag2: '🇳🇬', rate: 'N105.00', rawRate: 105, trend: 'up' },
+  { currency: 'UGX', pair: 'UGX/NGN', flag1: '🇺🇬', flag2: '🇳🇬', rate: 'N0.42', rawRate: 0.42, trend: 'up' },
+];
+
 export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExchangeSectionProps) {
+  const [exchangeRates, setExchangeRates] = useState<RateData[]>(initialRates);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCurrency, setSelectedCurrency] = useState(targetCurrency.toUpperCase());
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/rates`);
+        const data = await res.json();
+        
+        if (data && data.rates) {
+          const mappedRates = data.rates.map((r: any) => ({
+            currency: r.currency,
+            pair: `${r.currency}/${data.baseCurrency}`,
+            flag1: getFlag(r.currency),
+            flag2: getFlag(data.baseCurrency),
+            rate: `N${Number(r.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            rawRate: Number(r.rate),
+            trend: 'up' as const
+          }));
+          setExchangeRates(mappedRates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRates();
+  }, []);
+
+  const baseSendAmount = 2000400; // N2,000,400
+
   const getRecipientDetails = () => {
-    switch(targetCurrency.toUpperCase()) {
-      case 'GHS': return { flag: '🇬🇭', amount: '₵18,450', country: 'Ghana' };
-      case 'EUR': return { flag: '🇪🇺', amount: '€1,050', country: 'European Union' };
-      case 'GBP': return { flag: '🇬🇧', amount: '£890', country: 'United Kingdom' };
-      case 'USD':
-      default: return { flag: '🇺🇸', amount: '$1,130', country: 'United States' };
-    }
+    const target = selectedCurrency;
+    const rateData = exchangeRates.find(r => r.currency === target) || initialRates.find(r => r.currency === target);
+    const rate = rateData ? rateData.rawRate : 1550;
+    
+    const recipientGets = baseSendAmount / rate;
+    
+    return {
+      flag: getFlag(target),
+      amount: `${getCurrencySymbol(target)}${recipientGets.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      country: getCountry(target)
+    };
   };
 
   const recipient = getRecipientDetails();
@@ -50,10 +136,13 @@ export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExch
             Live Exchange Rate
           </h2>
 
-          <div className="flex flex-col w-full gap-[12px]">
+          <div className={`flex flex-col w-full gap-[12px] transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`}>
             {exchangeRates.map((item, idx) => (
               <React.Fragment key={item.pair}>
-                <div className="flex flex-row items-center justify-between w-full h-[37px]">
+                <div 
+                  className={`flex flex-row items-center justify-between w-full h-[45px] cursor-pointer rounded-lg px-2 -mx-2 transition-colors ${selectedCurrency === item.currency ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                  onClick={() => setSelectedCurrency(item.currency)}
+                >
 
                   {/* Flags & Pair */}
                   <div className="flex flex-row items-center gap-[13px] min-w-[145px]">
@@ -147,7 +236,7 @@ export default function LiveExchangeSection({ targetCurrency = 'USD' }: LiveExch
 
             {/* Recipient Box */}
             <div
-              className="flex flex-col items-center justify-center gap-1 lg:gap-[10px] w-[45%] md:w-full max-w-[289px] h-[90px] md:h-[140px] lg:h-[166px] bg-white rounded-[16px] lg:rounded-[30px] shadow-sm"
+              className={`flex flex-col items-center justify-center gap-1 lg:gap-[10px] w-[45%] md:w-full max-w-[289px] h-[90px] md:h-[140px] lg:h-[166px] bg-white rounded-[16px] lg:rounded-[30px] shadow-sm transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`}
               style={{ padding: '16px' }}
             >
               <div className="flex flex-row items-center justify-center gap-2 lg:gap-[20px] w-full">

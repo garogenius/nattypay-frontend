@@ -1,9 +1,14 @@
 import React from 'react';
-import { BlogPost } from '../data/mockPosts';
 import Link from 'next/link';
 
 interface BlogPostHeroProps {
-  post: BlogPost;
+  post: {
+    title: string;
+    category: string;
+    date: string;
+    readTime: string;
+    imageUrl: string;
+  };
 }
 
 export default function BlogPostHero({ post }: BlogPostHeroProps) {

@@ -1,15 +1,70 @@
-import React from 'react';
+"use client";
 
-const rates = [
-  { pair: 'USD/NGN', flag1: 'https://flagcdn.com/w80/us.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,350.00', trend: 'up' },
-  { pair: 'GBP/NGN', flag1: 'https://flagcdn.com/w80/gb.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,350.00', trend: 'up' },
-  { pair: 'EUR/NGN', flag1: 'https://flagcdn.com/w80/eu.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,350.00', trend: 'down' },
-  { pair: 'GCD/NGN', flag1: 'https://flagcdn.com/w80/gh.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,350.00', trend: 'up' },
-  { pair: 'SAC/NGN', flag1: 'https://flagcdn.com/w80/za.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,350.00', trend: 'down' },
-  { pair: 'AGC/NGN', flag1: 'https://flagcdn.com/w80/ao.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,350.00', trend: 'up' },
+import React, { useState, useEffect } from 'react';
+
+const getFlagUrl = (currency: string) => {
+  switch (currency.toUpperCase()) {
+    case 'USD': return 'https://flagcdn.com/w80/us.png';
+    case 'EUR': return 'https://flagcdn.com/w80/eu.png';
+    case 'GBP': return 'https://flagcdn.com/w80/gb.png';
+    case 'KES': return 'https://flagcdn.com/w80/ke.png';
+    case 'GHS': return 'https://flagcdn.com/w80/gh.png';
+    case 'UGX': return 'https://flagcdn.com/w80/ug.png';
+    case 'NGN': return 'https://flagcdn.com/w80/ng.png';
+    default: return 'https://flagcdn.com/w80/un.png';
+  }
+};
+
+interface RateData {
+  currency: string;
+  pair: string;
+  flag1: string;
+  flag2: string;
+  rate: string;
+  rawRate: number;
+  trend: 'up' | 'down';
+}
+
+const initialRates: RateData[] = [
+  { currency: 'USD', pair: 'USD/NGN', flag1: 'https://flagcdn.com/w80/us.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,550.00', rawRate: 1550, trend: 'up' },
+  { currency: 'EUR', pair: 'EUR/NGN', flag1: 'https://flagcdn.com/w80/eu.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,680.00', rawRate: 1680, trend: 'up' },
+  { currency: 'GBP', pair: 'GBP/NGN', flag1: 'https://flagcdn.com/w80/gb.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N1,980.00', rawRate: 1980, trend: 'up' },
+  { currency: 'KES', pair: 'KES/NGN', flag1: 'https://flagcdn.com/w80/ke.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N12.00', rawRate: 12, trend: 'up' },
+  { currency: 'GHS', pair: 'GHS/NGN', flag1: 'https://flagcdn.com/w80/gh.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N105.00', rawRate: 105, trend: 'up' },
+  { currency: 'UGX', pair: 'UGX/NGN', flag1: 'https://flagcdn.com/w80/ug.png', flag2: 'https://flagcdn.com/w80/ng.png', rate: 'N0.42', rawRate: 0.42, trend: 'up' },
 ];
 
 export default function UsdLiveExchangeSection() {
+  const [exchangeRates, setExchangeRates] = useState<RateData[]>(initialRates);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/public/currencies/rates`);
+        const data = await res.json();
+        
+        if (data && data.rates) {
+          const mappedRates = data.rates.map((r: any) => ({
+            currency: r.currency,
+            pair: `${r.currency}/${data.baseCurrency}`,
+            flag1: getFlagUrl(r.currency),
+            flag2: getFlagUrl(data.baseCurrency),
+            rate: `N${Number(r.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            rawRate: Number(r.rate),
+            trend: 'up' as const
+          }));
+          setExchangeRates(mappedRates);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rates:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRates();
+  }, []);
+
   return (
     <section
       className="w-full flex justify-center max-md:!py-[24px] max-md:!px-[12px]"
@@ -40,8 +95,8 @@ export default function UsdLiveExchangeSection() {
             Live Exchange Rate
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            {rates.map((item, index) => (
+          <div className={`transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`} style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            {exchangeRates.map((item, index) => (
               <React.Fragment key={index}>
                 <div className="max-md:!h-[46px] max-md:!py-[10px]" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 0' }}>
 
@@ -94,7 +149,7 @@ export default function UsdLiveExchangeSection() {
                   </div>
 
                 </div>
-                {index < rates.length - 1 && (
+                {index < exchangeRates.length - 1 && (
                   <div className="max-md:!bg-[#000000] max-md:!opacity-20" style={{ width: '100%', height: '1px', backgroundColor: 'rgba(0,0,0,0.12)' }} />
                 )}
               </React.Fragment>

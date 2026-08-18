@@ -34,11 +34,11 @@ export default function DownloadSection() {
                 {/* Store Buttons */}
                 <div className="flex flex-col gap-3">
                   <a href="https://play.google.com/store/apps/details?id=com.nattypay.nattypay" target="_blank" rel="noopener noreferrer" className="flex flex-row items-center justify-center w-[140px] h-[44px] bg-[#E5E7EB] hover:bg-gray-300 rounded-[8px] transition-colors gap-2 px-2">
-                    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3.5 2C3.22 2 3 2.22 3 2.5V21.5C3 21.78 3.22 22 3.5 22C3.63 22 3.76 21.95 3.85 21.85L14.7 11.95L3.85 2.15C3.76 2.05 3.63 2 3.5 2Z" fill="#00B0FF"/>
-                      <path d="M19.7 10.35L15.65 14L14.7 11.95L15.65 9.9L19.7 13.65C19.82 13.76 19.88 13.9 19.88 14.05C19.88 14.2 19.82 14.34 19.7 14.45V10.35Z" fill="#FFC107"/>
-                      <path d="M15.65 9.9L3.85 2.15C3.99 2.02 4.19 2 4.4 2C4.54 2 4.67 2.03 4.78 2.09L15.65 9.9Z" fill="#F44336"/>
-                      <path d="M15.65 14L4.78 21.91C4.67 21.97 4.54 22 4.4 22C4.19 22 3.99 21.98 3.85 21.85L15.65 14Z" fill="#4CAF50"/>
+                                        <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none">
+                      <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4"/>
+                      <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04"/>
+                      <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335"/>
+                      <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853"/>
                     </svg>
                     <div className="flex flex-col items-start justify-center">
                       <span className="text-[9px] font-medium leading-[10px] text-gray-600 uppercase">GET IT ON</span>

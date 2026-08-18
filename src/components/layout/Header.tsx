@@ -13,10 +13,10 @@ interface Currency {
 
 const currencies: Currency[] = [
   { code: 'NGN', name: 'Nigeria', flag: '🇳🇬', image: '/flags/ng.svg' },
-  { code: 'GBP', name: 'United Kingdom', flag: '🇬🇧', image: '/flags/gb.svg' },
+  { code: 'USD', name: 'United States', flag: '🇺🇸', image: '/flags/us.svg' },
   { code: 'EUR', name: 'European Union', flag: '🇪🇺', image: '/flags/eu.svg' },
-  { code: 'GHS', name: 'Ghana', flag: '🇬🇭', image: '/flags/gh.svg' },
-  { code: 'USD', name: 'United States', flag: '🇺🇸', image: '/flags/us.svg' }
+  { code: 'GBP', name: 'United Kingdom', flag: '🇬🇧', image: '/flags/gb.svg' },
+  { code: 'GHS', name: 'Ghana', flag: '🇬🇭', image: '/flags/gh.svg' }
 ];
 
 interface HeaderProps {
