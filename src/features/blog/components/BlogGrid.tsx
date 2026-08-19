@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import BlogCard from './BlogCard';
 
-export default function BlogGrid() {
+interface BlogGridProps {
+  searchQuery?: string;
+}
+
+export default function BlogGrid({ searchQuery = "" }: BlogGridProps) {
   const [activeCategory, setActiveCategory] = useState('All Articles');
   const [posts, setPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>(['All Articles']);
@@ -33,7 +37,7 @@ export default function BlogGrid() {
           const excerpt = textContent.substring(0, 150) + (textContent.length > 150 ? "..." : "");
 
           // Read time
-          const wordCount = textContent.split(/\\s+/).length;
+          const wordCount = textContent.split(/\s+/).length;
           const readTimeMins = Math.max(1, Math.ceil(wordCount / 200));
 
           // Date format
@@ -74,9 +78,13 @@ export default function BlogGrid() {
     fetchNews();
   }, []);
 
-  const filteredPosts = activeCategory === 'All Articles'
-    ? posts
-    : posts.filter((post) => post.category === activeCategory);
+  const filteredPosts = posts.filter((post) => {
+    const matchesCategory = activeCategory === 'All Articles' || post.category === activeCategory;
+    const matchesSearch = !searchQuery || 
+                          post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   if (isLoading) {
     return (

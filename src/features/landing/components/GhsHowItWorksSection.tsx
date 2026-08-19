@@ -2,12 +2,12 @@ import React from 'react';
 
 export default function GhsHowItWorksSection() {
   return (
-    <section className="w-full flex justify-center items-center py-[100px] px-[20px] lg:px-[58px] bg-[#F9F8F4]">
+    <section className="w-full flex justify-center items-center py-[60px] lg:py-[80px] px-[20px] lg:px-[58px] bg-[#F9F8F4]">
       <div className="w-full max-w-[1324px] flex flex-col lg:flex-row shadow-lg rounded-[24px] overflow-hidden" style={{ margin: '0 auto' }}>
         
         {/* Left Content */}
         <div 
-          className="flex-1 flex flex-col justify-center min-h-[507px] px-6 lg:px-0"
+          className="flex-1 flex flex-col justify-center min-h-[380px] lg:min-h-[420px] px-6 lg:px-0"
           style={{ 
             background: 'linear-gradient(180deg, #FFCE65 0%, #FFFFFF 100%)',
             paddingLeft: '102px',
@@ -64,13 +64,19 @@ export default function GhsHowItWorksSection() {
 
         {/* Right Image Content */}
         <div 
-          className="w-full lg:w-[590px] min-h-[400px] lg:min-h-[508px] flex-shrink-0"
+          className="w-full lg:w-[590px] min-h-[380px] lg:min-h-[420px] flex-shrink-0 relative flex items-center justify-center overflow-hidden"
           style={{
-            background: 'url("/img/right.png")',
+            background: 'url("/img/ghana_city_bg.png")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
-        />
+        >
+          <img 
+            src="/img/icons/3.png" 
+            alt="App Mockup" 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[85%] w-auto object-contain z-10 drop-shadow-2xl"
+          />
+        </div>
 
       </div>
     </section>

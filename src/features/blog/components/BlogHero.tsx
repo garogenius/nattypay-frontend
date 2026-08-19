@@ -1,6 +1,11 @@
 import React from 'react';
 
-export default function BlogHero() {
+interface BlogHeroProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+export default function BlogHero({ searchQuery, setSearchQuery }: BlogHeroProps) {
   return (
     <section className="w-full bg-[#000000] flex flex-col items-center justify-center font-['Poppins'] px-6 md:px-12 relative overflow-hidden" style={{ paddingTop: 'clamp(80px, 12vw, 140px)', paddingBottom: 'clamp(60px, 10vw, 100px)' }}>
       
@@ -36,6 +41,8 @@ export default function BlogHero() {
           </div>
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search articles..." 
             className="w-full bg-[#111111] border border-[#333333] rounded-full text-white text-[16px] outline-none focus:border-[#F0BF4C] transition-colors"
             style={{ height: '64px', paddingLeft: '56px', paddingRight: '128px' }}
