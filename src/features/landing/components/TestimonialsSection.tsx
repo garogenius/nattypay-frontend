@@ -70,6 +70,24 @@ export default function TestimonialsSection() {
     fetchTestimonials();
   }, []);
 
+  // Auto-play slider on mobile
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.innerWidth < 1024 && sliderRef.current && sliderRef.current.children.length > 0) {
+        const firstChild = sliderRef.current.children[0] as HTMLElement;
+        const cardWidth = firstChild.offsetWidth + 24; // card width + gap
+        const maxScroll = sliderRef.current.scrollWidth - sliderRef.current.clientWidth;
+        
+        if (sliderRef.current.scrollLeft >= maxScroll - 10) {
+          sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          sliderRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+        }
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [testimonials]);
+
   const scrollLeft = () => {
     if (sliderRef.current) {
       sliderRef.current.scrollBy({ left: -477, behavior: 'smooth' }); // Card width + gap
@@ -147,95 +165,90 @@ export default function TestimonialsSection() {
         {/* We remove right padding on the container so the cards bleed to the edge of the screen */}
         {isLoading ? (
           <div 
-            className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto hide-scroll pb-4 lg:pb-8"
-            style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
+            className="flex flex-row items-start w-full overflow-x-auto lg:overflow-hidden hide-scroll pb-4 lg:pb-8 gap-[24px] snap-x snap-mandatory lg:snap-none lg:gap-[32px]"
           >
             {[1, 2, 3, 4].map((i) => (
-              <div 
-                key={i} 
-                className="flex flex-col flex-shrink-0 w-[260px] lg:w-[453px] h-[340px] lg:h-[440px] bg-[#E5E7EB] rounded-[16px] lg:rounded-[24px] animate-pulse"
-                style={{ padding: 'clamp(24px, 4vw, 40px)' }}
-              >
-                {/* Profile Image Shimmer */}
-                <div className="w-[90px] h-[90px] lg:w-[140px] lg:h-[140px] rounded-full bg-gray-300 self-center flex-shrink-0"></div>
-                
-                {/* Text Content Shimmer */}
-                <div className="flex flex-col items-start text-left gap-2 lg:gap-3 w-full mt-6 lg:mt-[36px]">
-                  <div className="h-5 lg:h-8 w-3/4 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-3 lg:h-5 w-full bg-gray-300 rounded"></div>
-                  <div className="h-3 lg:h-5 w-full bg-gray-300 rounded"></div>
-                  <div className="h-3 lg:h-5 w-4/5 bg-gray-300 rounded"></div>
-                </div>
-                
-                {/* Star Rating Shimmer */}
-                <div className="flex flex-row items-center justify-end self-end gap-1 mt-auto">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <div key={star} className="w-[20px] h-[20px] lg:w-[26px] lg:h-[26px] bg-gray-300 rounded-full"></div>
-                  ))}
+              <div key={i} className="flex-shrink-0 snap-center w-[280px] lg:w-[453px]">
+                <div 
+                  className="flex flex-col flex-shrink-0 w-full h-[360px] lg:h-[440px] bg-[#E5E7EB] rounded-[16px] lg:rounded-[24px] animate-pulse"
+                  style={{ padding: 'clamp(24px, 4vw, 40px)' }}
+                >
+                  {/* Profile Image Shimmer */}
+                  <div className="w-[90px] h-[90px] lg:w-[140px] lg:h-[140px] rounded-full bg-gray-300 self-center flex-shrink-0"></div>
+                  
+                  {/* Text Content Shimmer */}
+                  <div className="flex flex-col items-start text-left gap-2 lg:gap-3 w-full mt-6 lg:mt-[36px]">
+                    <div className="h-5 lg:h-8 w-3/4 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-3 lg:h-5 w-full bg-gray-300 rounded"></div>
+                    <div className="h-3 lg:h-5 w-full bg-gray-300 rounded"></div>
+                    <div className="h-3 lg:h-5 w-4/5 bg-gray-300 rounded"></div>
+                  </div>
+                  
+                  {/* Star Rating Shimmer */}
+                  <div className="flex flex-row items-center justify-end self-end gap-1 mt-auto">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <div key={star} className="w-[20px] h-[20px] lg:w-[26px] lg:h-[26px] bg-gray-300 rounded-full"></div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-        <div
-          ref={sliderRef}
-          className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-4 lg:pb-8"
-          style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
-        >
-          {testimonials.map((testimonial, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col flex-shrink-0 w-[260px] lg:w-[453px] h-[340px] lg:h-[440px] bg-[#F0BF4C] rounded-[16px] lg:rounded-[24px] snap-center"
-              style={{ padding: 'clamp(24px, 4vw, 40px)' }}
-            >
+        <div className="w-full overflow-hidden pb-4 lg:pb-8 relative">
+          {/* Slider Container */}
+          <div
+            ref={sliderRef}
+            className="flex flex-row items-start w-full overflow-x-auto lg:overflow-hidden hide-scroll gap-[24px] snap-x snap-mandatory lg:snap-none lg:gap-[32px]"
+            style={{ paddingRight: '24px' }}
+          >
+            {testimonials.map((testimonial, idx) => (
+              <div key={idx} className="flex-shrink-0 snap-center w-[280px] lg:w-[453px]">
+                <div
+                  className="flex flex-col flex-shrink-0 w-full h-[360px] lg:h-[440px] bg-[#F0BF4C] rounded-[16px] lg:rounded-[24px] transition-transform hover:-translate-y-2"
+                  style={{ padding: 'clamp(24px, 4vw, 40px)' }}
+                >
+                  {/* Profile Image (Centered) */}
+                  <div className="w-[90px] h-[90px] lg:w-[140px] lg:h-[140px] rounded-full overflow-hidden self-center flex-shrink-0">
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-              {/* Profile Image (Centered) */}
-              <div className="w-[90px] h-[90px] lg:w-[140px] lg:h-[140px] rounded-full overflow-hidden self-center flex-shrink-0">
-                <img
-                  src={testimonial.image}
-                  alt={testimonial.name}
-                  className="w-full h-full object-cover"
-                />
+                  {/* Text Content (Left Aligned) */}
+                  <div className="flex flex-col items-start text-left gap-2 lg:gap-3 w-full mt-6 lg:mt-[36px]">
+                    <h3 className="font-poppins font-medium text-[16px] lg:text-[28px] leading-[22px] lg:leading-[42px] text-black m-0">
+                      {testimonial.name}
+                    </h3>
+                    <p className="font-poppins font-normal text-[12px] lg:text-[18px] leading-[18px] lg:leading-[32px] text-[#4A4A4A] m-0 line-clamp-4">
+                      {testimonial.text}
+                    </p>
+                  </div>
+
+                  {/* Star Rating (Right Aligned) */}
+                  <div className="flex flex-row items-center justify-end self-end gap-1 mt-auto">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg
+                        key={star}
+                        width="26"
+                        height="26"
+                        viewBox="0 0 24 24"
+                        fill={star <= testimonial.rating ? "white" : "transparent"}
+                        stroke="white"
+                        strokeWidth="2"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
               </div>
-
-              {/* Text Content (Left Aligned) */}
-              <div className="flex flex-col items-start text-left gap-2 lg:gap-3 w-full mt-6 lg:mt-[36px]">
-                <h3 className="font-poppins font-medium text-[16px] lg:text-[28px] leading-[22px] lg:leading-[42px] text-black m-0">
-                  {testimonial.name}
-                </h3>
-                <p className="font-poppins font-normal text-[12px] lg:text-[18px] leading-[18px] lg:leading-[32px] text-[#4A4A4A] m-0 line-clamp-4">
-                  {testimonial.text}
-                </p>
-              </div>
-
-              {/* Star Rating (Right Aligned) */}
-              <div className="flex flex-row items-center justify-end self-end gap-1 mt-auto">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg
-                    key={star}
-                    width="26"
-                    height="26"
-                    viewBox="0 0 24 24"
-                    fill={star <= testimonial.rating ? "white" : "transparent"}
-                    stroke="white"
-                    strokeWidth="2"
-                  >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                ))}
-              </div>
-
-            </div>
-          ))}
-        </div>
-        )}
-
-        {/* Scrollbar / Progress Bar (Mobile Only) */}
-        <div className="w-full flex lg:hidden mt-4 items-center justify-start max-w-[260px] mx-auto">
-          <div className="w-full h-[3px] bg-[#D1D5DB] rounded-full overflow-hidden">
-             <div className="w-1/3 h-full bg-[#F0BF4C] rounded-full"></div>
+            ))}
           </div>
         </div>
+        )}
 
       </div>
 

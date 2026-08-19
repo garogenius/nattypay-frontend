@@ -93,80 +93,117 @@ export default function ManageSection() {
 
           {/* Chart Card */}
           <div 
-            className="w-full max-w-[652px] rounded-[20px] relative overflow-hidden"
+            className="w-full max-w-[652px] rounded-[20px] relative overflow-x-auto hide-scroll lg:overflow-hidden"
             style={{ height: '268px', backgroundColor: 'rgba(255, 206, 101, 0.33)' }}
           >
-            
-            {/* Title */}
-            <h4 
-              className="font-poppins font-semibold text-[20px] leading-[30px] text-[#2A2A2A] m-0 absolute"
-              style={{ left: '20px', top: '21px' }}
-            >
-              NattyPay Record
-            </h4>
-            
-            {/* Badges/Pill */}
-            <div 
-              className="flex flex-row items-center absolute"
-              style={{ left: '20px', top: '55px', gap: '10px' }}
-            >
-              <div className="bg-[#D4B039] rounded-[4px]" style={{ padding: '3px 6px' }}>
-                <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black">
-                  $10.230.997.123
-                </span>
-              </div>
-              <span className="font-poppins font-normal text-[12px] leading-[18px] text-black">
-                Managed assets
-              </span>
-            </div>
-
-            {/* Fake Chart Line SVG */}
-            <svg 
-              className="absolute"
-              style={{ left: '20px', top: '107px', width: '612px', height: '88px' }}
-              preserveAspectRatio="none" 
-              viewBox="0 0 100 50"
-            >
-              <path d="M0 45 Q15 50 30 40 T60 30 T85 10 T100 5" fill="none" stroke="#685E40" strokeWidth="1" />
-            </svg>
-
-            {/* Black Gradient Bar */}
-            <div 
-              className="hidden md:block absolute rounded-t-[4px]"
-              style={{ 
-                left: '521px', 
-                top: '55px', 
-                width: '111px', 
-                height: '203px',
-                background: 'linear-gradient(180deg, #FFCE65 0%, #000000 100%)'
-              }}
-            >
-              {/* Tooltip Pill */}
-              <div 
-                className="absolute bg-white/50 backdrop-blur-sm rounded-[4px] flex flex-row items-center justify-center"
-                style={{ left: '28px', top: '31px', width: '54px', height: '16px', gap: '2px', padding: '2px 4px' }}
+            {/* Inner Fixed Width Container to enable mobile slider */}
+            <div className="relative w-[652px] h-full flex-shrink-0">
+              {/* Title */}
+              <h4 
+                className="font-poppins font-semibold text-[20px] leading-[30px] text-[#2A2A2A] m-0 absolute"
+                style={{ left: '20px', top: '21px' }}
               >
-                <span className="font-poppins font-normal text-[8px] leading-[12px] text-[#2A2A2A]">
-                  2.010.355
+                NattyPay Record
+              </h4>
+              
+              {/* Badges/Pill */}
+              <div 
+                className="flex flex-row items-center absolute"
+                style={{ left: '20px', top: '55px', gap: '10px' }}
+              >
+                <div className="bg-[#D4B039] rounded-[4px]" style={{ padding: '3px 6px' }}>
+                  <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black">
+                    $10.230.997.123
+                  </span>
+                </div>
+                <span className="font-poppins font-normal text-[12px] leading-[18px] text-black">
+                  Managed assets
                 </span>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
-                </svg>
               </div>
 
-              {/* Dot on Line */}
-              <div className="absolute w-[7px] h-[7px] bg-[#F0BF4C] rounded-full" style={{ left: '52px', top: '55px' }}>
-                <div className="absolute top-[2px] left-[2px] w-[3px] h-[3px] bg-white rounded-full" />
+              {/* Fake Chart Line SVG (Live Animated) */}
+              <svg 
+                className="absolute"
+                style={{ left: '20px', top: '107px', width: '612px', height: '88px' }}
+                preserveAspectRatio="none" 
+                viewBox="0 0 100 50"
+              >
+                <defs>
+                  <linearGradient id="chart-glow" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F0BF4C" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#F0BF4C" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                
+                {/* Glowing animated fill */}
+                <path fill="url(#chart-glow)" stroke="none">
+                  <animate 
+                    attributeName="d" 
+                    dur="4s" 
+                    repeatCount="indefinite"
+                    values="
+                      M0 45 Q15 50 30 40 T60 30 T85 10 T100 5 L100 50 L0 50 Z;
+                      M0 43 Q15 46 30 42 T60 28 T85 12 T100 2 L100 50 L0 50 Z;
+                      M0 47 Q15 54 30 38 T60 32 T85 8 T100 8 L100 50 L0 50 Z;
+                      M0 45 Q15 50 30 40 T60 30 T85 10 T100 5 L100 50 L0 50 Z
+                    "
+                  />
+                </path>
+
+                {/* Animated stroke line */}
+                <path fill="none" stroke="#685E40" strokeWidth="1">
+                  <animate 
+                    attributeName="d" 
+                    dur="4s" 
+                    repeatCount="indefinite"
+                    values="
+                      M0 45 Q15 50 30 40 T60 30 T85 10 T100 5;
+                      M0 43 Q15 46 30 42 T60 28 T85 12 T100 2;
+                      M0 47 Q15 54 30 38 T60 32 T85 8 T100 8;
+                      M0 45 Q15 50 30 40 T60 30 T85 10 T100 5
+                    "
+                  />
+                </path>
+              </svg>
+
+              {/* Black Gradient Bar - Visible on mobile via scroll */}
+              <div 
+                className="absolute rounded-t-[4px]"
+                style={{ 
+                  left: '521px', 
+                  top: '55px', 
+                  width: '111px', 
+                  height: '203px',
+                  background: 'linear-gradient(180deg, #FFCE65 0%, #000000 100%)'
+                }}
+              >
+                {/* Tooltip Pill */}
+                <div 
+                  className="absolute bg-white/50 backdrop-blur-sm rounded-[4px] flex flex-row items-center justify-center"
+                  style={{ left: '28px', top: '31px', width: '54px', height: '16px', gap: '2px', padding: '2px 4px' }}
+                >
+                  <span className="font-poppins font-normal text-[8px] leading-[12px] text-[#2A2A2A]">
+                    2.010.355
+                  </span>
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
+                  </svg>
+                </div>
+
+                {/* Dot on Line */}
+                <div className="absolute w-[7px] h-[7px] bg-[#F0BF4C] rounded-full flex items-center justify-center" style={{ left: '52px', top: '55px' }}>
+                  <div className="absolute w-full h-full bg-[#F0BF4C] rounded-full animate-ping opacity-75" />
+                  <div className="w-[3px] h-[3px] bg-white rounded-full z-10" />
+                </div>
               </div>
+
+              {/* X-Axis Labels */}
+              <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '58px', top: '230px' }}>2019</span>
+              <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '183px', top: '230px' }}>2020</span>
+              <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '312px', top: '230px' }}>2021</span>
+              <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '438px', top: '230px' }}>2022</span>
             </div>
-
-            {/* X-Axis Labels */}
-            <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '58px', top: '230px' }}>2019</span>
-            <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '183px', top: '230px' }}>2020</span>
-            <span className="font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '312px', top: '230px' }}>2021</span>
-            <span className="hidden md:block font-poppins font-semibold text-[12px] leading-[18px] text-black absolute" style={{ left: '438px', top: '230px' }}>2022</span>
-            
           </div>
 
         </div>

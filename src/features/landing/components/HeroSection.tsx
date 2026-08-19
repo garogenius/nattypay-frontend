@@ -53,11 +53,11 @@ export default function HeroSection() {
                 </a>
                 {/* Google Play Store */}
                 <a href="https://play.google.com/store/apps/details?id=com.nattypay.nattypay" target="_blank" rel="noopener noreferrer" className="flex-shrink-0 flex items-center gap-[10px] bg-black border border-white/20 rounded-[10px] hover:bg-white/10 transition-colors" style={{ padding: '16px 32px' }}>
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                    <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4"/>
-                    <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04"/>
-                    <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335"/>
-                    <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853"/>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4" />
+                    <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04" />
+                    <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335" />
+                    <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853" />
                   </svg>
                   <div className="flex flex-col items-start leading-none">
                     <span className="font-poppins text-[10px] text-white/70">Get it on</span>
@@ -100,7 +100,7 @@ export default function HeroSection() {
             {/* Right Text Content (Aligned top on mobile) */}
             <div className="w-full flex flex-col items-start pt-6 overflow-hidden gap-6 sm:gap-8">
               <h1 className="font-poppins font-bold text-[32px] sm:text-[36px] md:text-[56px] leading-[1.1] text-white w-full">
-                One Wallet.<br />
+                One Dashboard.<br />
                 <span className="text-[#FFCE65]">Multiple Currencies.</span><br />
                 Endless possibilities
               </h1>
@@ -123,11 +123,11 @@ export default function HeroSection() {
                 </a>
                 {/* Google Play Store */}
                 <a href="https://play.google.com/store/apps/details?id=com.nattypay.nattypay" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-[8px] bg-black border border-white/20 rounded-[10px] hover:bg-white/10 transition-colors" style={{ padding: '14px 20px' }}>
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-                    <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4"/>
-                    <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04"/>
-                    <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335"/>
-                    <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853"/>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                    <path d="M2.78 1.53c-.35.37-.56.96-.56 1.72v17.5c0 .76.21 1.35.56 1.72l.07.07 9.87-9.87v-.14L2.85 1.46l-.07.07z" fill="#4285F4" />
+                    <path d="M15.96 15.65l-3.24-3.24v-.14l3.24-3.24.11.06 3.86 2.19c1.1.63 1.1 1.66 0 2.29l-3.86 2.19-.11.06z" fill="#FBBC04" />
+                    <path d="M12.83 12.52l-9.98 9.98c.34.37.93.44 1.63.04l8.35-4.73 2.11-2.11-2.11-3.18z" fill="#EA4335" />
+                    <path d="M12.83 11.48L4.48 6.75C3.78 6.35 3.19 6.42 2.85 6.79l9.98 9.98 2.11-3.18-2.11-2.11z" fill="#34A853" />
                   </svg>
                   <div className="flex flex-col items-start leading-none">
                     <span className="font-poppins text-[9px] text-white/70">Get it on</span>

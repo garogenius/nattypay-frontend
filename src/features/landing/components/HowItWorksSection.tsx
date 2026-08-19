@@ -1,4 +1,5 @@
-import React from 'react';
+"use client";
+import React, { useRef, useEffect } from 'react';
 
 const stats = [
   {
@@ -60,6 +61,26 @@ const mockups = [
 ];
 
 export default function HowItWorksSection() {
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  // Auto-play slider on mobile
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.innerWidth < 1024 && sliderRef.current && sliderRef.current.children.length > 0) {
+        const firstChild = sliderRef.current.children[0] as HTMLElement;
+        const cardWidth = firstChild.offsetWidth + 24; // card width + gap
+        const maxScroll = sliderRef.current.scrollWidth - sliderRef.current.clientWidth;
+        
+        if (sliderRef.current.scrollLeft >= maxScroll - 10) {
+          sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          sliderRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+        }
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section 
       className="w-full relative flex flex-col items-center justify-center overflow-hidden bg-black"
@@ -132,22 +153,29 @@ export default function HowItWorksSection() {
           </div>
 
           {/* Mockups Row */}
-          <div className="flex flex-row items-center justify-start lg:justify-start gap-[12px] overflow-x-auto w-full pb-4 hide-scroll">
-            {mockups.map((src, idx) => (
-              <img 
-                key={idx}
-                src={src}
-                alt={`NattyPay Mockup ${idx + 1}`}
-                className="flex-shrink-0 object-cover"
-                style={{
-                  width: 'calc(50vw - 22px)',
-                  maxWidth: '168px',
-                  height: 'auto',
-                  aspectRatio: '168/364',
-                  borderRadius: '13px'
-                }}
-              />
-            ))}
+          <div className="w-full overflow-hidden lg:overflow-visible pb-4 relative">
+            <div 
+              ref={sliderRef}
+              className="flex flex-row items-center justify-start w-full overflow-x-auto lg:overflow-visible hide-scroll gap-[24px] snap-x snap-mandatory lg:snap-none lg:gap-[32px]"
+              style={{ paddingRight: '24px' }}
+            >
+              {mockups.map((src, idx) => (
+                <div key={idx} className="flex-shrink-0 snap-center">
+                  <img 
+                    src={src}
+                    alt={`NattyPay Mockup ${idx + 1}`}
+                    className="object-cover"
+                    style={{
+                      width: 'calc(50vw - 22px)',
+                      maxWidth: '168px',
+                      height: 'auto',
+                      aspectRatio: '168/364',
+                      borderRadius: '13px'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
         </div>

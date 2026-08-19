@@ -50,6 +50,24 @@ export default function NewsSection() {
     fetchNews();
   }, []);
 
+  // Auto-play slider on mobile
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.innerWidth < 1024 && sliderRef.current && sliderRef.current.children.length > 0) {
+        const firstChild = sliderRef.current.children[0] as HTMLElement;
+        const cardWidth = firstChild.offsetWidth + 24; // card width + gap
+        const maxScroll = sliderRef.current.scrollWidth - sliderRef.current.clientWidth;
+        
+        if (sliderRef.current.scrollLeft >= maxScroll - 10) {
+          sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          sliderRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+        }
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [newsItems]);
+
   const scrollLeft = () => {
     if (sliderRef.current) {
       sliderRef.current.scrollBy({ left: -632, behavior: 'smooth' }); // Card width (608) + gap (24)
@@ -124,91 +142,90 @@ export default function NewsSection() {
         </div>
 
           {isLoading ? (
-            <div className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full hide-scroll">
+            <div className="flex flex-row items-start w-full overflow-x-auto lg:overflow-hidden hide-scroll pb-4 lg:pb-8 gap-[24px] snap-x snap-mandatory lg:snap-none lg:gap-[32px]">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex flex-col flex-shrink-0 w-[280px] lg:w-[608px] h-[340px] lg:h-[534px] relative bg-[#E5E7EB] rounded-[16px] lg:rounded-[24px] animate-pulse">
-                  <div className="w-full h-[180px] lg:h-[300px] bg-gray-300 rounded-t-[16px]"></div>
-                  <div className="flex flex-col gap-4 p-6 mt-4">
-                    <div className="h-4 w-24 bg-gray-300 rounded"></div>
-                    <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
-                    <div className="h-4 w-full bg-gray-300 rounded"></div>
+                <div key={i} className="flex-shrink-0 snap-center w-[300px] lg:w-[608px]">
+                  <div className="flex flex-col flex-shrink-0 w-full h-[360px] lg:h-[534px] relative bg-[#E5E7EB] rounded-[16px] lg:rounded-[24px] animate-pulse">
+                    <div className="w-full h-[180px] lg:h-[300px] bg-gray-300 rounded-t-[16px] lg:rounded-t-[24px]"></div>
+                    <div className="flex flex-col gap-4 p-6 mt-4">
+                      <div className="h-4 w-24 bg-gray-300 rounded"></div>
+                      <div className="h-8 w-3/4 bg-gray-300 rounded"></div>
+                      <div className="h-4 w-full bg-gray-300 rounded"></div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div 
-              ref={sliderRef}
-              className="flex flex-row items-start gap-[16px] lg:gap-[24px] w-full overflow-x-auto snap-x snap-mandatory hide-scroll pb-4 lg:pb-8"
-              style={{ paddingRight: 'clamp(16px, 6vw, 96px)' }}
-            >
-              {newsItems.map((news, idx) => (
-            <div 
-              key={idx}
-              className="flex flex-col flex-shrink-0 w-[280px] lg:w-[608px] h-[340px] lg:h-[534px] relative snap-center"
-            >
-              
-              {/* Top Image */}
+            <div className="w-full overflow-hidden pb-4 lg:pb-8 relative">
+              {/* Slider Container */}
               <div 
-                className="w-full h-[180px] lg:h-[300px] absolute top-0 left-0 bg-gray-300"
-                style={{ borderRadius: '16px 16px 0px 0px' }}
+                ref={sliderRef}
+                className="flex flex-row items-start w-full overflow-x-auto lg:overflow-hidden hide-scroll gap-[24px] snap-x snap-mandatory lg:snap-none lg:gap-[32px]"
+                style={{ paddingRight: '24px' }}
               >
-                <img 
-                  src={news.image} 
-                  alt={news.title}
-                  className="w-full h-full object-cover"
-                  style={{ borderRadius: '16px 16px 0px 0px' }}
-                />
+                {newsItems.map((news, idx) => (
+                  <div key={idx} className="flex-shrink-0 snap-center w-[300px] lg:w-[608px]">
+                    <div 
+                      className="flex flex-col flex-shrink-0 w-full h-[360px] lg:h-[534px] relative transition-transform hover:-translate-y-2"
+                    >
+                      
+                      {/* Top Image */}
+                      <div 
+                        className="w-full h-[180px] lg:h-[300px] absolute top-0 left-0 bg-gray-300"
+                        style={{ borderRadius: '16px 16px 0px 0px' }}
+                      >
+                        <img 
+                          src={news.image} 
+                          alt={news.title}
+                          className="w-full h-full object-cover"
+                          style={{ borderRadius: '16px 16px 0px 0px' }}
+                        />
+                      </div>
+
+                      {/* Bottom Yellow Card */}
+                      <div 
+                        className="flex flex-col items-start bg-[#F0BF4C] absolute left-0 w-full"
+                        style={{ 
+                          top: 'clamp(150px, 25vw, 260px)', 
+                          height: 'clamp(190px, 27vw, 274px)', 
+                          borderRadius: 'clamp(16px, 2vw, 24px)',
+                          padding: 'clamp(24px, 4vw, 40px)' 
+                        }}
+                      >
+                        <div className="flex flex-col gap-2 lg:gap-6 w-full h-full justify-between">
+                          
+                          {/* Category */}
+                          {news.category && (
+                            <span className="font-poppins font-bold text-[10px] lg:text-[14px] leading-none text-black/60 uppercase tracking-widest mb-[-4px] lg:mb-[-12px]">
+                              {news.category}
+                            </span>
+                          )}
+
+                          {/* Title */}
+                          <h3 className="font-poppins font-semibold text-[14px] lg:text-[28px] leading-[20px] lg:leading-[38px] text-black m-0 line-clamp-1">
+                            {news.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="font-poppins font-normal text-[11px] lg:text-[18px] leading-[16px] lg:leading-[32px] text-black m-0 line-clamp-2">
+                            {news.description}
+                          </p>
+
+                          {/* Date */}
+                          <p className="font-poppins font-normal text-[10px] lg:text-[16px] leading-[14px] lg:leading-[24px] text-[#7D7D7D] m-0 self-end mt-auto">
+                            {news.date}
+                          </p>
+                          
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              {/* Bottom Yellow Card */}
-              <div 
-                className="flex flex-col items-start bg-[#F0BF4C] absolute left-0 w-full"
-                style={{ 
-                  top: 'clamp(150px, 25vw, 260px)', 
-                  height: 'clamp(190px, 27vw, 274px)', 
-                  borderRadius: 'clamp(16px, 2vw, 24px)',
-                  padding: 'clamp(24px, 4vw, 40px)' 
-                }}
-              >
-                <div className="flex flex-col gap-2 lg:gap-6 w-full h-full justify-between">
-                  
-                  {/* Category */}
-                  {news.category && (
-                    <span className="font-poppins font-bold text-[10px] lg:text-[14px] leading-none text-black/60 uppercase tracking-widest mb-[-4px] lg:mb-[-12px]">
-                      {news.category}
-                    </span>
-                  )}
-
-                  {/* Title */}
-                  <h3 className="font-poppins font-semibold text-[14px] lg:text-[28px] leading-[20px] lg:leading-[38px] text-black m-0 line-clamp-1">
-                    {news.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="font-poppins font-normal text-[11px] lg:text-[18px] leading-[16px] lg:leading-[32px] text-black m-0 line-clamp-2">
-                    {news.description}
-                  </p>
-
-                  {/* Date */}
-                  <p className="font-poppins font-normal text-[10px] lg:text-[16px] leading-[14px] lg:leading-[24px] text-[#7D7D7D] m-0 self-end mt-auto">
-                    {news.date}
-                  </p>
-                  
-                </div>
-              </div>
-
             </div>
-          ))}
-        </div>
-        )}
-
-        {/* Scrollbar / Progress Bar (Mobile Only) */}
-        <div className="w-full flex lg:hidden mt-4 items-center justify-start max-w-[280px] mx-auto">
-          <div className="w-full h-[3px] bg-[#D1D5DB] rounded-full overflow-hidden">
-             <div className="w-1/3 h-full bg-[#F0BF4C] rounded-full"></div>
-          </div>
-        </div>
+          )}
 
       </div>
 
